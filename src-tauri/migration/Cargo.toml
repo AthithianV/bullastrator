@@ -1,0 +1,32 @@
+[package]
+name = "migration"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+name = "migration"
+path = "src/lib.rs"
+
+[dependencies]
+async-std = { version = "1", features = ["attributes", "tokio1"] }
+chrono = { version = "0.4.41", features = ["serde"] }
+uuid = { version = "1.2", features = ["v4", "serde"] }
+
+
+[dependencies.sea-orm]
+version = "1.1.12"
+features = [
+    "sqlx-sqlite", 
+    "macros",
+    "runtime-tokio-native-tls",
+    "with-uuid"
+]
+
+[dependencies.sea-orm-migration]
+version = "1.1.12"
+features = [
+    "sqlx-sqlite", 
+    "runtime-tokio-native-tls", 
+    "with-uuid"
+]

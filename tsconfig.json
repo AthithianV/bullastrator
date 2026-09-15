@@ -1,0 +1,45 @@
+{
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "moduleResolution": "bundler",
+    "paths": {
+      "components": ["./src/lib/shared/components"],
+      "ui": ["./src/lib/shared/components/ui"],
+      "utils": ["./src/lib/shared/utils"],
+      "hooks": ["./src/lib/shared/hooks"],
+      "$lib": ["./src/lib"],
+      "$lib/*": ["./src/lib/*"],
+
+      // Feature Paths - Note the ./ prefix
+      "connection/*": ["./src/lib/features/connection/*"],
+      "job/*": ["./src/lib/features/job/*"],
+      "metrics/*": ["./src/lib/features/metrics/*"],
+      "queue/*": ["./src/lib/features/queue/*"],
+      "search/*": ["./src/lib/features/search/*"],
+      "sidebar/*": ["./src/lib/features/sidebar/*"],
+      "settings/*": ["./src/lib/features/settings/*"],
+      "tabs/*": ["./src/lib/features/tabs/*"],
+      "worker/*": ["./src/lib/features/worker/*"],
+      "titlebar/*": ["./src/lib/features/titlebar/*"],
+      "workspace/*": ["./src/lib/features/workspace/*"],
+
+      // Shared Paths
+      "shared/*": ["./src/lib/shared/*"],
+      "components/*": ["./src/lib/shared/components/*"],
+      "ui/*": ["./src/lib/shared/components/ui/*"],
+      "utils/*": ["./src/lib/shared/utils/*"],
+      "hooks/*": ["./src/lib/shared/hooks/*"],
+      "helpers/*": ["./src/lib/shared/helpers/*"]
+    }
+  }
+}
