@@ -1,6 +1,6 @@
 [package]
 name = "asyncian"
-version = "0.1.10"
+version = "0.1.0"
 description = "asyncian - A light Weight desktop app for managing bullMq."
 authors = ["Athithian"]
 edition = "2021"

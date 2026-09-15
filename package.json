@@ -1,6 +1,6 @@
 {
   "name": "asyncian",
-  "version": "0.1.10",
+  "version": "0.1.0",
   "description": "Desktop GUI for BullMq",
   "type": "module",
   "scripts": {
