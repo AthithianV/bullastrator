@@ -10,7 +10,7 @@ use migration::{Migrator, MigratorTrait};
 use anyhow::{Context, Result};
 
 pub async fn initialize_local_db() -> Result<DatabaseConnection> {
-    const DB_DIRECTORY_NAME: &str = "asyncian";
+    const DB_DIRECTORY_NAME: &str = "bullastrator";
     const DB_FILE_NAME: &str = "data.db";
 
     let app_data_path: PathBuf = data_dir().context("Cannot find app data dir")?;

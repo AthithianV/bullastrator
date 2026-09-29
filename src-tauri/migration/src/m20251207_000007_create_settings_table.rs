@@ -24,7 +24,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        const DEFAULT_WORKSPACE_NAME: &str = "asyncian";
+        const DEFAULT_WORKSPACE_NAME: &str = "bullastrator";
         const WS_KEY: &str = "active_workspace_id";
 
         let exists = manager

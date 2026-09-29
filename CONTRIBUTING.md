@@ -1,8 +1,8 @@
-# Contributing to Asyncian
+# Contributing to Bullastrator
 
-Thank you for your interest in contributing to **Asyncian**
+Thank you for your interest in contributing to **Bullastrator**
 
-Asyncian is an open-source desktop application for managing and inspecting Redis & BullMQ queues. Contributions of all kinds are welcome — bug fixes, features, documentation, UI improvements, performance improvements, and ideas.
+Bullastrator is an open-source desktop application for managing and inspecting Redis & BullMQ queues. Contributions of all kinds are welcome — bug fixes, features, documentation, UI improvements, performance improvements, and ideas.
 
 ## Getting Started
 
@@ -19,8 +19,8 @@ Before contributing, make sure you have:
 ### Clone the repository
 
 ```bash
-git clone https://github.com/athithianv/asyncian.git
-cd asyncian
+git clone https://github.com/athithianv/bullastrator.git
+cd bullastrator
 ```
 
 ### Install dependencies
@@ -35,7 +35,7 @@ npm install
 npm run tauri dev
 ```
 
-Make sure Redis is running locally or connect to another Redis instance from Asyncian.
+Make sure Redis is running locally or connect to another Redis instance from Bullastrator.
 
 ---
 
@@ -125,7 +125,7 @@ Before opening a bug report:
 Include:
 
 - Operating system
-- Asyncian version
+- Bullastrator version
 - Redis version
 - Steps to reproduce
 - Expected behavior
@@ -186,4 +186,4 @@ If you discover a security vulnerability, please follow the instructions in [`SE
 
 ## License
 
-By contributing to Asyncian, you agree that your contributions will be licensed under the same license as the project.
+By contributing to Bullastrator, you agree that your contributions will be licensed under the same license as the project.

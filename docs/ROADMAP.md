@@ -2,7 +2,7 @@
 
 ## 🧭 Roadmap
 
-Asyncian is actively evolving.
+Bullastrator is actively evolving.
 
 ### 🔎 Advanced Job Search
 

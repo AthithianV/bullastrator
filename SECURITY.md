@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Security fixes are generally provided for the latest released version of Asyncian.
+Security fixes are generally provided for the latest released version of Bullastrator.
 
 | Version                         | Supported      |
 | ------------------------------- | -------------- |
@@ -16,7 +16,7 @@ Security fixes are generally provided for the latest released version of Asyncia
 
 Please **do not report security vulnerabilities through public GitHub issues**.
 
-If you discover a security vulnerability in Asyncian, please report it privately to the project maintainer.
+If you discover a security vulnerability in Bullastrator, please report it privately to the project maintainer.
 
 Include as much of the following information as possible:
 
@@ -49,11 +49,11 @@ Redact sensitive information from logs and screenshots before sharing them.
 
 ## Current Security Considerations
 
-Asyncian currently supports direct Redis connections.
+Bullastrator currently supports direct Redis connections.
 
 > ⚠️ Redis credentials are not yet encrypted at rest.
 
-Until encrypted credential storage is implemented, users should avoid storing sensitive production credentials in Asyncian.
+Until encrypted credential storage is implemented, users should avoid storing sensitive production credentials in Bullastrator.
 
 TLS/SSL support and secure credential storage are planned improvements.
 

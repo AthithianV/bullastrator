@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a reproducible problem with Asyncian
+about: Report a reproducible problem with Bullastrator
 title: "[Bug]: "
 labels: bug
 assignees: ""
@@ -14,7 +14,7 @@ A clear and concise description of the problem.
 
 ## Steps to Reproduce
 
-1. Open Asyncian
+1. Open Bullastrator
 2. Connect to Redis
 3. Open the affected queue
 4. Perform the following action...
@@ -30,7 +30,7 @@ What actually happened?
 
 ## Environment
 
-- Asyncian version:
+- Bullastrator version:
 - Operating system:
 - OS version:
 - Redis version:

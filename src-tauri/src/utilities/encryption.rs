@@ -12,7 +12,7 @@ pub fn get_master_key() -> [u8; 32] {
     // Hash it so it's exactly 32 bytes and looks like random data
     let mut hasher = Sha256::new();
     hasher.update(uid.as_bytes());
-    hasher.update(b"asyncian_salt");
+    hasher.update(b"bullastrator_salt");
 
     let result = hasher.finalize();
     let mut key = [0u8; 32];
