@@ -7,7 +7,7 @@
     class="flex items-center gap-1 px-3 py-6 transition-all duration-300 select-none"
 >
     <!-- <Avatar.Root class="h-10 w-10 bg-background">
-        <Avatar.Image src="/logo.png" alt="asyncian" class="object-contain p-1.5 rounded-full" />
+        <Avatar.Image src="/logo.png" alt="bullastrator" class="object-contain p-1.5 rounded-full" />
         <Avatar.Fallback class="rounded-xl bg-primary text-primary-foreground font-bold">
             CB
         </Avatar.Fallback>
@@ -18,7 +18,7 @@
             <h1
                 class="text-md font-black tracking-tight text-foreground italic"
             >
-                Asyncian
+                Bullastrator
             </h1>
             <!-- <div class="flex items-center gap-1.5">
                 <span class="relative flex h-2 w-2">

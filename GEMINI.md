@@ -1,6 +1,6 @@
-# Asyncian: BullMQ Desktop Manager
+# Bullastrator: BullMQ Desktop Manager
 
-Asyncian is a cross-platform desktop application built with **Tauri v2** and **Svelte 5**, designed for managing BullMQ queues with direct Redis connections.
+Bullastrator is a cross-platform desktop application built with **Tauri v2** and **Svelte 5**, designed for managing BullMQ queues with direct Redis connections.
 
 ## 🏗️ Core Architecture
 

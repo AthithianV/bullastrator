@@ -14,7 +14,7 @@
 
     const handleManageBilling = () => {
         window.open(
-            `${import.meta.env.VITE_QHOUND_FRONTEND_BASE_URL ?? "https://asyncian.dev"}/settings/billing`,
+            `${import.meta.env.VITE_QHOUND_FRONTEND_BASE_URL ?? "https://bullastrator.dev"}/settings/billing`,
             "_blank",
         );
         open = false;
@@ -31,7 +31,7 @@
             <Dialog.Description>
                 Your <strong
                     >{subscription?.plan
-                        .replace("asyncian_", "")
+                        .replace("bullastrator_", "")
                         .toUpperCase()}</strong
                 >
                 subscription is currently

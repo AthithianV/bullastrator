@@ -2,7 +2,7 @@
 
 ## Our Commitment
 
-Asyncian is committed to providing a welcoming, respectful, and harassment-free environment for everyone who participates in the project.
+Bullastrator is committed to providing a welcoming, respectful, and harassment-free environment for everyone who participates in the project.
 
 We welcome contributions from people of all backgrounds and experience levels.
 
@@ -45,7 +45,7 @@ This Code of Conduct applies to all project spaces, including:
 - Pull requests
 - Discussions
 - Project-related communication
-- Other spaces where someone is representing the Asyncian project
+- Other spaces where someone is representing the Bullastrator project
 
 ## Attribution
 

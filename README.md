@@ -1,16 +1,16 @@
-# Asyncian
+# Bullastrator
 
 ### Aquarium of Queues
 
 **A fast, native desktop application for managing, inspecting, and monitoring Redis & BullMQ queues.**
 
-Asyncian gives developers a powerful interface for working with BullMQ queues directly from their desktop — inspect jobs, search queues, manage failures, organize queues into workspaces, and perform bulk operations without digging through Redis manually.
+Bullastrator gives developers a powerful interface for working with BullMQ queues directly from their desktop — inspect jobs, search queues, manage failures, organize queues into workspaces, and perform bulk operations without digging through Redis manually.
 
 Built with **Rust, Tauri, Svelte, TypeScript, Redis, and BullMQ**.
 
 ---
 
-## ✨ Why Asyncian?
+## ✨ Why Bullastrator?
 
 Working with BullMQ queues often means switching between Redis tools, application logs, dashboards, and custom scripts just to answer simple questions:
 
@@ -19,7 +19,7 @@ Working with BullMQ queues often means switching between Redis tools, applicatio
 > - Can I retry these 50 jobs?
 > - Where are my delayed jobs?
 
-Asyncian brings those workflows into a single desktop application.
+Bullastrator brings those workflows into a single desktop application.
 
 **Connect → Explore → Inspect → Manage.**
 
@@ -66,7 +66,7 @@ Perform operations on individual jobs or multiple jobs at once:
 
 ### 🖥️ Native Desktop Experience
 
-Asyncian is built as a native desktop application using **Tauri + Rust**.
+Bullastrator is built as a native desktop application using **Tauri + Rust**.
 
 That means:
 
@@ -107,7 +107,7 @@ That means:
 
 ## 🎥 Demo
 
-Watch Asyncian in action:
+Watch Bullastrator in action:
 
 **[Demo Video](https://www.youtube.com/watch?v=lWR9azwUais)**
 
@@ -127,8 +127,8 @@ Make sure you have the following installed:
 ### Clone the repository
 
 ```bash
-git clone https://github.com/athithianv/asyncian.git
-cd asyncian
+git clone https://github.com/athithianv/bullastrator.git
+cd bullastrator
 ```
 
 ### Install dependencies
@@ -143,7 +143,7 @@ npm install
 npm run tauri dev
 ```
 
-Asyncian can then connect to your local Redis instance:
+Bullastrator can then connect to your local Redis instance:
 
 ```text
 127.0.0.1:6379
@@ -153,7 +153,7 @@ Asyncian can then connect to your local Redis instance:
 
 ## 🔌 Redis Connection
 
-Asyncian connects directly to your Redis instance.
+Bullastrator connects directly to your Redis instance.
 
 Example:
 
@@ -167,7 +167,7 @@ Password: ********
 
 ## 🗺️ Project Status
 
-Asyncian is currently under active development.
+Bullastrator is currently under active development.
 
 The core queue and job management functionality is already available, while advanced search, security, performance improvements, flow management, and collaboration features are being developed.
 
@@ -191,7 +191,7 @@ Please read the contribution guidelines before submitting a PR.
 
 ## 💡 Feature Requests
 
-Have an idea for Asyncian?
+Have an idea for Bullastrator?
 
 Open a GitHub issue and describe:
 
@@ -220,7 +220,7 @@ See [`LICENSE`](LICENSE) for details.
 
 ## ⭐ Support
 
-If Asyncian is useful to you, consider giving the project a ⭐ on GitHub.
+If Bullastrator is useful to you, consider giving the project a ⭐ on GitHub.
 
 It helps the project get discovered and motivates further development.
 
@@ -228,7 +228,7 @@ It helps the project get discovered and motivates further development.
 
 <div align="center">
 
-### Asyncian
+### Bullastrator
 
 **Aquarium of Queues**
 

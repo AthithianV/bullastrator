@@ -1,5 +1,5 @@
 --[[
-  Asyncian Job Fetcher
+  Bullastrator Job Fetcher
 
   KEYS[1] -> State key
              e.g. bull:myqueue:wait

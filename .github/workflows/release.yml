@@ -68,9 +68,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: v__VERSION__
-          releaseName: "Asyncian v__VERSION__"
+          releaseName: "Bullastrator v__VERSION__"
           releaseBody: |
-            ## Asyncian
+            ## Bullastrator
 
             Aquarium of Queues.
 

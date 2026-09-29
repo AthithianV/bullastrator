@@ -62,7 +62,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        const DEFAULT_NAME: &str = "asyncian";
+        const DEFAULT_NAME: &str = "bullastrator";
 
         let exists = manager
             .get_connection()

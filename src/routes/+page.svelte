@@ -35,7 +35,7 @@
             const now = Date.now();
             if (now - lastTick > 10000) {
                 console.log(
-                    "Asyncian resumed from sleep. Refreshing connections...",
+                    "Bullastrator resumed from sleep. Refreshing connections...",
                 );
             }
             lastTick = now;

@@ -405,52 +405,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "asyncian"
-version = "0.1.0"
-dependencies = [
- "aes-gcm",
- "anyhow",
- "chrono",
- "deadpool-redis",
- "dirs-next",
- "dotenvy",
- "hex",
- "log",
- "machine-uid",
- "migration",
- "rand 0.8.6",
- "redis",
- "regex",
- "reqwest 0.12.28",
- "rmp-serde",
- "sea-orm",
- "semver",
- "serde",
- "serde_json",
- "sha2",
- "strum",
- "strum_macros",
- "tauri",
- "tauri-build",
- "tauri-plugin-deep-link",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-http",
- "tauri-plugin-log",
- "tauri-plugin-opener",
- "tauri-plugin-os",
- "tauri-plugin-process",
- "tauri-plugin-single-instance",
- "tauri-plugin-updater",
- "thiserror 1.0.69",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "url",
- "uuid",
-]
-
-[[package]]
 name = "atk"
 version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -642,6 +596,52 @@ checksum = "874bb8112abecc98cbd6d81ea4fa7e94fb9449648c93cc89aa40c81c24d7de03"
 dependencies = [
  "alloc-no-stdlib",
  "alloc-stdlib",
+]
+
+[[package]]
+name = "bullastrator"
+version = "0.1.0"
+dependencies = [
+ "aes-gcm",
+ "anyhow",
+ "chrono",
+ "deadpool-redis",
+ "dirs-next",
+ "dotenvy",
+ "hex",
+ "log",
+ "machine-uid",
+ "migration",
+ "rand 0.8.6",
+ "redis",
+ "regex",
+ "reqwest 0.12.28",
+ "rmp-serde",
+ "sea-orm",
+ "semver",
+ "serde",
+ "serde_json",
+ "sha2",
+ "strum",
+ "strum_macros",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-deep-link",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-http",
+ "tauri-plugin-log",
+ "tauri-plugin-opener",
+ "tauri-plugin-os",
+ "tauri-plugin-process",
+ "tauri-plugin-single-instance",
+ "tauri-plugin-updater",
+ "thiserror 1.0.69",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "uuid",
 ]
 
 [[package]]

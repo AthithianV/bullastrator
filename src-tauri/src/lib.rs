@@ -45,7 +45,7 @@ pub fn run() {
                 .set_focus();
 
             for arg in args {
-                if arg.starts_with("asyncian://") {
+                if arg.starts_with("bullastrator://") {
                     // Logic to process the URL (Refactor this into a helper function)
                     println!("Deep link ARG: {}", arg);
                 }
@@ -114,7 +114,7 @@ pub fn run() {
                     "main",
                     WebviewUrl::App("index.html".into()),
                 )
-                .title("Asyncian")
+                .title("Bullastrator")
                 .decorations(false)
                 .transparent(false)
                 .maximized(true)
@@ -130,7 +130,7 @@ pub fn run() {
             });
 
             let args: Vec<String> = std::env::args().collect();
-            if args.len() > 1 && args[1].starts_with("asyncian://") {
+            if args.len() > 1 && args[1].starts_with("bullastrator://") {
                 println!("Deep link ARG: {}", args[1]);
             }
 

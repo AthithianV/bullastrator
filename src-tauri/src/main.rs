@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    asyncian_lib::run()
+    bullastrator_lib::run()
 }

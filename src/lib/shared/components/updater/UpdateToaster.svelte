@@ -52,7 +52,7 @@
                         </Button>
                         {#if isLinux}
                             <a
-                                href={"https://releases.asyncian.dev/"}
+                                href={"https://releases.bullastrator.dev/"}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 class="px-3 py-1 bg-primary font-semibold text-black text-sm rounded flex justify-center items-center"
