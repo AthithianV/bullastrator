@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import * as Resizable from "ui/resizable";
+    import { PUBLIC_IS_WEB } from "$env/static/public";
 
     import TitleBar from "titlebar/components/TitleBar.svelte";
     import Card from "ui/card/card.svelte";
@@ -11,15 +12,10 @@
     import { globalStore } from "shared/stores/global.svelte";
     import AppSideBar from "sidebar/components/AppSideBar.svelte";
     import TabContainer from "tabs/components/TabContainer.svelte";
-
-    import BillingDueModal from "$lib/features/billing/components/BillingDueModal.svelte";
-    import type { BillingSubscription } from "$lib/shared/interfaces/billing.types";
-
-    let billingSubscription = $state<BillingSubscription | null>(null);
-    let isBillingModalOpen = $state(false);
+    import WebTitlebar from "$lib/features/titlebar/components/WebTitlebar.svelte";
 
     onMount(async () => {
-        await invoke("show_main_window");
+        !PUBLIC_IS_WEB && (await invoke("show_main_window"));
     });
 
     onMount(() => {
@@ -47,12 +43,12 @@
 
 <main class="w-full fixed top-0 bg-card select-none min-w-0">
     <Zoom />
-    <TitleBar />
-    <UpdateToaster />
-    <BillingDueModal
-        bind:open={isBillingModalOpen}
-        bind:subscription={billingSubscription}
-    />
+    {#if !PUBLIC_IS_WEB}
+        <TitleBar />
+        <UpdateToaster />
+    {:else}
+        <WebTitlebar />
+    {/if}
     <div class="flex h-(--app-height) min-w-0">
         <div class="w-full p-2 pt-0 min-w-0">
             <Card

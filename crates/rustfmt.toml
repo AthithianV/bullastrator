@@ -1,0 +1,25 @@
+# Use the latest stable formatting features
+edition = "2021"
+version = "Two"
+
+# Max line length - 100 is standard for modern displays
+max_width = 100
+
+# Group imports by category (Std, External, Local) - Clean & Professional
+group_imports = "StdExternalCrate"
+
+# Force trailing commas everywhere (better for Git diffs)
+trailing_comma = "Always"
+
+# Use Unix-style line endings
+newline_style = "Unix"
+
+# Put the { on the same line as the function header
+brace_style = "SameLineWhere"
+
+# Format code snippets inside Markdown files (Docs are important!)
+format_strings = true
+format_code_in_doc_comments = true
+
+# Functional style: wrap long closures and chains
+combine_control_expr = true

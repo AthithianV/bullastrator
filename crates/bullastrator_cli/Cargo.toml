@@ -1,0 +1,21 @@
+[package]
+name = "bullastrator-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "bullastrator"
+path = "src/main.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing-subscriber = { workspace = true }
+dirs-next = { workspace = true }
+
+bullastrator-storage = { path = "../bullastrator_storage" }
+bullastrator-core = { path = "../bullastrator_core" }
+bullastrator-web = { path = "../bullastrator_web" }

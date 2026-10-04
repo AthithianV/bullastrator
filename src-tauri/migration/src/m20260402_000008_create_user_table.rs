@@ -15,19 +15,6 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(User::Name).string().not_null())
                     .col(ColumnDef::new(User::Email).string().not_null().unique_key())
                     .col(ColumnDef::new(User::Image).string().null())
-                    .col(ColumnDef::new(User::Plan).string().not_null()) // Stored as String for the Enum
-                    .col(
-                        ColumnDef::new(User::MaxMembers)
-                            .integer()
-                            .not_null()
-                            .default(1),
-                    )
-                    .col(
-                        ColumnDef::new(User::MaxWorkspaces)
-                            .integer()
-                            .not_null()
-                            .default(1),
-                    )
                     .col(
                         ColumnDef::new(User::CreatedAt)
                             .timestamp_with_time_zone()
@@ -59,9 +46,6 @@ pub enum User {
     Name,
     Email,
     Image,
-    Plan,
-    MaxMembers,
-    MaxWorkspaces,
     CreatedAt,
     UpdatedAt,
 }

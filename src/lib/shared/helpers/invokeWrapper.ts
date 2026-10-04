@@ -1,6 +1,8 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 import { error, info } from "@tauri-apps/plugin-log";
 import { toast } from "svelte-sonner";
+import { PUBLIC_IS_WEB } from "$env/static/public";
+import { callWebApi, type CommandArgs } from "../apiServices";
 
 interface InvokeOptions {
   shouldToast?: boolean;
@@ -10,38 +12,34 @@ interface InvokeOptions {
   loadMessage?: string;
 }
 
+const isWeb = [true, "true", "1"].includes(PUBLIC_IS_WEB);
+
 export async function invokeWrapper<T>(
   cmd: string,
-  args?: Record<string, any>,
+  args: CommandArgs = {},
   options: InvokeOptions = { shouldToast: false },
 ): Promise<T> {
   const { shouldToast, successMessage, errorMessage, shouldLogResult } =
     options;
 
   try {
-    // await info(`\n\n[IPC Start] ${cmd}`);
-    const result = await tauriInvoke<T>(cmd, args);
+    const result = PUBLIC_IS_WEB
+      ? await callWebApi<T>(cmd, args)
+      : await tauriInvoke<T>(cmd, args);
 
-    if (shouldToast) {
+    if (shouldToast)
       toast.success(successMessage || `${cmd} completed successfully`);
-    }
-
     if (shouldLogResult) {
-      await info(`[IPC Result]: ${JSON.stringify(result)}`);
+      if (isWeb) console.info(`[API Result] ${cmd}`, result);
+      else await info(`[IPC Result]: ${JSON.stringify(result)}`);
     }
-
     return result;
   } catch (err) {
-    const errorString = typeof err === "string" ? err : JSON.stringify(err);
-
-    // Log to Rust backend
-    await error(`[IPC Error] ${cmd}: ${errorString}\n\n`);
-
-    // Failure handling
-    if (shouldToast) {
-      toast.error(errorString || errorMessage || `Some thing Went Wrong`);
-    }
-
-    throw new Error(errorString);
+    const errorString = err instanceof Error ? err.message : String(err);
+    if (isWeb) console.error(`[API Error] ${cmd}: ${errorString}`);
+    else await error(`[IPC Error] ${cmd}: ${errorString}`);
+    if (shouldToast)
+      toast.error(errorString || errorMessage || "Something went wrong");
+    throw new Error(errorString || errorMessage || "Something went wrong");
   }
 }
