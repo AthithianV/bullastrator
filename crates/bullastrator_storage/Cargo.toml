@@ -15,6 +15,7 @@ anyhow = { workspace = true }
 sqlx = { workspace = true }
 chrono = { workspace = true }
 uuid = { workspace = true }
+dirs-next = { workspace = true }
 
 [profile.release]
 opt-level = 3

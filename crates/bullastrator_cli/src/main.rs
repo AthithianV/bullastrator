@@ -2,7 +2,6 @@ use anyhow::{Context, Result};
 use bullastrator_core::state::AppState;
 use bullastrator_web::server::serve;
 use serde::{Deserialize, Serialize};
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::{
     io::{self, Write},
     net::IpAddr,
@@ -44,19 +43,9 @@ async fn main() -> Result<()> {
         config
     };
 
-    if let Some(parent) = config.database_path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let is_new_database = !config.database_path.exists();
-    let options = SqliteConnectOptions::new()
-        .filename(&config.database_path)
-        .create_if_missing(true);
-    let pool = SqlitePoolOptions::new().connect_with(options).await?;
-    if is_new_database {
-        bullastrator_storage::initialize_database(&pool).await?;
-    }
+    let pool = bullastrator_storage::initialize_database().await?;
 
-    let state = AppState::new(config.database_path.to_string_lossy().into_owned()).await?;
+    let state = AppState::new(pool).await?;
 
     let address = std::net::SocketAddr::new(config.bind_address, config.port);
     println!("Bullastrator is running at http://{address}");
@@ -64,10 +53,9 @@ async fn main() -> Result<()> {
 }
 
 fn init_tracing() {
-    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| {
-            tracing_subscriber::EnvFilter::new("bullastrator_core=debug,bullastrator_cli=debug")
-        });
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+        tracing_subscriber::EnvFilter::new("bullastrator_core=debug,bullastrator_cli=debug")
+    });
     tracing_subscriber::fmt()
         .with_env_filter(filter)
         .with_target(true)
@@ -81,10 +69,6 @@ fn onboarding() -> Result<Config> {
         .parse::<u16>()
         .context("Port must be between 0 and 65535")?;
     let default_db = default_database_path();
-    let database_path = PathBuf::from(ask(
-        "SQLite database path",
-        &default_db.display().to_string(),
-    )?);
     let theme_color = ask("Theme color", DEFAULT_THEME)?;
     let vpn_restricted = ask_yes_no("Restrict access to VPN/private network", false)?;
     let bind_address = ask("Bind address", "127.0.0.1")?
@@ -92,7 +76,7 @@ fn onboarding() -> Result<Config> {
         .context("Invalid bind address")?;
     Ok(Config {
         port,
-        database_path,
+        database_path: default_db,
         theme_color,
         vpn_restricted,
         bind_address,

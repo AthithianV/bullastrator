@@ -14,7 +14,8 @@ sqlx = { workspace = true }
 tokio = { workspace = true }
 anyhow = { workspace = true }
 tracing-subscriber = { workspace = true }
+dirs-next = { workspace = true }
+
 bullastrator-storage = { path = "../bullastrator_storage" }
 bullastrator-core = { path = "../bullastrator_core" }
 bullastrator-web = { path = "../bullastrator_web" }
-dirs-next = "2.0"

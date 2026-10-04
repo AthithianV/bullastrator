@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use crate::error::{BullastratorError, Result};
 use crate::services::{
@@ -13,7 +14,8 @@ use deadpool_redis::{
     Config as RedisConfig, ConnectionAddr, ConnectionInfo, ProtocolVersion, RedisConnectionInfo,
     Runtime,
 };
-use sqlx::SqlitePool;
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::{SqlitePool, pool};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -32,9 +34,9 @@ pub struct ServerSettings {
 }
 
 impl AppState {
-    pub async fn new(db_url: String) -> Result<Self> {
+    pub async fn new(pool: SqlitePool) -> Result<Self> {
         Self::new_with_settings(
-            db_url,
+            pool,
             ServerSettings {
                 theme_color: "#00CADB".into(),
                 vpn_restricted: false,
@@ -43,9 +45,8 @@ impl AppState {
         .await
     }
 
-    pub async fn new_with_settings(db_url: String, settings: ServerSettings) -> Result<Self> {
+    pub async fn new_with_settings(pool: SqlitePool, settings: ServerSettings) -> Result<Self> {
         tracing::info!("initializing application state");
-        let pool = sqlx::SqlitePool::connect(&db_url).await?;
 
         let connections = ConnectionRepository::new(pool.clone())
             .get_all_connections()
