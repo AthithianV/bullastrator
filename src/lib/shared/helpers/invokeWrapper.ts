@@ -1,7 +1,8 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 import { error, info } from "@tauri-apps/plugin-log";
 import { toast } from "svelte-sonner";
-import { callWebApi, type CommandArgs } from "./apiWrapper";
+import { PUBLIC_IS_WEB } from "$env/static/public";
+import { callWebApi, type CommandArgs } from "../apiServices";
 
 interface InvokeOptions {
   shouldToast?: boolean;
@@ -11,7 +12,7 @@ interface InvokeOptions {
   loadMessage?: string;
 }
 
-const isWeb = [true, "true", "1"].includes(import.meta.env.IS_WEB as any);
+const isWeb = [true, "true", "1"].includes(PUBLIC_IS_WEB);
 
 export async function invokeWrapper<T>(
   cmd: string,
@@ -22,7 +23,7 @@ export async function invokeWrapper<T>(
     options;
 
   try {
-    const result = isWeb
+    const result = PUBLIC_IS_WEB
       ? await callWebApi<T>(cmd, args)
       : await tauriInvoke<T>(cmd, args);
 

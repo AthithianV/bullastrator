@@ -31,6 +31,7 @@ pub(crate) async fn queue_details(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct PauseRequest {
     paused: bool,
 }

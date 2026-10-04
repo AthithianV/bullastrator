@@ -1,6 +1,6 @@
 interface ImportMetaEnv {
-  readonly IS_WEB?: string;
-  readonly VITE_API_URL?: string;
+  readonly PUBLIC_IS_WEB?: string;
+  readonly PUBLIC_API_URL?: string;
 }
 
 interface ImportMeta {

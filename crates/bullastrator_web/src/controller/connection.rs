@@ -28,6 +28,7 @@ pub(crate) async fn redis_health(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RedisUrlRequest {
     redis_url: String,
 }
@@ -51,6 +52,7 @@ pub(crate) async fn redis_version(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RedisVersionRequest {
     host: String,
     port: i32,

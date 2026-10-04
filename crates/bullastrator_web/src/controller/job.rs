@@ -13,6 +13,7 @@ use bullastrator_core::{
 use serde::Deserialize;
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct JobListQuery {
     status: JobStatus,
     cursor: Option<usize>,
@@ -37,6 +38,7 @@ pub(crate) async fn list_jobs(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct JobStatusQuery {
     status: JobStatus,
 }
@@ -70,6 +72,7 @@ pub(crate) async fn add_jobs(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct SearchRequest {
     status: JobStatus,
     filters: Vec<JobFilterType>,
@@ -116,6 +119,7 @@ pub(crate) async fn job_data(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct JobCountsRequest {
     queue_names: Vec<String>,
 }
@@ -133,6 +137,7 @@ pub(crate) async fn job_counts(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct UpdateJobRequest {
     job_id: String,
     data: serde_json::Value,
@@ -150,6 +155,7 @@ pub(crate) async fn update_job(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RetryJobsRequest {
     job_ids: Vec<String>,
     strategy: RetryStrategy,
@@ -169,6 +175,7 @@ pub(crate) async fn retry_jobs(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct JobIdsRequest {
     job_ids: Vec<String>,
 }
@@ -183,6 +190,7 @@ pub(crate) async fn promote_jobs(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct DeleteJobsRequest {
     job_ids: Vec<String>,
     remove_children: bool,
@@ -201,6 +209,7 @@ pub(crate) async fn delete_jobs(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct RetryAllRequest {
     strategy: RetryStrategy,
     status: RetryJobStatus,
@@ -227,6 +236,7 @@ pub(crate) async fn promote_all(
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct DeleteStateRequest {
     state: JobStatus,
     remove_children: bool,
