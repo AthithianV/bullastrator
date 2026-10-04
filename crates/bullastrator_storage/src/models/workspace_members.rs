@@ -1,19 +1,19 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct WorkspaceMember {
+    pub name: String,
+    pub email: String,
     pub user_id: String,
-    pub connection_id: String,
+    pub workspace_id: String,
     pub role: String,
-    pub created_at: NaiveDateTime,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateWorkspaceMember {
     pub user_id: String,
-    pub connection_id: String,
+    pub workspace_id: String,
     pub role: String,
 }
 

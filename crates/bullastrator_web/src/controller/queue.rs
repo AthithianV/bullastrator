@@ -1,10 +1,9 @@
-use crate::controller::ApiResult;
+use crate::{controller::ApiResult, models::queue::PauseRequest};
 use axum::{
     Json,
     extract::{Path, State},
 };
 use bullastrator_core::{services::queue::QueueDetails, state::AppState};
-use serde::Deserialize;
 
 pub(crate) async fn all_queues(
     State(state): State<AppState>,
@@ -30,11 +29,6 @@ pub(crate) async fn queue_details(
     ))
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct PauseRequest {
-    paused: bool,
-}
 pub(crate) async fn pause_queue(
     State(state): State<AppState>,
     Path((connection_id, queue)): Path<(String, String)>,

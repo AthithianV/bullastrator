@@ -76,4 +76,19 @@ impl UserRepository {
         .await?;
         Ok(result.rows_affected() > 0)
     }
+
+    pub async fn get_user_id(&self, token_hash: &str) -> Result<Option<String>> {
+        Ok(sqlx::query_scalar(
+            r#"
+            SELECT user_id
+            FROM sessions
+            WHERE token_hash = ?
+              AND revoked_at IS NULL
+              AND expires_at > CURRENT_TIMESTAMP
+            "#,
+        )
+        .bind(token_hash)
+        .fetch_optional(&self.pool)
+        .await?)
+    }
 }

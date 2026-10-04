@@ -1,24 +1,20 @@
-use crate::controller::ApiResult;
+use crate::{
+    controller::ApiResult,
+    models::job::{
+        DeleteJobsRequest, DeleteStateRequest, JobCountsRequest, JobDataRequest, JobIdsRequest,
+        JobListQuery, JobStatusQuery, RetryAllRequest, RetryJobsRequest, SearchRequest,
+        UpdateJobRequest,
+    },
+};
 use axum::{
     Json,
     extract::{Path, Query, State},
 };
 use bullastrator_core::{
-    models::job::{
-        AddJobModel, JobFilterType, JobSearchResult, JobStatus, RetryJobStatus, RetryStrategy,
-    },
+    models::job::{AddJobModel, JobSearchResult},
     services::job::JobService,
     state::AppState,
 };
-use serde::Deserialize;
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct JobListQuery {
-    status: JobStatus,
-    cursor: Option<usize>,
-    limit: Option<usize>,
-}
 
 pub(crate) async fn list_jobs(
     State(state): State<AppState>,
@@ -37,11 +33,6 @@ pub(crate) async fn list_jobs(
     ))
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct JobStatusQuery {
-    status: JobStatus,
-}
 pub(crate) async fn get_job(
     State(state): State<AppState>,
     Path((connection_id, queue, job_id)): Path<(String, String, String)>,
@@ -71,15 +62,6 @@ pub(crate) async fn add_jobs(
     Ok(Json(s.add_job_to_queue_service(queue, jobs).await?))
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct SearchRequest {
-    status: JobStatus,
-    filters: Vec<JobFilterType>,
-    cursor: Option<usize>,
-    limit: Option<usize>,
-}
-
 pub(crate) async fn search_jobs(
     State(state): State<AppState>,
     Path((connection_id, queue)): Path<(String, String)>,
@@ -98,14 +80,6 @@ pub(crate) async fn search_jobs(
     ))
 }
 
-#[derive(Deserialize)]
-pub(crate) struct JobDataRequest {
-    job_ids: Vec<String>,
-    status: JobStatus,
-    start: Option<i32>,
-    end: Option<i32>,
-}
-
 pub(crate) async fn job_data(
     State(state): State<AppState>,
     Path((connection_id, queue)): Path<(String, String)>,
@@ -116,12 +90,6 @@ pub(crate) async fn job_data(
         s.get_job_data(queue, r.job_ids, r.status, r.start, r.end)
             .await?,
     ))
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct JobCountsRequest {
-    queue_names: Vec<String>,
 }
 
 pub(crate) async fn job_counts(
@@ -136,13 +104,6 @@ pub(crate) async fn job_counts(
     ))
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct UpdateJobRequest {
-    job_id: String,
-    data: serde_json::Value,
-}
-
 pub(crate) async fn update_job(
     State(state): State<AppState>,
     Path((connection_id, queue)): Path<(String, String)>,
@@ -152,14 +113,6 @@ pub(crate) async fn update_job(
     Ok(Json(
         s.update_job_data_service(queue, r.job_id, r.data).await?,
     ))
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RetryJobsRequest {
-    job_ids: Vec<String>,
-    strategy: RetryStrategy,
-    status: RetryJobStatus,
 }
 
 pub(crate) async fn retry_jobs(
@@ -174,12 +127,6 @@ pub(crate) async fn retry_jobs(
     ))
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct JobIdsRequest {
-    job_ids: Vec<String>,
-}
-
 pub(crate) async fn promote_jobs(
     State(state): State<AppState>,
     Path((connection_id, queue)): Path<(String, String)>,
@@ -187,13 +134,6 @@ pub(crate) async fn promote_jobs(
 ) -> ApiResult<Json<Vec<String>>> {
     let s = JobService::new(state.redis_connection(&connection_id)?);
     Ok(Json(s.promote_jobs_service(queue, r.job_ids).await?))
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DeleteJobsRequest {
-    job_ids: Vec<String>,
-    remove_children: bool,
 }
 
 pub(crate) async fn delete_jobs(
@@ -206,13 +146,6 @@ pub(crate) async fn delete_jobs(
         s.delete_jobs_service(queue, r.job_ids, r.remove_children)
             .await?,
     ))
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RetryAllRequest {
-    strategy: RetryStrategy,
-    status: RetryJobStatus,
 }
 
 pub(crate) async fn retry_all(
@@ -233,13 +166,6 @@ pub(crate) async fn promote_all(
 ) -> ApiResult<Json<String>> {
     let s = JobService::new(state.redis_connection(&connection_id)?);
     Ok(Json(s.promote_all_jobs_service(queue).await?))
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct DeleteStateRequest {
-    state: JobStatus,
-    remove_children: bool,
 }
 
 pub(crate) async fn delete_state(

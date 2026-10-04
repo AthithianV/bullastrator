@@ -1,10 +1,11 @@
 use crate::controller;
 use axum::{
-    Router,
+    Router, debug_handler,
     routing::{get, post},
 };
 use bullastrator_core::state::AppState;
 
+#[debug_handler]
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/workspaces", post(controller::workspace::create))

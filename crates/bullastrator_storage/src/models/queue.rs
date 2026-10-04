@@ -7,10 +7,6 @@ pub struct Queue {
     pub id: String,
     pub connection_id: String,
     pub queue_name: String,
-    pub display_name: Option<String>,
-    pub is_starred: Option<bool>,
-    pub auto_refresh_rate: Option<i32>,
-    pub notification_settings: Option<String>,
     pub created_at: NaiveDateTime,
 }
 

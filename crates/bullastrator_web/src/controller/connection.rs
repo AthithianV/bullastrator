@@ -1,11 +1,11 @@
-use crate::controller::ApiResult;
+use crate::models::connection::RedisVersionRequest;
+use crate::{controller::ApiResult, models::connection::RedisUrlRequest};
 use axum::{
     Json,
     extract::{Path, State},
 };
 use bullastrator_core::{services::connection as connection_service, state::AppState};
 use bullastrator_storage::models::CreateConnection;
-use serde::Deserialize;
 
 pub(crate) async fn test_redis(Json(request): Json<RedisUrlRequest>) -> ApiResult<Json<bool>> {
     Ok(Json(
@@ -27,11 +27,6 @@ pub(crate) async fn redis_health(
     ))
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RedisUrlRequest {
-    redis_url: String,
-}
 pub(crate) async fn redis_version(
     Json(request): Json<RedisVersionRequest>,
 ) -> ApiResult<Json<serde_json::Value>> {
@@ -49,15 +44,4 @@ pub(crate) async fn redis_version(
     };
     connection_service::check_redis_version(&connection).await?;
     Ok(Json(serde_json::json!({"supported": true})))
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RedisVersionRequest {
-    host: String,
-    port: i32,
-    username: Option<String>,
-    password: Option<String>,
-    db: i32,
-    is_tls_enabled: bool,
 }
