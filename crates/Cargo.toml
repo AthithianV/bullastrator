@@ -5,4 +5,5 @@ members = [
     "bullastrator_core",
     "bullastrator_web",
     "bullastrator_storage",
+    "bullastrator_cli",
 ]

@@ -114,7 +114,11 @@ impl WorkspaceRepository {
         .await?)
     }
 
-    pub async fn get_member(&self, user_id: &str, connection_id: &str) -> Result<Option<WorkspaceMember>> {
+    pub async fn get_member(
+        &self,
+        user_id: &str,
+        connection_id: &str,
+    ) -> Result<Option<WorkspaceMember>> {
         Ok(sqlx::query_as::<_, WorkspaceMember>(
             "SELECT user_id, connection_id, role, created_at FROM workspace_members WHERE user_id = ? AND connection_id = ?",
         )
@@ -161,13 +165,12 @@ impl WorkspaceRepository {
     }
 
     pub async fn remove_member(&self, user_id: &str, connection_id: &str) -> Result<u64> {
-        let result = sqlx::query(
-            "DELETE FROM workspace_members WHERE user_id = ? AND connection_id = ?",
-        )
-        .bind(user_id)
-        .bind(connection_id)
-        .execute(&self.pool)
-        .await?;
+        let result =
+            sqlx::query("DELETE FROM workspace_members WHERE user_id = ? AND connection_id = ?")
+                .bind(user_id)
+                .bind(connection_id)
+                .execute(&self.pool)
+                .await?;
         if result.rows_affected() == 0 {
             bail!("Workspace member was not found")
         }

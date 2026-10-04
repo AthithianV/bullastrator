@@ -1,6 +1,12 @@
 use anyhow::{bail, Context, Result};
-use argon2::{password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString}, Argon2};
-use bullastrator_storage::{models::{Session, User}, repositories::UserRepository};
+use argon2::{
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
+use bullastrator_storage::{
+    models::{Session, User},
+    repositories::UserRepository,
+};
 use chrono::{Duration, Utc};
 use rand::rngs::OsRng;
 use serde::{Deserialize, Serialize};
@@ -51,18 +57,28 @@ impl UserService {
         }
 
         let password_hash = hash_password(&request.password)?;
-        let user = self.repository.register(name, &email, &password_hash).await?;
+        let user = self
+            .repository
+            .register(name, &email, &password_hash)
+            .await?;
         self.create_auth_response(user).await
     }
 
     pub async fn login(&self, request: LoginRequest) -> Result<AuthResponse> {
         let email = normalize_email(&request.email)?;
-        let user = self.repository.find_by_email(&email).await?
+        let user = self
+            .repository
+            .find_by_email(&email)
+            .await?
             .context("Invalid email or password")?;
-        let password_hash = user.password_hash.as_deref().context("Invalid email or password")?;
+        let password_hash = user
+            .password_hash
+            .as_deref()
+            .context("Invalid email or password")?;
         let parsed_hash = PasswordHash::new(password_hash)
             .map_err(|_| anyhow::anyhow!("Invalid stored password hash"))?;
-        Argon2::default().verify_password(request.password.as_bytes(), &parsed_hash)
+        Argon2::default()
+            .verify_password(request.password.as_bytes(), &parsed_hash)
             .map_err(|_| anyhow::anyhow!("Invalid email or password"))?;
         self.create_auth_response(user).await
     }
@@ -78,15 +94,21 @@ impl UserService {
         let token = Uuid::new_v4().to_string();
         let now = Utc::now().naive_utc();
         let expires_at = now + Duration::days(SESSION_TTL_DAYS);
-        self.repository.create_session(&Session {
-            id: Uuid::new_v4().to_string(),
-            user_id: user.id.clone(),
-            token_hash: hash_token(&token),
+        self.repository
+            .create_session(&Session {
+                id: Uuid::new_v4().to_string(),
+                user_id: user.id.clone(),
+                token_hash: hash_token(&token),
+                expires_at,
+                revoked_at: None,
+                created_at: now,
+            })
+            .await?;
+        Ok(AuthResponse {
+            user,
+            token,
             expires_at,
-            revoked_at: None,
-            created_at: now,
-        }).await?;
-        Ok(AuthResponse { user, token, expires_at })
+        })
     }
 }
 

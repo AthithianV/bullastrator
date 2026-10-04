@@ -1,0 +1,18 @@
+[package]
+name = "bullastrator-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "bullastrator"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.100"
+bullastrator-storage = { path = "../bullastrator_storage" }
+bullastrator-web = { path = "../bullastrator_web" }
+dirs-next = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio-native-tls", "chrono", "macros"] }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }

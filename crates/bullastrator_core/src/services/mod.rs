@@ -1,8 +1,8 @@
 pub mod connection;
 pub mod job;
 pub mod queue;
-pub mod workspace;
 pub mod user;
+pub mod workspace;
 
 use deadpool_redis::Pool;
 

@@ -289,6 +289,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "bullastrator-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "bullastrator-storage",
+ "bullastrator-web",
+ "dirs-next",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
 name = "bullastrator-core"
 version = "0.1.0"
 dependencies = [

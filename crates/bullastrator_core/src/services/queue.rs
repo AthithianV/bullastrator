@@ -81,7 +81,10 @@ impl QueueService {
         Ok(QueueDetails {
             name: queue_name.into(),
             is_paused: queue.is_paused().await?,
-            version: queue.get_version().await?.unwrap_or_else(|| "unknown".into()),
+            version: queue
+                .get_version()
+                .await?
+                .unwrap_or_else(|| "unknown".into()),
             prefix: self.redis.prefix.clone(),
             active_workers: workers,
         })

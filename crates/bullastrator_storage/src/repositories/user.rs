@@ -48,7 +48,9 @@ impl UserRepository {
         sqlx::query("INSERT INTO user (id, name, email, password_hash, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)")
             .bind(&id).bind(name).bind(email).bind(password_hash).bind(now).bind(now)
             .execute(&self.pool).await?;
-        self.find_by_email(email).await?.ok_or_else(|| anyhow::anyhow!("Registered user was not found"))
+        self.find_by_email(email)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Registered user was not found"))
     }
 
     pub async fn find_by_email(&self, email: &str) -> Result<Option<User>> {
@@ -65,8 +67,13 @@ impl UserRepository {
     }
 
     pub async fn revoke_session(&self, token_hash: &str) -> Result<bool> {
-        let result = sqlx::query("UPDATE session SET revoked_at = ? WHERE token_hash = ? AND revoked_at IS NULL")
-            .bind(Utc::now().naive_utc()).bind(token_hash).execute(&self.pool).await?;
+        let result = sqlx::query(
+            "UPDATE session SET revoked_at = ? WHERE token_hash = ? AND revoked_at IS NULL",
+        )
+        .bind(Utc::now().naive_utc())
+        .bind(token_hash)
+        .execute(&self.pool)
+        .await?;
         Ok(result.rows_affected() > 0)
     }
 }
