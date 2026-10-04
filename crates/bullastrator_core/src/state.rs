@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::path::Path;
 
 use crate::error::{BullastratorError, Result};
 use crate::services::{
@@ -14,8 +13,7 @@ use deadpool_redis::{
     Config as RedisConfig, ConnectionAddr, ConnectionInfo, ProtocolVersion, RedisConnectionInfo,
     Runtime,
 };
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
-use sqlx::{SqlitePool, pool};
+use sqlx::SqlitePool;
 
 #[derive(Clone)]
 pub struct AppState {
