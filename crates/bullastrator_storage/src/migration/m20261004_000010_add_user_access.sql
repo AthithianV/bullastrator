@@ -11,10 +11,23 @@ CREATE TABLE "user" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL UNIQUE,
+    "password_hash" TEXT,
     "image" TEXT,
     "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE "session" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "user_id" TEXT NOT NULL,
+    "token_hash" TEXT NOT NULL UNIQUE,
+    "expires_at" TIMESTAMP NOT NULL,
+    "revoked_at" TIMESTAMP,
+    "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE
+);
+
+CREATE INDEX "idx_session_token_hash" ON "session" ("token_hash");
 
 CREATE TABLE "workspace" (
     "id" TEXT NOT NULL PRIMARY KEY,
@@ -132,7 +145,7 @@ CREATE TABLE "settings" (
 );
 
 -- A user's role within a connection, for example OWNER, ADMIN, or MEMBER.
-CREATE TABLE "user_role" (
+CREATE TABLE "workspace_members" (
     "user_id" TEXT NOT NULL,
     "connection_id" TEXT NOT NULL,
     "role" TEXT NOT NULL CHECK (length(trim("role")) > 0),
@@ -202,8 +215,8 @@ CREATE UNIQUE INDEX "idx-queue-connection-id"
 CREATE INDEX "idx-tab-user-id" ON "tab" ("user_id");
 CREATE INDEX "idx-folder-user-id" ON "folder" ("user_id");
 CREATE INDEX "idx-settings-user-id" ON "settings" ("user_id");
-CREATE INDEX "idx-user-role-connection-id"
-    ON "user_role" ("connection_id");
+CREATE INDEX "idx-workspace-members-connection-id"
+    ON "workspace_members" ("connection_id");
 CREATE INDEX "idx-queue-actions-workspace-id"
     ON "queue_actions" ("workspace_id");
 CREATE INDEX "idx-queue-actions-connection-id"

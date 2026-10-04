@@ -1,0 +1,46 @@
+use chrono::NaiveDateTime;
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct Tab {
+    pub id: String,
+    pub workspace_id: String,
+    pub connection_id: Option<String>,
+    pub user_id: Option<String>,
+    pub title: String,
+    pub params: String,
+    pub is_active: bool,
+    pub is_dirty: bool,
+    pub is_pinned: bool,
+    pub is_preview: bool,
+    pub rank: i32,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+}
+
+#[derive(Debug, Clone)]
+pub struct CreateTab {
+    pub connection_id: Option<String>,
+    pub user_id: Option<String>,
+    pub title: String,
+    pub params: String,
+    pub is_preview: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct UpdateTab {
+    pub title: Option<String>,
+    pub params: Option<String>,
+    pub rank: Option<i32>,
+    pub is_active: Option<bool>,
+    pub is_dirty: Option<bool>,
+    pub is_pinned: Option<bool>,
+    pub is_preview: Option<bool>,
+}
+
+#[derive(Debug, Clone)]
+pub struct TabWithConnection {
+    pub tab: Tab,
+    pub connection: Option<super::Connection>,
+}

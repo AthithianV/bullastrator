@@ -2,6 +2,7 @@
 resolver = "2"
 
 members = [
-    "crates/bullastrator-core",
-    "crates/bullastrator-web",
+    "bullastrator_core",
+    "bullastrator_web",
+    "bullastrator_storage",
 ]
