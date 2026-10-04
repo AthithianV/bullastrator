@@ -1,6 +1,9 @@
-use crate::{controller::ApiResult, server::AppState};
-use axum::{extract::State, Json};
-use bullastrator_core::services::user::{AuthResponse, LoginRequest, RegisterRequest};
+use crate::controller::ApiResult;
+use axum::{Json, extract::State};
+use bullastrator_core::{
+    services::user::{AuthResponse, LoginRequest, RegisterRequest},
+    state::AppState,
+};
 use serde::Deserialize;
 
 pub(crate) async fn register(

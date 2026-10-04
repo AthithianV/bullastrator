@@ -11,43 +11,38 @@ pub struct RedisConnection {
     pub pool: Pool,
     pub prefix: String,
     pub connection_id: String,
-    /// URL used by bullmq-official. The deadpool connection remains available
-    /// for the custom Lua operations owned by bullastrator_core.
-    pub redis_url: String,
+    pub bullmq_options: bullmq::options::RedisConnectionOptions,
 }
 
 impl RedisConnection {
     pub fn new(pool: Pool, connection_id: impl Into<String>, prefix: impl Into<String>) -> Self {
-        Self::with_url(
+        Self::with_options(
             pool,
             connection_id,
             prefix,
-            "redis://127.0.0.1:6379".to_string(),
+            bullmq::options::RedisConnectionOptions::default(),
         )
     }
 
-    pub fn with_url(
+    pub fn with_options(
         pool: Pool,
         connection_id: impl Into<String>,
         prefix: impl Into<String>,
-        redis_url: impl Into<String>,
+        bullmq_options: bullmq::options::RedisConnectionOptions,
     ) -> Self {
         Self {
             pool,
             connection_id: connection_id.into(),
             prefix: prefix.into(),
-            redis_url: redis_url.into(),
+            bullmq_options,
         }
     }
 
     pub async fn queue(&self, queue_name: &str) -> anyhow::Result<bullmq::Queue> {
-        use bullmq::options::{QueueOptions, RedisConnectionOptions};
+        use bullmq::options::QueueOptions;
 
         let options = QueueOptions::new()
-            .connection(RedisConnectionOptions {
-                url: self.redis_url.clone(),
-                ..Default::default()
-            })
+            .connection(self.bullmq_options.clone())
             .prefix(self.prefix.clone())
             .skip_version_check();
 

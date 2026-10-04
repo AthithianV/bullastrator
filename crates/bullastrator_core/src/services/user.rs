@@ -1,7 +1,7 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use argon2::{
-    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
 use bullastrator_storage::{
     models::{Session, User},
@@ -45,7 +45,9 @@ impl UserService {
         Self { repository }
     }
 
+    #[tracing::instrument(skip(self, request), err)]
     pub async fn register(&self, request: RegisterRequest) -> Result<AuthResponse> {
+        tracing::info!("registering user");
         let name = request.name.trim();
         let email = normalize_email(&request.email)?;
         validate_password(&request.password)?;
@@ -64,7 +66,9 @@ impl UserService {
         self.create_auth_response(user).await
     }
 
+    #[tracing::instrument(skip(self, request), err)]
     pub async fn login(&self, request: LoginRequest) -> Result<AuthResponse> {
+        tracing::info!("authenticating user");
         let email = normalize_email(&request.email)?;
         let user = self
             .repository
@@ -83,7 +87,9 @@ impl UserService {
         self.create_auth_response(user).await
     }
 
+    #[tracing::instrument(skip(self, token), err)]
     pub async fn logout(&self, token: &str) -> Result<bool> {
+        tracing::info!("logging out user");
         if token.trim().is_empty() {
             return Ok(false);
         }

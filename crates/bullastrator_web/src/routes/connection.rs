@@ -1,8 +1,9 @@
-use crate::{controller, server::AppState};
+use crate::controller;
 use axum::{
-    routing::{get, post},
     Router,
+    routing::{get, post},
 };
+use bullastrator_core::state::AppState;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -11,7 +12,7 @@ pub fn routes() -> Router<AppState> {
             post(controller::connection::test_redis),
         )
         .route(
-            "/connections/redis/health",
+            "/connections/{connection_id}/redis/health",
             get(controller::connection::redis_health),
         )
         .route(

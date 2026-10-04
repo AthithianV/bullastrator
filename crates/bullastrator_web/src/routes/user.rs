@@ -1,5 +1,6 @@
-use crate::{controller, server::AppState};
-use axum::{routing::post, Router};
+use crate::controller;
+use axum::{Router, routing::post};
+use bullastrator_core::state::AppState;
 
 pub fn routes() -> Router<AppState> {
     Router::new()

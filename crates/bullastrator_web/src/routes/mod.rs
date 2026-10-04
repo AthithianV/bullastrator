@@ -4,9 +4,10 @@ pub(crate) mod queue;
 pub(crate) mod user;
 pub(crate) mod workspace;
 
-use axum::{routing::get, Router};
+use axum::{Router, routing::get};
+use bullastrator_core::state::AppState;
 
-use crate::{controller, server::AppState};
+use crate::controller;
 
 pub fn router(state: AppState) -> Router {
     Router::new()

@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
@@ -31,6 +31,11 @@ impl ConnectionRepository {
     pub async fn get_all(&self, workspace_id: &str) -> Result<Vec<Connection>> {
         Ok(sqlx::query_as::<_, Connection>("SELECT id, workspace_id, name, host, port, username, password, db, is_tls_enabled, last_synced_at, bullmq_prefix, color, label, created_at FROM connection WHERE workspace_id = ? ORDER BY name")
             .bind(workspace_id).fetch_all(&self.pool).await?)
+    }
+
+    pub async fn get_all_connections(&self) -> Result<Vec<Connection>> {
+        Ok(sqlx::query_as::<_, Connection>("SELECT id, workspace_id, name, host, port, username, password, db, is_tls_enabled, last_synced_at, bullmq_prefix, color, label, created_at FROM connection ORDER BY name")
+            .fetch_all(&self.pool).await?)
     }
 
     pub async fn count_by_workspace(&self, workspace_id: &str) -> Result<u32> {

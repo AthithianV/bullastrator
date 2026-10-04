@@ -26,7 +26,9 @@ impl QueueService {
         Self { redis, repository }
     }
 
+    #[tracing::instrument(skip(self), fields(connection_id = %self.redis.connection_id), err)]
     pub async fn get_all_bullmq_queues(&self) -> Result<Vec<String>> {
+        tracing::debug!("discovering BullMQ queues");
         let mut connection = self.redis.pool.get().await.context("Connection failed")?;
         let pattern = format!("{}:*:meta", self.redis.prefix);
         let mut cursor = 0_u64;
@@ -61,11 +63,13 @@ impl QueueService {
         Ok(result)
     }
 
+    #[tracing::instrument(skip(self), fields(connection_id = %self.redis.connection_id, queue = %queue_name, paused = should_pause), err)]
     pub async fn pause_queue_service(
         &self,
         queue_name: &str,
         should_pause: bool,
     ) -> Result<String> {
+        tracing::info!("updating queue pause state");
         let queue = self.redis.queue(queue_name).await?;
         if should_pause {
             queue.pause().await?;
@@ -75,7 +79,9 @@ impl QueueService {
         Ok(if should_pause { "paused" } else { "resumed" }.into())
     }
 
+    #[tracing::instrument(skip(self), fields(connection_id = %self.redis.connection_id, queue = %queue_name), err)]
     pub async fn get_queue_details_service(&self, queue_name: &str) -> Result<QueueDetails> {
+        tracing::debug!("loading queue details");
         let queue = self.redis.queue(queue_name).await?;
         let workers = queue.get_workers_count().await?;
         Ok(QueueDetails {

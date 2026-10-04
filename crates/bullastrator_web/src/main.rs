@@ -1,12 +1,24 @@
 use anyhow::Result;
-use bullastrator_web::server::{serve, AppState};
+use bullastrator_core::state::AppState;
+use bullastrator_web::server::serve;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    init_tracing();
     let database_url =
         std::env::var("DATABASE_URL").unwrap_or_else(|_| "sqlite://bullastrator.db".into());
-    let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1:6379".into());
-    let pool = sqlx::SqlitePool::connect(&database_url).await?;
-    let state = AppState::new(pool, &redis_url, "default", "bull")?;
+    let state = AppState::new(database_url).await?;
     serve(state, ([127, 0, 0, 1], 3000).into()).await
+}
+
+fn init_tracing() {
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| {
+            tracing_subscriber::EnvFilter::new("bullastrator_core=debug,bullastrator_web=debug")
+        });
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_target(true)
+        .with_thread_ids(true)
+        .init();
 }

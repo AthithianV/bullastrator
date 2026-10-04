@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use deadpool_redis::Connection;
 use redis::{AsyncCommands, Script};
-use serde_json::{to_string, Value};
+use serde_json::{Value, to_string};
 use std::collections::HashMap;
 
 use crate::bull_drivers::bullmq_driver_v5::BullmqV5Driver;
@@ -27,6 +27,7 @@ impl<'a> JobService<'a> {
         }
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn get_jobs_in_queue_service(
         &self,
         queue_name: String,
@@ -70,6 +71,7 @@ impl<'a> JobService<'a> {
         })
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn get_job_logs_service(
         &self,
         queue_name: String,
@@ -80,6 +82,7 @@ impl<'a> JobService<'a> {
         Ok(logs)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn check_if_job_exists_in_a_status(
         &self,
         prefix: &str,
@@ -117,6 +120,7 @@ impl<'a> JobService<'a> {
         Ok(is_in_state)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn get_jobs_by_id_service(
         &self,
         queue_name: String,
@@ -172,6 +176,7 @@ impl<'a> JobService<'a> {
         }))
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn get_job_data(
         &self,
         queue_name: String,
@@ -288,6 +293,7 @@ impl<'a> JobService<'a> {
         Ok(all_jobs)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn search_jobs_in_queue_service(
         &self,
         queue_name: String,
@@ -419,6 +425,7 @@ impl<'a> JobService<'a> {
         })
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn get_job_count_in_queue_service(
         &self,
         queue_names: Vec<&str>,
@@ -495,6 +502,7 @@ impl<'a> JobService<'a> {
         Ok(all_counts)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn add_job_to_queue_service(
         &self,
         queue_name: String,
@@ -520,6 +528,7 @@ impl<'a> JobService<'a> {
         Ok(added.into_iter().map(|job| job.id().to_string()).collect())
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn update_job_data_service(
         &self,
         queue_name: String,
@@ -551,6 +560,7 @@ impl<'a> JobService<'a> {
         Ok(result)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn retry_failed_jobs_service(
         &self,
         queue_name: String,
@@ -615,6 +625,7 @@ impl<'a> JobService<'a> {
         Ok(all_results)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn retry_all_failed_jobs_service(
         &self,
         queue_name: String,
@@ -632,6 +643,7 @@ impl<'a> JobService<'a> {
         ))
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn promote_jobs_service(
         &self,
         queue_name: String,
@@ -685,12 +697,14 @@ impl<'a> JobService<'a> {
         Ok(all_results)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn promote_all_jobs_service(&self, queue_name: String) -> Result<String> {
         let queue = self.connection_pool.queue(&queue_name).await?;
         queue.promote_jobs(1000).await?;
         Ok("Successfully promoted all delayed jobs".into())
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn delete_jobs_service(
         &self,
         queue_name: String,
@@ -748,6 +762,7 @@ impl<'a> JobService<'a> {
         Ok(all_results)
     }
 
+    #[tracing::instrument(skip_all, err)]
     pub async fn delete_all_jobs_in_state_service(
         &self,
         queue_name: String,

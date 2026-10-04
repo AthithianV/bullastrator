@@ -1,4 +1,4 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
@@ -35,7 +35,9 @@ impl QueueRepository {
                 let placeholders = std::iter::repeat_n("?", queue_names.len())
                     .collect::<Vec<_>>()
                     .join(",");
-                let query = format!("DELETE FROM queue WHERE connection_id = ? AND queue_name NOT IN ({placeholders})");
+                let query = format!(
+                    "DELETE FROM queue WHERE connection_id = ? AND queue_name NOT IN ({placeholders})"
+                );
                 let mut request = sqlx::query(&query).bind(connection_id);
                 for name in queue_names {
                     request = request.bind(name);

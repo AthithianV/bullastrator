@@ -40,7 +40,9 @@ impl WorkspaceService {
         Self { repository }
     }
 
+    #[tracing::instrument(skip(self, request), err)]
     pub async fn create(&self, request: CreateWorkspaceRequest) -> Result<Workspace> {
+        tracing::info!("creating workspace");
         self.repository
             .create(CreateWorkspace {
                 user_id: request.user_id,
@@ -55,19 +57,24 @@ impl WorkspaceService {
             .await
     }
 
+    #[tracing::instrument(skip(self), fields(workspace_id = %id), err)]
     pub async fn get(&self, id: &str) -> Result<Option<Workspace>> {
         self.repository.get_by_id(id).await
     }
+    #[tracing::instrument(skip(self), fields(user_id = %user_id), err)]
     pub async fn list_for_user(&self, user_id: &str) -> Result<Vec<Workspace>> {
         self.repository.get_by_user_id(user_id).await
     }
+    #[tracing::instrument(skip(self), err)]
     pub async fn active(&self) -> Result<Workspace> {
         self.repository.get_active_workspace().await
     }
+    #[tracing::instrument(skip(self), fields(workspace_id = %id), err)]
     pub async fn select(&self, id: &str) -> Result<Workspace> {
         self.repository.select_workspace(id).await
     }
 
+    #[tracing::instrument(skip(self, request), fields(workspace_id = %id), err)]
     pub async fn update(&self, id: &str, request: UpdateWorkspaceRequest) -> Result<Workspace> {
         self.repository
             .update(
@@ -84,18 +91,22 @@ impl WorkspaceService {
             .await
     }
 
+    #[tracing::instrument(skip(self), fields(workspace_id = %id), err)]
     pub async fn delete(&self, id: &str) -> Result<u64> {
         self.repository.delete(id).await
     }
 
+    #[tracing::instrument(skip(self), fields(connection_id = %connection_id), err)]
     pub async fn list_members(&self, connection_id: &str) -> Result<Vec<WorkspaceMember>> {
         self.repository.get_members(connection_id).await
     }
 
+    #[tracing::instrument(skip(self, request), err)]
     pub async fn add_member(&self, request: CreateWorkspaceMember) -> Result<WorkspaceMember> {
         self.repository.add_member(request).await
     }
 
+    #[tracing::instrument(skip(self, request), fields(user_id = %user_id, connection_id = %connection_id), err)]
     pub async fn update_member(
         &self,
         user_id: &str,
@@ -107,6 +118,7 @@ impl WorkspaceService {
             .await
     }
 
+    #[tracing::instrument(skip(self), fields(user_id = %user_id, connection_id = %connection_id), err)]
     pub async fn remove_member(&self, user_id: &str, connection_id: &str) -> Result<u64> {
         self.repository.remove_member(user_id, connection_id).await
     }

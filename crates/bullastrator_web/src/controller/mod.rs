@@ -5,9 +5,9 @@ pub(crate) mod user;
 pub(crate) mod workspace;
 
 use axum::{
+    Json,
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
 
 pub(crate) async fn health() -> Json<serde_json::Value> {
@@ -21,6 +21,12 @@ pub(crate) struct ApiError(anyhow::Error);
 impl From<anyhow::Error> for ApiError {
     fn from(error: anyhow::Error) -> Self {
         Self(error)
+    }
+}
+
+impl From<bullastrator_core::error::BullastratorError> for ApiError {
+    fn from(error: bullastrator_core::error::BullastratorError) -> Self {
+        Self(anyhow::Error::new(error))
     }
 }
 

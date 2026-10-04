@@ -1,6 +1,9 @@
-use crate::{controller::ApiResult, server::AppState};
-use axum::{extract::State, Json};
-use bullastrator_core::services::connection as connection_service;
+use crate::controller::ApiResult;
+use axum::{
+    Json,
+    extract::{Path, State},
+};
+use bullastrator_core::{services::connection as connection_service, state::AppState};
 use bullastrator_storage::models::CreateConnection;
 use serde::Deserialize;
 
@@ -12,9 +15,15 @@ pub(crate) async fn test_redis(Json(request): Json<RedisUrlRequest>) -> ApiResul
     ))
 }
 
-pub(crate) async fn redis_health(State(state): State<AppState>) -> ApiResult<Json<bool>> {
+pub(crate) async fn redis_health(
+    State(state): State<AppState>,
+    Path(connection_id): Path<String>,
+) -> ApiResult<Json<bool>> {
     Ok(Json(
-        connection_service::start_health_check_service(&state.redis.pool).await?,
+        connection_service::start_health_check_service(
+            &state.redis_connection(&connection_id)?.pool,
+        )
+        .await?,
     ))
 }
 

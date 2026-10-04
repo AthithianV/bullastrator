@@ -1,14 +1,19 @@
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use semver::Version;
 use std::time::Duration;
 use tokio::time::timeout;
 
 use bullastrator_storage::models::CreateConnection;
 
+#[tracing::instrument(skip(pool), err)]
 pub async fn start_health_check_service(pool: &deadpool_redis::Pool) -> Result<bool> {
+    tracing::debug!("checking Redis health");
     let mut connection = match timeout(Duration::from_secs(1), pool.get()).await {
         Ok(Ok(connection)) => connection,
-        _ => return Ok(false),
+        _ => {
+            tracing::warn!("Redis health check could not acquire a connection");
+            return Ok(false);
+        }
     };
     Ok(matches!(
         timeout(
@@ -20,7 +25,9 @@ pub async fn start_health_check_service(pool: &deadpool_redis::Pool) -> Result<b
     ))
 }
 
+#[tracing::instrument(skip(redis_url), err)]
 pub async fn test_redis_connection_service(redis_url: String) -> Result<bool, String> {
+    tracing::debug!("testing Redis connection");
     let client = redis::Client::open(redis_url).map_err(|e| e.to_string())?;
     let mut connection = tokio::time::timeout(
         Duration::from_secs(5),
@@ -36,7 +43,9 @@ pub async fn test_redis_connection_service(redis_url: String) -> Result<bool, St
     Ok(response == "PONG")
 }
 
+#[tracing::instrument(skip(data), fields(host = %data.host, port = data.port), err)]
 pub async fn check_redis_version(data: &CreateConnection) -> Result<()> {
+    tracing::debug!("checking Redis server version");
     let url = create_redis_url(
         &data.host,
         data.port,

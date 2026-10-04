@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
-use bullastrator_web::server::{serve, AppState, ServerSettings};
+use bullastrator_core::state::AppState;
+use bullastrator_web::server::serve;
 use serde::{Deserialize, Serialize};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use std::{
@@ -9,7 +10,6 @@ use std::{
 };
 
 const DEFAULT_THEME: &str = "#00CADB";
-const DEFAULT_REDIS: &str = "redis://127.0.0.1:6379";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Config {
@@ -17,12 +17,12 @@ struct Config {
     database_path: PathBuf,
     theme_color: String,
     vpn_restricted: bool,
-    redis_url: String,
     bind_address: IpAddr,
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    init_tracing();
     let config_path = config_path()?;
     let config = if config_path.exists() {
         let saved = std::fs::read_to_string(&config_path)
@@ -56,19 +56,23 @@ async fn main() -> Result<()> {
         bullastrator_storage::initialize_database(&pool).await?;
     }
 
-    let state = AppState::new_with_settings(
-        pool,
-        &config.redis_url,
-        "default",
-        "bull",
-        ServerSettings {
-            theme_color: config.theme_color.clone(),
-            vpn_restricted: config.vpn_restricted,
-        },
-    )?;
+    let state = AppState::new(config.database_path.to_string_lossy().into_owned()).await?;
+
     let address = std::net::SocketAddr::new(config.bind_address, config.port);
     println!("Bullastrator is running at http://{address}");
     serve(state, address).await
+}
+
+fn init_tracing() {
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| {
+            tracing_subscriber::EnvFilter::new("bullastrator_core=debug,bullastrator_cli=debug")
+        });
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_target(true)
+        .with_thread_ids(true)
+        .init();
 }
 
 fn onboarding() -> Result<Config> {
@@ -83,7 +87,6 @@ fn onboarding() -> Result<Config> {
     )?);
     let theme_color = ask("Theme color", DEFAULT_THEME)?;
     let vpn_restricted = ask_yes_no("Restrict access to VPN/private network", false)?;
-    let redis_url = ask("Redis URL", DEFAULT_REDIS)?;
     let bind_address = ask("Bind address", "127.0.0.1")?
         .parse::<IpAddr>()
         .context("Invalid bind address")?;
@@ -92,7 +95,6 @@ fn onboarding() -> Result<Config> {
         database_path,
         theme_color,
         vpn_restricted,
-        redis_url,
         bind_address,
     })
 }

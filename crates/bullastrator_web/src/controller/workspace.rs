@@ -1,9 +1,12 @@
-use crate::{controller::ApiResult, server::AppState};
+use crate::controller::ApiResult;
 use axum::{
-    extract::{Path, State},
     Json,
+    extract::{Path, State},
 };
-use bullastrator_core::services::workspace::{CreateWorkspaceRequest, UpdateWorkspaceRequest};
+use bullastrator_core::{
+    services::workspace::{CreateWorkspaceRequest, UpdateWorkspaceRequest},
+    state::AppState,
+};
 use bullastrator_storage::models::{CreateWorkspaceMember, UpdateWorkspaceMember};
 use serde::Deserialize;
 
