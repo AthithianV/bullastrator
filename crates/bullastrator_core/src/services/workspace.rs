@@ -21,12 +21,14 @@ impl WorkspaceService {
     pub async fn create(&self, user_id: &str, request: CreateWorkspace) -> Result<Workspace> {
         tracing::info!("creating workspace");
         self.repository
-            .create(CreateWorkspace {
-                user_id: request.user_id,
-                name: request.name,
-                color: request.color,
-                icon: request.icon,
-            })
+            .create(
+                user_id,
+                CreateWorkspace {
+                    name: request.name,
+                    color: request.color,
+                    icon: request.icon,
+                },
+            )
             .await
     }
 

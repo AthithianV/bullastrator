@@ -14,15 +14,14 @@ pub struct Workspace {
     pub role: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateWorkspace {
-    pub user_id: String,
     pub name: String,
     pub color: Option<String>,
     pub icon: Option<i32>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct UpdateWorkspace {
     pub name: Option<String>,
     pub icon: Option<i32>,

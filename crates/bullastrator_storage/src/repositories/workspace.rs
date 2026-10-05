@@ -64,7 +64,7 @@ impl WorkspaceRepository {
         Ok(())
     }
 
-    pub async fn create(&self, data: CreateWorkspace) -> Result<Workspace> {
+    pub async fn create(&self, user_id: &str, data: CreateWorkspace) -> Result<Workspace> {
         let exists: bool = sqlx::query_scalar(
             r#"
             SELECT EXISTS (
@@ -75,7 +75,7 @@ impl WorkspaceRepository {
             )
             "#,
         )
-        .bind(&data.user_id)
+        .bind(user_id)
         .bind(&data.name)
         .fetch_one(&self.pool)
         .await?;
@@ -99,7 +99,7 @@ impl WorkspaceRepository {
             "#,
         )
         .bind(&id)
-        .bind(data.user_id.clone())
+        .bind(user_id)
         .bind(data.name)
         .bind(data.color)
         .bind(data.icon)
@@ -118,12 +118,12 @@ impl WorkspaceRepository {
             "#,
         )
         .bind(&id)
-        .bind(data.user_id.clone())
+        .bind(user_id)
         .bind("OWNER")
         .execute(&self.pool)
         .await?;
 
-        self.get_by_id(&id, &data.user_id)
+        self.get_by_id(&id, user_id)
             .await?
             .context("Created workspace was not found")
     }
