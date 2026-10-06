@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -7,7 +6,6 @@ pub struct Queue {
     pub id: String,
     pub connection_id: String,
     pub queue_name: String,
-    pub created_at: NaiveDateTime,
 }
 
 #[derive(Debug, Clone, Default)]

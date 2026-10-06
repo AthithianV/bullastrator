@@ -156,11 +156,9 @@
                                             "rounded-full p-2",
                                             "text-[10px] text-white font-semibold italics",
                                         )}
-                                        style={avatarStyle(
-                                            tab.connection?.color,
-                                        )}
+                                        style={avatarStyle(tab.connectionColor)}
                                     >
-                                        {tab.connection?.label}
+                                        {tab.connectionLabel}
                                     </Avatar.Fallback>
                                 </Avatar.Root>
                                 {#if tab.params.type === "QUEUE"}
@@ -177,8 +175,8 @@
                                     size={"sm"}
                                     class="w-2 h-2 px-0 relative top-px text-0.5 cursor-pointer p-2 rounded hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-red-400 text-muted-foreground/50"
                                     onclick={(e) => {
-                                      e.stopPropagation();
-                                      handleCloseTab(e, tab.id);
+                                        e.stopPropagation();
+                                        handleCloseTab(e, tab.id);
                                     }}
                                 >
                                     <X size={8} class="w-2 h-2" />
@@ -204,7 +202,6 @@
                                 <FolderTab
                                     tabParams={tab.params}
                                     tabId={tab.id}
-                                    connection={tab.connection}
                                 />
                             {/if}
                         {/key}

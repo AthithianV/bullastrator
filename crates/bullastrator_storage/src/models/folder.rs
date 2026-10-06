@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -8,7 +7,6 @@ pub struct Folder {
     pub connection_id: String,
     pub user_id: Option<String>,
     pub title: String,
-    pub created_at: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Clone)]
@@ -22,4 +20,15 @@ pub struct CreateFolder {
 pub struct FolderWithQueues {
     pub folder: Folder,
     pub queues: Vec<super::Queue>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+pub struct FolderAndQueues {
+    pub folder_id: String,
+    pub folder_connection_id: String,
+    pub folder_user_id: Option<String>,
+    pub folder_title: String,
+    pub queue_id: String,
+    pub queue_connection_id: String,
+    pub queue_name: String,
 }

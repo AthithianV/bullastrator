@@ -18,7 +18,7 @@ pub use queue::{ConnectionWithQueues, Queue, UpdateQueue};
 pub use queue_actions::QueueAction;
 pub use session::Session;
 pub use settings::Settings;
-pub use tab::{CreateTab, Tab, TabWithConnection, UpdateTab};
+pub use tab::{CreateTab, Tab, UpdateTab};
 pub use user::User;
 pub use user_access_connection::UserAccessConnection;
 pub use workspace::{CreateWorkspace, UpdateWorkspace, Workspace};

@@ -1,4 +1,3 @@
-import type { ReadConnection } from "connection/interface/connection.types";
 import type { FolderTabParams } from "../../folder/interface/folder.types";
 import type { QueueTabParams } from "queue/interface/queue.types";
 
@@ -14,7 +13,9 @@ export interface ReadTabModel {
   isDirty: boolean;
   isPinned: boolean;
   isPreview: boolean;
-  connection?: ReadConnection;
+
+  connectionColor?: string;
+  connectionLabel?: string;
 
   rank: number;
 }

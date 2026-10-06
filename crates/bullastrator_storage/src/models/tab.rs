@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -15,8 +14,9 @@ pub struct Tab {
     pub is_pinned: bool,
     pub is_preview: bool,
     pub rank: i32,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+
+    pub connection_color: Option<String>,
+    pub connection_label: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -37,10 +37,4 @@ pub struct UpdateTab {
     pub is_dirty: Option<bool>,
     pub is_pinned: Option<bool>,
     pub is_preview: Option<bool>,
-}
-
-#[derive(Debug, Clone)]
-pub struct TabWithConnection {
-    pub tab: Tab,
-    pub connection: Option<super::Connection>,
 }

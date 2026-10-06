@@ -89,7 +89,7 @@ impl WorkspaceRepository {
         sqlx::query(
             r#"
                 INSERT INTO
-                    workspace (
+                    workspaces (
                         id,
                         user_id,
                         name,
@@ -141,7 +141,7 @@ impl WorkspaceRepository {
                     w.last_accessed_at,
                     ws.role
                 FROM
-                    workspace w
+                    workspaces w
                 INNER JOIN
                     workspace_members wm
                 ON
@@ -319,7 +319,7 @@ impl WorkspaceRepository {
         let result = sqlx::query(
             r#"
                 UPDATE
-                    workspace
+                    workspaces
                 SET
                     name = COALESCE(?, name),
                     icon = COALESCE(?, icon),
@@ -343,7 +343,7 @@ impl WorkspaceRepository {
     }
 
     pub async fn delete(&self, id: &str) -> Result<u64> {
-        let result = sqlx::query("DELETE FROM workspace WHERE id = ?")
+        let result = sqlx::query("DELETE FROM workspaces WHERE id = ?")
             .bind(id)
             .execute(&self.pool)
             .await?;

@@ -22,7 +22,7 @@ impl UserRepository {
         sqlx::query(
             r#"
             INSERT INTO
-                user (
+                users (
                     id,
                     name,
                     email,
@@ -52,7 +52,7 @@ impl UserRepository {
                     SELECT
                         id, name, email, password_hash, image, created_at, updated_at
                     FROM
-                        user
+                        users
                     WHERE
                         email = ?
                 "#,
@@ -66,7 +66,7 @@ impl UserRepository {
         sqlx::query(
             r#"
                 INSERT INTO
-                session (id, user_id, token_hash, expires_at, revoked_at, created_at)
+                sessions (id, user_id, token_hash, expires_at, revoked_at, created_at)
                 VALUES (?, ?, ?, ?, ?, ?)
             "#,
         )
@@ -85,7 +85,7 @@ impl UserRepository {
         let result = sqlx::query(
             r#"
                 UPDATE
-                    session
+                    sessions
                 SET
                     revoked_at = ?
                 WHERE
