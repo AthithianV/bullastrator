@@ -56,13 +56,33 @@ impl ConnectionRepository {
     }
 
     pub async fn get_all(&self, workspace_id: &str) -> Result<Vec<Connection>> {
-        Ok(sqlx::query_as::<_, Connection>("SELECT id, workspace_id, name, host, port, username, password, db, is_tls_enabled, last_synced_at, bullmq_prefix, color, label, created_at FROM connections WHERE workspace_id = ? ORDER BY name")
-            .bind(workspace_id).fetch_all(&self.pool).await?)
-    }
-
-    pub async fn get_all_connections(&self) -> Result<Vec<Connection>> {
-        Ok(sqlx::query_as::<_, Connection>("SELECT id, workspace_id, name, host, port, username, password, db, is_tls_enabled, last_synced_at, bullmq_prefix, color, label, created_at FROM connections ORDER BY name")
-            .fetch_all(&self.pool).await?)
+        Ok(sqlx::query_as::<_, Connection>(
+            r#"
+            SELECT
+                id
+                workspace_id
+                name
+                host
+                port
+                username
+                password
+                db
+                is_tls_enabled
+                last_synced_at
+                bullmq_prefix
+                color
+                label
+                created_at
+            FROM
+                connections
+            WHERE
+                workspace_id = ?
+            ORDER BY
+                name"#,
+        )
+        .bind(workspace_id)
+        .fetch_all(&self.pool)
+        .await?)
     }
 
     pub async fn count_by_workspace(&self, workspace_id: &str) -> Result<u32> {
@@ -75,7 +95,32 @@ impl ConnectionRepository {
     }
 
     pub async fn get_by_id(&self, id: &str) -> Result<Option<Connection>> {
-        Ok(sqlx::query_as::<_, Connection>("SELECT id, workspace_id, name, host, port, username, password, db, is_tls_enabled, last_synced_at, bullmq_prefix, color, label, created_at FROM connections WHERE id = ?").bind(id).fetch_optional(&self.pool).await?)
+        Ok(sqlx::query_as::<_, Connection>(
+            r#"
+                    SELECT
+                        id
+                        workspace_id
+                        name
+                        host
+                        port
+                        username
+                        password
+                        db
+                        is_tls_enabled
+                        last_synced_at
+                        bullmq_prefix
+                        color
+                        label
+                        created_at
+                    FROM
+                        connections
+                    WHERE
+                        id = ?
+                    "#,
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?)
     }
 
     pub async fn get_by_id_with_password(&self, id: &str) -> Result<Option<Connection>> {
@@ -83,8 +128,37 @@ impl ConnectionRepository {
     }
 
     pub async fn update(&self, id: &str, data: UpdateConnection) -> Result<Connection> {
-        let result = sqlx::query("UPDATE connections SET name = COALESCE(?, name), host = COALESCE(?, host), port = COALESCE(?, port), username = COALESCE(?, username), password = COALESCE(?, password), db = COALESCE(?, db), bullmq_prefix = COALESCE(?, bullmq_prefix), is_tls_enabled = COALESCE(?, is_tls_enabled), color = COALESCE(?, color), label = COALESCE(?, label) WHERE id = ?")
-            .bind(data.name).bind(data.host).bind(data.port).bind(data.username).bind(data.password).bind(data.db).bind(data.bullmq_prefix).bind(data.is_tls_enabled).bind(data.color).bind(data.label).bind(id).execute(&self.pool).await?;
+        let result = sqlx::query(
+            r#"
+            UPDATE
+                connections
+            SET
+                name = COALESCE(?, name),
+                host = COALESCE(?, host),
+                port = COALESCE(?, port),
+                username = COALESCE(?, username),
+                password = COALESCE(?, password),
+                db = COALESCE(?, db),
+                bullmq_prefix = COALESCE(?, bullmq_prefix),
+                is_tls_enabled = COALESCE(?, is_tls_enabled),
+                color = COALESCE(?, color),
+                label = COALESCE(?, label)
+            WHERE id = ?
+            "#,
+        )
+        .bind(data.name)
+        .bind(data.host)
+        .bind(data.port)
+        .bind(data.username)
+        .bind(data.password)
+        .bind(data.db)
+        .bind(data.bullmq_prefix)
+        .bind(data.is_tls_enabled)
+        .bind(data.color)
+        .bind(data.label)
+        .bind(id)
+        .execute(&self.pool)
+        .await?;
         if result.rows_affected() == 0 {
             bail!("Connection with ID {id} not found")
         }

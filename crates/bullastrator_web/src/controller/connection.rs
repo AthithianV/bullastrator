@@ -21,7 +21,7 @@ pub(crate) async fn redis_health(
 ) -> ApiResult<Json<bool>> {
     Ok(Json(
         connection_service::start_health_check_service(
-            &state.redis_connection(&connection_id)?.pool,
+            &state.get_redis_connection(&connection_id).await?.pool,
         )
         .await?,
     ))

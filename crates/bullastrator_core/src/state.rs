@@ -1,26 +1,23 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::error::{BullastratorError, Result};
 use crate::services::{
     RedisConnection, queue::QueueService, user::UserService, workspace::WorkspaceService,
 };
-use anyhow::Context;
-use bullastrator_storage::{
-    models::Connection,
-    repositories::{ConnectionRepository, QueueRepository, UserRepository, WorkspaceRepository},
-};
-use deadpool_redis::{
-    Config as RedisConfig, ConnectionAddr, ConnectionInfo, ProtocolVersion, RedisConnectionInfo,
-    Runtime,
+use crate::utils::redis_connection::create_redis_connection;
+use bullastrator_storage::repositories::{
+    ConnectionRepository, QueueRepository, UserRepository, WorkspaceRepository,
 };
 use sqlx::SqlitePool;
+use tokio::sync::RwLock;
 
 #[derive(Clone)]
 pub struct AppState {
     pub db: SqlitePool,
     pub users: UserService,
-    pub redis: HashMap<String, RedisConnection>,
-    pub queues: HashMap<String, QueueService>,
+    pub redis_connections: Arc<RwLock<HashMap<String, RedisConnection>>>,
+    pub queue_services: Arc<RwLock<HashMap<String, QueueService>>>,
     pub workspaces: WorkspaceService,
     pub settings: ServerSettings,
 }
@@ -45,104 +42,77 @@ impl AppState {
 
     pub async fn new_with_settings(pool: SqlitePool, settings: ServerSettings) -> Result<Self> {
         tracing::info!("initializing application state");
+        let redis_connections = Arc::new(RwLock::new(HashMap::new()));
+        let queue_services = Arc::new(RwLock::new(HashMap::new()));
 
-        let connections = ConnectionRepository::new(pool.clone())
-            .get_all_connections()
-            .await?;
-        let mut redis = HashMap::with_capacity(connections.len());
-        let mut queues = HashMap::with_capacity(connections.len());
-
-        for connection in connections {
-            tracing::debug!(connection_id = %connection.id, host = %connection.host, "initializing Redis connection");
-            let redis_connection = create_redis_connection(&connection)?;
-            let connection_id = connection.id.clone();
-            queues.insert(
-                connection_id.clone(),
-                QueueService::new(redis_connection.clone(), QueueRepository::new(pool.clone())),
-            );
-            redis.insert(connection_id, redis_connection);
-        }
-
-        tracing::info!(
-            redis_connections = redis.len(),
-            "application state initialized"
-        );
+        tracing::info!("application state initialized");
 
         Ok(Self {
             users: UserService::new(UserRepository::new(pool.clone())),
             workspaces: WorkspaceService::new(WorkspaceRepository::new(pool.clone())),
             db: pool,
-            redis,
-            queues,
+            redis_connections,
+            queue_services,
             settings,
         })
     }
 
-    pub fn redis_connection(&self, connection_id: &str) -> Result<&RedisConnection> {
-        self.redis
+    pub async fn get_redis_connection(&self, connection_id: &str) -> Result<RedisConnection> {
+        if let Some(redis_connection) = self
+            .redis_connections
+            .read()
+            .await
             .get(connection_id)
-            .ok_or_else(|| BullastratorError::NotFound(format!("Redis connection {connection_id}")))
-    }
-
-    pub fn queue_service(&self, connection_id: &str) -> Result<&QueueService> {
-        self.queues.get(connection_id).ok_or_else(|| {
-            BullastratorError::NotFound(format!("Queue service for connection {connection_id}"))
-        })
-    }
-}
-
-fn create_redis_connection(connection: &Connection) -> Result<RedisConnection> {
-    if connection.host.is_empty() {
-        return Err(BullastratorError::Validation(format!(
-            "Redis host cannot be empty for {}",
-            connection.id
-        )));
-    }
-    let port = u16::try_from(connection.port)
-        .with_context(|| format!("Invalid Redis port for {}", connection.id))?;
-    let db = connection.db.unwrap_or(0);
-    let db_u8 = u8::try_from(db)
-        .with_context(|| format!("Invalid Redis database index for {}", connection.id))?;
-    let tls = connection.is_tls_enabled.unwrap_or(false);
-    let addr = if tls {
-        ConnectionAddr::TcpTls {
-            host: connection.host.clone(),
-            port,
-            insecure: false,
+            .cloned()
+        {
+            return Ok(redis_connection);
         }
-    } else {
-        ConnectionAddr::Tcp(connection.host.clone(), port)
-    };
-    let connection_info = ConnectionInfo {
-        addr,
-        redis: RedisConnectionInfo {
-            db: i64::from(db),
-            username: connection.username.clone(),
-            password: connection.password.clone(),
-            protocol: ProtocolVersion::RESP2,
-        },
-    };
-    let pool = RedisConfig::from_connection_info(connection_info)
-        .create_pool(Some(Runtime::Tokio1))
-        .with_context(|| format!("Failed to create Redis pool for {}", connection.id))?;
 
-    let bullmq_options = bullmq::options::RedisConnectionOptions {
-        host: Some(connection.host.clone()),
-        port: Some(port),
-        username: connection.username.clone(),
-        password: connection.password.clone(),
-        db: Some(db_u8),
-        tls,
-        ..Default::default()
-    };
+        let connection = ConnectionRepository::new(self.db.clone())
+            .get_by_id(connection_id)
+            .await?;
 
-    Ok(RedisConnection::with_options(
-        pool,
-        connection.id.clone(),
-        connection
-            .bullmq_prefix
-            .clone()
-            .unwrap_or_else(|| "bull".into()),
-        bullmq_options,
-    ))
+        if connection.is_none() {
+            return Err(BullastratorError::NotFound(
+                "connection not found".to_string(),
+            ));
+        }
+        let connection = connection.unwrap();
+
+        tracing::debug!(connection_id = %connection_id, host = %connection.host, "initializing Redis connection");
+        let redis_connection = create_redis_connection(&connection)?;
+        let connection_id = connection_id.to_string();
+
+        let mut redis_connections = self.redis_connections.write().await;
+
+        let connection = redis_connections
+            .entry(connection_id.to_string())
+            .or_insert(redis_connection);
+
+        Ok(connection.clone())
+    }
+
+    pub async fn get_queue_service(&self, connection_id: &str) -> Result<QueueService> {
+        if let Some(queue_service) = self.queue_services.read().await.get(connection_id).cloned() {
+            return Ok(queue_service);
+        }
+
+        let queue_service =
+            self.get_redis_connection(connection_id)
+                .await
+                .map(|redis_connection| {
+                    QueueService::new(
+                        redis_connection.clone(),
+                        QueueRepository::new(self.db.clone()),
+                    )
+                })?;
+
+        let mut queue_services = self.queue_services.write().await;
+
+        let queue_service_clone = queue_services
+            .entry(connection_id.to_string())
+            .or_insert(queue_service);
+
+        Ok(queue_service_clone.clone())
+    }
 }

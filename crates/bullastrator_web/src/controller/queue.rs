@@ -9,24 +9,18 @@ pub(crate) async fn all_queues(
     State(state): State<AppState>,
     Path(connection_id): Path<String>,
 ) -> ApiResult<Json<Vec<String>>> {
-    Ok(Json(
-        state
-            .queue_service(&connection_id)?
-            .get_all_bullmq_queues()
-            .await?,
-    ))
+    let queue_service = state.get_queue_service(&connection_id).await?;
+
+    Ok(Json(queue_service.get_all_bullmq_queues().await?))
 }
 
 pub(crate) async fn queue_details(
     State(state): State<AppState>,
     Path((connection_id, queue)): Path<(String, String)>,
 ) -> ApiResult<Json<QueueDetails>> {
-    Ok(Json(
-        state
-            .queue_service(&connection_id)?
-            .get_queue_details_service(&queue)
-            .await?,
-    ))
+    let queue_service = state.get_queue_service(&connection_id).await?;
+
+    Ok(Json(queue_service.get_queue_details_service(&queue).await?))
 }
 
 pub(crate) async fn pause_queue(
@@ -34,9 +28,10 @@ pub(crate) async fn pause_queue(
     Path((connection_id, queue)): Path<(String, String)>,
     Json(request): Json<PauseRequest>,
 ) -> ApiResult<Json<String>> {
+    let queue_service = state.get_queue_service(&connection_id).await?;
+
     Ok(Json(
-        state
-            .queue_service(&connection_id)?
+        queue_service
             .pause_queue_service(&queue, request.paused)
             .await?,
     ))
