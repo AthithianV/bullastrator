@@ -22,6 +22,10 @@ export interface AuthResponse {
   expiresAt: string;
 }
 
+export interface AuthenticatedSession {
+  id: string;
+}
+
 export interface LogoutResponse {
   revoked: boolean;
 }

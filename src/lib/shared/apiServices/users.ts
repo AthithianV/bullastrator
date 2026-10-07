@@ -2,6 +2,10 @@ import { snakeCase, type WebCommand } from ".";
 
 // ../../../../crates/bullastrator_web/src/routes/user.rs
 export const USER_ROUTES: Record<string, WebCommand> = {
+  check_session: {
+    method: "GET",
+    path: () => "/auth/session",
+  },
   register: {
     method: "POST",
     path: () => "/auth/register",

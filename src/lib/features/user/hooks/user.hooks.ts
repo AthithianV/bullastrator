@@ -3,12 +3,28 @@ import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import { toast } from "svelte-sonner";
 import type {
   AuthResponse,
+  AuthenticatedSession,
   LoginRequest,
   LogoutResponse,
   RegisterRequest,
 } from "../interface";
 
 export const USER_QUERY_KEY = ["user"];
+
+/** Check whether the current HTTP-only session cookie is valid. */
+export const useCheckSession = () => {
+  return async (): Promise<boolean> => {
+    try {
+      await invokeWrapper<AuthenticatedSession>("check_session", {}, {
+        shouldToast: false,
+        shouldLogResult: false,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+};
 
 /** Register a new user. */
 export const useRegister = () => {

@@ -1,4 +1,4 @@
-use crate::controller::ApiResult;
+use crate::{controller::ApiResult, models::user::AuthenticatedUser};
 use axum::{Json, extract::State};
 use axum_extra::extract::{
     CookieJar,
@@ -45,4 +45,10 @@ fn session_cookie(token: &str) -> Cookie<'static> {
         .http_only(true)
         .same_site(SameSite::Lax)
         .build()
+}
+
+pub(crate) async fn session(
+    axum::extract::Extension(user): axum::Extension<AuthenticatedUser>,
+) -> Json<AuthenticatedUser> {
+    Json(user)
 }

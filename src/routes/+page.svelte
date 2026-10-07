@@ -13,6 +13,7 @@
     import AppSideBar from "sidebar/components/AppSideBar.svelte";
     import TabContainer from "tabs/components/TabContainer.svelte";
     import WebTitlebar from "$lib/features/titlebar/components/WebTitlebar.svelte";
+    import ProtectedRoute from "$lib/features/user/components/ProtectedRoute.svelte";
 
     onMount(async () => {
         !PUBLIC_IS_WEB && (await invoke("show_main_window"));
@@ -41,7 +42,7 @@
     });
 </script>
 
-<main class="w-full fixed top-0 bg-card select-none min-w-0">
+<ProtectedRoute>
     <Zoom />
     {#if !PUBLIC_IS_WEB}
         <TitleBar />
@@ -52,7 +53,7 @@
     <div class="flex h-(--app-height) min-w-0">
         <div class="w-full p-2 pt-0 min-w-0">
             <Card
-                class="h-full rounded-none shadow-none py-0 min-w-0 border-none bg-background"
+                class="h-full rounded-none shadow-none py-0 min-w-0 border-none"
             >
                 <Resizable.PaneGroup
                     direction="horizontal"
@@ -78,4 +79,4 @@
             </Card>
         </div>
     </div>
-</main>
+</ProtectedRoute>

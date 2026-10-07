@@ -55,6 +55,7 @@ pub fn router(state: AppState) -> Router {
         .merge(queue::routes())
         .merge(tab::routes())
         .merge(job::routes())
+        .route("/auth/session", get(controller::user::session))
         .layer(middleware::from_fn_with_state(
             state.clone(),
             auth_middleware,
