@@ -1,6 +1,7 @@
 pub(crate) mod connection;
 pub(crate) mod job;
 pub(crate) mod queue;
+pub(crate) mod tab;
 pub(crate) mod user;
 pub(crate) mod workspace;
 
@@ -52,6 +53,7 @@ pub fn router(state: AppState) -> Router {
         .merge(connection::routes())
         .merge(workspace::routes())
         .merge(queue::routes())
+        .merge(tab::routes())
         .merge(job::routes())
         .layer(middleware::from_fn_with_state(
             state.clone(),

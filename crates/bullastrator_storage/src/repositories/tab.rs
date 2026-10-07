@@ -3,6 +3,7 @@ use sqlx::SqlitePool;
 
 use crate::models::{CreateTab, Tab, UpdateTab};
 
+#[derive(Clone)]
 pub struct TabRepository {
     pool: SqlitePool,
 }

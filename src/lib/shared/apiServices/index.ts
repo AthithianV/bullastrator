@@ -2,6 +2,7 @@ import { PUBLIC_API_URL } from "$env/static/public";
 import { JOB_ROUTES } from "./jobs";
 import { QUEUE_ROUTES } from "./queues";
 import { TAB_ROUTES } from "./tabs";
+import { USER_ROUTES } from "./users";
 import { WORKSPACE_ROUTES } from "./workspace";
 
 const apiBaseUrl = (PUBLIC_API_URL || "http://127.0.0.1:3000").replace(
@@ -44,6 +45,7 @@ export const webCommandMap: Record<string, WebCommand> = {
   ...WORKSPACE_ROUTES,
   ...QUEUE_ROUTES,
   ...TAB_ROUTES,
+  ...USER_ROUTES,
 };
 
 export async function callWebApi<T>(
@@ -66,6 +68,7 @@ export async function callWebApi<T>(
 
   const response = await fetch(path, {
     method: route.method,
+    credentials: "include",
     headers:
       body === undefined ? undefined : { "content-type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),

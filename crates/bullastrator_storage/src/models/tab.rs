@@ -19,7 +19,7 @@ pub struct Tab {
     pub connection_label: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateTab {
     pub connection_id: Option<String>,
     pub user_id: Option<String>,
@@ -28,7 +28,7 @@ pub struct CreateTab {
     pub is_preview: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct UpdateTab {
     pub title: Option<String>,
     pub params: Option<String>,

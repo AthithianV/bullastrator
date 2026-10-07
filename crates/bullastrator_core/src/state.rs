@@ -3,11 +3,12 @@ use std::sync::Arc;
 
 use crate::error::{BullastratorError, Result};
 use crate::services::{
-    RedisConnection, queue::QueueService, user::UserService, workspace::WorkspaceService,
+    RedisConnection, queue::QueueService, tab::TabService, user::UserService,
+    workspace::WorkspaceService,
 };
 use crate::utils::redis_connection::create_redis_connection;
 use bullastrator_storage::repositories::{
-    ConnectionRepository, QueueRepository, UserRepository, WorkspaceRepository,
+    ConnectionRepository, QueueRepository, TabRepository, UserRepository, WorkspaceRepository,
 };
 use sqlx::SqlitePool;
 use tokio::sync::RwLock;
@@ -19,6 +20,7 @@ pub struct AppState {
     pub redis_connections: Arc<RwLock<HashMap<String, RedisConnection>>>,
     pub queue_services: Arc<RwLock<HashMap<String, QueueService>>>,
     pub workspaces: WorkspaceService,
+    pub tabs: TabService,
     pub settings: ServerSettings,
 }
 
@@ -50,6 +52,10 @@ impl AppState {
         Ok(Self {
             users: UserService::new(UserRepository::new(pool.clone())),
             workspaces: WorkspaceService::new(WorkspaceRepository::new(pool.clone())),
+            tabs: TabService::new(
+                TabRepository::new(pool.clone()),
+                WorkspaceRepository::new(pool.clone()),
+            ),
             db: pool,
             redis_connections,
             queue_services,

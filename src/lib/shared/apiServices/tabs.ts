@@ -7,7 +7,7 @@ export const TAB_ROUTES: Record<string, WebCommand> = {
   },
   get_all_tabs: {
     method: "GET",
-    path: () => "/tabs/active",
+    path: () => "/tabs",
   },
   create_tab: {
     method: "POST",

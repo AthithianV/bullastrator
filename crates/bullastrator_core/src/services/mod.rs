@@ -1,6 +1,7 @@
 pub mod connection;
 pub mod job;
 pub mod queue;
+pub mod tab;
 pub mod user;
 pub mod workspace;
 

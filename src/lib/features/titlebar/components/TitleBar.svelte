@@ -56,9 +56,7 @@
 >
     <div class="flex items-center">
         {#if !isMacos || (isMacos && isMaximized)}
-            <!-- <div class={cn("brand-container")}> -->
             <Brand />
-            <!-- </div> -->
         {/if}
         <WorkspaceSelector />
     </div>

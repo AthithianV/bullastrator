@@ -1,5 +1,9 @@
 use crate::controller::ApiResult;
 use axum::{Json, extract::State};
+use axum_extra::extract::{
+    CookieJar,
+    cookie::{Cookie, SameSite},
+};
 use bullastrator_core::{
     models::user::{AuthResponse, LoginRequest, RegisterRequest, TokenRequest},
     state::AppState,
@@ -7,23 +11,38 @@ use bullastrator_core::{
 
 pub(crate) async fn register(
     State(state): State<AppState>,
+    jar: CookieJar,
     Json(request): Json<RegisterRequest>,
-) -> ApiResult<Json<AuthResponse>> {
-    Ok(Json(state.users.register(request).await?))
+) -> ApiResult<(CookieJar, Json<AuthResponse>)> {
+    let response = state.users.register(request).await?;
+    Ok((jar.add(session_cookie(&response.token)), Json(response)))
 }
 
 pub(crate) async fn login(
     State(state): State<AppState>,
+    jar: CookieJar,
     Json(request): Json<LoginRequest>,
-) -> ApiResult<Json<AuthResponse>> {
-    Ok(Json(state.users.login(request).await?))
+) -> ApiResult<(CookieJar, Json<AuthResponse>)> {
+    let response = state.users.login(request).await?;
+    Ok((jar.add(session_cookie(&response.token)), Json(response)))
 }
 
 pub(crate) async fn logout(
     State(state): State<AppState>,
+    jar: CookieJar,
     Json(request): Json<TokenRequest>,
-) -> ApiResult<Json<serde_json::Value>> {
-    Ok(Json(
-        serde_json::json!({"revoked": state.users.logout(&request.token).await?}),
+) -> ApiResult<(CookieJar, Json<serde_json::Value>)> {
+    let revoked = state.users.logout(&request.token).await?;
+    Ok((
+        jar.remove(Cookie::build(("session", "")).path("/").build()),
+        Json(serde_json::json!({"revoked": revoked})),
     ))
+}
+
+fn session_cookie(token: &str) -> Cookie<'static> {
+    Cookie::build(("session", token.to_owned()))
+        .path("/")
+        .http_only(true)
+        .same_site(SameSite::Lax)
+        .build()
 }
