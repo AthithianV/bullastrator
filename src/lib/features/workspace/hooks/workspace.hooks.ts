@@ -3,7 +3,6 @@ import {
   createQuery,
   useQueryClient,
 } from "@tanstack/svelte-query";
-import { invoke } from "@tauri-apps/api/core";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import { toast } from "svelte-sonner";
 import type {
@@ -33,7 +32,11 @@ export const useGetWorkspaces = () => {
 export const useGetActiveWorkspace = () => {
   return createQuery(() => ({
     queryKey: [...WORKSPACE_QUERY_KEY, "active_workspace"],
-    queryFn: () => invoke<ReadWorkspaceModel>("get_active_workspace"),
+    queryFn: () =>
+      invokeWrapper<ReadWorkspaceModel>("get_active_workspace", {}, {
+        shouldToast: false,
+        shouldLogResult: false,
+      }),
   }));
 };
 

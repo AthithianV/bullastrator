@@ -17,6 +17,7 @@ use tokio::sync::RwLock;
 pub struct AppState {
     pub db: SqlitePool,
     pub users: UserService,
+    pub connections: crate::services::connection::ConnectionService,
     pub redis_connections: Arc<RwLock<HashMap<String, RedisConnection>>>,
     pub queue_services: Arc<RwLock<HashMap<String, QueueService>>>,
     pub workspaces: WorkspaceService,
@@ -46,16 +47,18 @@ impl AppState {
         tracing::info!("initializing application state");
         let redis_connections = Arc::new(RwLock::new(HashMap::new()));
         let queue_services = Arc::new(RwLock::new(HashMap::new()));
+        let workspaces = WorkspaceService::new(WorkspaceRepository::new(pool.clone()));
 
         tracing::info!("application state initialized");
 
         Ok(Self {
             users: UserService::new(UserRepository::new(pool.clone())),
-            workspaces: WorkspaceService::new(WorkspaceRepository::new(pool.clone())),
-            tabs: TabService::new(
-                TabRepository::new(pool.clone()),
-                WorkspaceRepository::new(pool.clone()),
+            connections: crate::services::connection::ConnectionService::new(
+                ConnectionRepository::new(pool.clone()),
+                workspaces.clone(),
             ),
+            workspaces: workspaces.clone(),
+            tabs: TabService::new(TabRepository::new(pool.clone()), workspaces),
             db: pool,
             redis_connections,
             queue_services,
@@ -110,6 +113,7 @@ impl AppState {
                     QueueService::new(
                         redis_connection.clone(),
                         QueueRepository::new(self.db.clone()),
+                        self.connections.clone(),
                     )
                 })?;
 

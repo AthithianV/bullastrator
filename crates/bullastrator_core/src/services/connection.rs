@@ -3,7 +3,96 @@ use semver::Version;
 use std::time::Duration;
 use tokio::time::timeout;
 
-use bullastrator_storage::models::CreateConnection;
+use bullastrator_storage::{
+    models::{Connection, CreateConnection, UpdateConnection, WorkspaceRole},
+    repositories::ConnectionRepository,
+};
+
+use crate::services::workspace::WorkspaceService;
+
+#[derive(Clone)]
+pub struct ConnectionService {
+    repository: ConnectionRepository,
+    workspaces: WorkspaceService,
+}
+
+impl ConnectionService {
+    pub fn new(repository: ConnectionRepository, workspaces: WorkspaceService) -> Self {
+        Self {
+            repository,
+            workspaces,
+        }
+    }
+
+    async fn active_workspace(&self, user_id: &str) -> Result<String> {
+        self.workspaces.active_id(user_id).await
+    }
+
+    pub async fn authorize(
+        &self,
+        connection_id: &str,
+        user_id: &str,
+        role: WorkspaceRole,
+    ) -> Result<Connection> {
+        let workspace_id = self.active_workspace(user_id).await?;
+        let connection = self
+            .repository
+            .get_by_id(connection_id)
+            .await?
+            .context("Connection not found")?;
+        if connection.workspace_id != workspace_id {
+            bail!("Connection does not belong to the active workspace");
+        }
+        self.workspaces
+            .check_permission(&workspace_id, user_id, role)
+            .await?;
+        Ok(connection)
+    }
+
+    pub async fn create(&self, user_id: &str, request: CreateConnection) -> Result<Connection> {
+        let workspace_id = self.active_workspace(user_id).await?;
+        self.workspaces
+            .check_permission(&workspace_id, user_id, WorkspaceRole::ADMIN)
+            .await?;
+        self.repository.create(&workspace_id, request).await
+    }
+
+    pub async fn list(&self, user_id: &str) -> Result<Vec<Connection>> {
+        let workspace_id = self.active_workspace(user_id).await?;
+        self.workspaces
+            .check_permission(&workspace_id, user_id, WorkspaceRole::VIEWER)
+            .await?;
+        self.repository.get_all(&workspace_id).await
+    }
+
+    pub async fn get(&self, connection_id: &str, user_id: &str) -> Result<Option<Connection>> {
+        match self
+            .authorize(connection_id, user_id, WorkspaceRole::VIEWER)
+            .await
+        {
+            Ok(connection) => Ok(Some(connection)),
+            Err(error) if error.to_string() == "Connection not found" => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
+
+    pub async fn update(
+        &self,
+        connection_id: &str,
+        user_id: &str,
+        request: UpdateConnection,
+    ) -> Result<Connection> {
+        self.authorize(connection_id, user_id, WorkspaceRole::ADMIN)
+            .await?;
+        self.repository.update(connection_id, request).await
+    }
+
+    pub async fn delete(&self, connection_id: &str, user_id: &str) -> Result<u64> {
+        self.authorize(connection_id, user_id, WorkspaceRole::ADMIN)
+            .await?;
+        self.repository.delete(connection_id).await
+    }
+}
 
 #[tracing::instrument(skip(pool), err)]
 pub async fn start_health_check_service(pool: &deadpool_redis::Pool) -> Result<bool> {

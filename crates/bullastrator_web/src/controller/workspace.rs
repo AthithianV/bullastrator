@@ -30,9 +30,9 @@ pub(crate) async fn get(
 
 pub(crate) async fn list_for_user(
     State(state): State<AppState>,
-    Path(user_id): Path<String>,
+    Extension(user): Extension<AuthenticatedUser>,
 ) -> ApiResult<Json<Vec<Workspace>>> {
-    Ok(Json(state.workspaces.list_for_user(&user_id).await?))
+    Ok(Json(state.workspaces.list_for_user(&user.id).await?))
 }
 
 pub(crate) async fn update(

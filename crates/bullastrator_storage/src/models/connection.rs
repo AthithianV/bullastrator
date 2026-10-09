@@ -20,7 +20,7 @@ pub struct Connection {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateConnection {
     pub name: String,
     pub host: String,
@@ -34,7 +34,7 @@ pub struct CreateConnection {
     pub is_tls_enabled: bool,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct UpdateConnection {
     pub name: Option<String>,
     pub host: Option<String>,

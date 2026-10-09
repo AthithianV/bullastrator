@@ -21,5 +21,7 @@ pub use settings::Settings;
 pub use tab::{CreateTab, Tab, UpdateTab};
 pub use user::User;
 pub use user_access_connection::UserAccessConnection;
-pub use workspace::{CreateWorkspace, UpdateWorkspace, Workspace};
-pub use workspace_members::{CreateWorkspaceMember, UpdateWorkspaceMember, WorkspaceMember};
+pub use workspace::{CreateWorkspace, UpdateWorkspace, Workspace, WorkspacePermissionError};
+pub use workspace_members::{
+    CreateWorkspaceMember, UpdateWorkspaceMember, WorkspaceMember, WorkspaceRole,
+};

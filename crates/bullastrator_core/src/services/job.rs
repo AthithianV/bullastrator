@@ -11,6 +11,8 @@ use crate::models::job::{JobDetails, JobFilterType, JobSearchResult, RetryStrate
 
 use crate::models::job::QueueJobCounts;
 use crate::services::RedisConnection;
+use crate::services::connection::ConnectionService;
+use bullastrator_storage::models::WorkspaceRole;
 
 pub struct JobService<'a> {
     connection_pool: &'a RedisConnection,
@@ -25,6 +27,29 @@ impl<'a> JobService<'a> {
             prefix: connection_pool.prefix.as_str(),
             bull_driver: &BullmqV5Driver,
         }
+    }
+
+    pub async fn authorize(
+        &self,
+        connections: &ConnectionService,
+        user_id: &str,
+        role: WorkspaceRole,
+    ) -> Result<()> {
+        connections
+            .authorize(&self.connection_pool.connection_id, user_id, role)
+            .await
+            .map(|_| ())
+    }
+
+    pub async fn for_user(
+        connection_pool: &'a RedisConnection,
+        connections: &ConnectionService,
+        user_id: &str,
+        role: WorkspaceRole,
+    ) -> Result<Self> {
+        let service = Self::new(connection_pool);
+        service.authorize(connections, user_id, role).await?;
+        Ok(service)
     }
 
     #[tracing::instrument(skip_all, err)]

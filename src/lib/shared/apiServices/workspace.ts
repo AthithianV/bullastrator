@@ -1,6 +1,10 @@
 import { id, snakeCase, type WebCommand } from ".";
 
 export const WORKSPACE_ROUTES: Record<string, WebCommand> = {
+  get_all_workspaces: {
+    method: "GET",
+    path: (args) => `/workspaces`,
+  },
   get_workspace_by_id: {
     method: "GET",
     path: (args) => `/workspaces/${id(args.id, "id")}`,

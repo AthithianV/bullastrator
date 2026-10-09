@@ -17,6 +17,7 @@ chrono = { workspace = true }
 uuid = { workspace = true }
 dirs-next = { workspace = true }
 thiserror = { workspace = true }
+strum_macros = { workspace = true }
 
 [profile.release]
 opt-level = 3

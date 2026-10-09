@@ -4,6 +4,7 @@ use uuid::Uuid;
 
 use crate::models::{Connection, CreateConnection, UpdateConnection};
 
+#[derive(Clone)]
 pub struct ConnectionRepository {
     pool: SqlitePool,
 }
@@ -83,15 +84,6 @@ impl ConnectionRepository {
         .bind(workspace_id)
         .fetch_all(&self.pool)
         .await?)
-    }
-
-    pub async fn count_by_workspace(&self, workspace_id: &str) -> Result<u32> {
-        let (count,): (i64,) =
-            sqlx::query_as("SELECT COUNT(*) FROM connections WHERE workspace_id = ?")
-                .bind(workspace_id)
-                .fetch_one(&self.pool)
-                .await?;
-        Ok(count as u32)
     }
 
     pub async fn get_by_id(&self, id: &str) -> Result<Option<Connection>> {

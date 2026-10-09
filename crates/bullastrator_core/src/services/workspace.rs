@@ -2,7 +2,7 @@ use anyhow::Result;
 use bullastrator_storage::{
     models::{
         CreateWorkspace, CreateWorkspaceMember, UpdateWorkspace, UpdateWorkspaceMember, Workspace,
-        WorkspaceMember,
+        WorkspaceMember, WorkspacePermissionError, WorkspaceRole,
     },
     repositories::WorkspaceRepository,
 };
@@ -15,6 +15,18 @@ pub struct WorkspaceService {
 impl WorkspaceService {
     pub fn new(repository: WorkspaceRepository) -> Self {
         Self { repository }
+    }
+
+    #[tracing::instrument(skip(self, required_role), err)]
+    pub async fn check_permission(
+        &self,
+        workspace_id: &str,
+        user_id: &str,
+        required_role: WorkspaceRole,
+    ) -> Result<(), WorkspacePermissionError> {
+        self.repository
+            .check_permission(workspace_id, user_id, &required_role)
+            .await
     }
 
     #[tracing::instrument(skip(self, request), err)]
@@ -35,7 +47,7 @@ impl WorkspaceService {
     #[tracing::instrument(skip(self), fields(workspace_id = %workspace_id), err)]
     pub async fn get(&self, workspace_id: &str, user_id: &str) -> Result<Option<Workspace>> {
         self.repository
-            .check_permission(workspace_id, user_id, "VIEWER")
+            .check_permission(workspace_id, user_id, &WorkspaceRole::VIEWER)
             .await?;
         self.repository.get_by_id(workspace_id, user_id).await
     }
@@ -50,10 +62,14 @@ impl WorkspaceService {
         self.repository.get_active_workspace(user_id).await
     }
 
+    pub async fn active_id(&self, user_id: &str) -> Result<String> {
+        Ok(self.active(user_id).await?.id)
+    }
+
     #[tracing::instrument(skip(self), fields(workspace_id = %workspace_id), err)]
     pub async fn select(&self, workspace_id: &str, user_id: &str) -> Result<Workspace> {
         self.repository
-            .check_permission(workspace_id, user_id, "VIEWER")
+            .check_permission(workspace_id, user_id, &WorkspaceRole::VIEWER)
             .await?;
         self.repository
             .set_active_workspace(workspace_id, user_id)
@@ -68,7 +84,7 @@ impl WorkspaceService {
         request: UpdateWorkspace,
     ) -> Result<Workspace> {
         self.repository
-            .check_permission(workspace_id, user_id, "OWNER")
+            .check_permission(workspace_id, user_id, &WorkspaceRole::ADMIN)
             .await?;
         self.repository
             .update(
@@ -86,7 +102,7 @@ impl WorkspaceService {
     #[tracing::instrument(skip(self), fields(workspace_id = %workspace_id), err)]
     pub async fn delete(&self, workspace_id: &str, user_id: &str) -> Result<u64> {
         self.repository
-            .check_permission(workspace_id, user_id, "OWNER")
+            .check_permission(workspace_id, user_id, &WorkspaceRole::OWNER)
             .await?;
         self.repository.delete(workspace_id).await
     }
@@ -98,7 +114,7 @@ impl WorkspaceService {
         user_id: &str,
     ) -> Result<Vec<WorkspaceMember>> {
         self.repository
-            .check_permission(workspace_id, user_id, "ADMIN")
+            .check_permission(workspace_id, user_id, &WorkspaceRole::ADMIN)
             .await?;
         self.repository.get_members(workspace_id).await
     }
@@ -111,7 +127,7 @@ impl WorkspaceService {
         request: CreateWorkspaceMember,
     ) -> Result<WorkspaceMember> {
         self.repository
-            .check_permission(workspace_id, user_id, "ADMIN")
+            .check_permission(workspace_id, user_id, &WorkspaceRole::ADMIN)
             .await?;
 
         self.repository.add_member(request).await
@@ -125,7 +141,7 @@ impl WorkspaceService {
         request: UpdateWorkspaceMember,
     ) -> Result<WorkspaceMember> {
         self.repository
-            .check_permission(workspace_id, user_id, "ADMIN")
+            .check_permission(workspace_id, user_id, &WorkspaceRole::ADMIN)
             .await?;
 
         self.repository
@@ -136,7 +152,7 @@ impl WorkspaceService {
     #[tracing::instrument(skip(self), fields(user_id = %user_id, workspace_id = %workspace_id), err)]
     pub async fn remove_member(&self, user_id: &str, workspace_id: &str) -> Result<u64> {
         self.repository
-            .check_permission(workspace_id, user_id, "ADMIN")
+            .check_permission(workspace_id, user_id, &WorkspaceRole::ADMIN)
             .await?;
 
         self.repository.remove_member(user_id, workspace_id).await

@@ -5,7 +5,7 @@ use sqlx::FromRow;
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Workspace {
     pub id: String,
-    pub user_id: Option<String>,
+    pub owner_id: Option<String>,
     pub name: String,
     pub color: Option<String>,
     pub active_tab_id: Option<String>,

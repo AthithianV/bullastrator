@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::models::{
     CreateWorkspace, CreateWorkspaceMember, UpdateWorkspace, UpdateWorkspaceMember, Workspace,
-    WorkspaceMember, workspace::WorkspacePermissionError,
+    WorkspaceMember, workspace::WorkspacePermissionError, workspace_members::WorkspaceRole,
 };
 
 #[derive(Clone)]
@@ -17,13 +17,12 @@ impl WorkspaceRepository {
         Self { pool }
     }
 
-    fn role_level(role: &str) -> Result<u8, WorkspacePermissionError> {
+    fn role_level(role: &WorkspaceRole) -> Result<u8, WorkspacePermissionError> {
         match role {
-            "VIEWER" => Ok(1),
-            "EDITOR" => Ok(2),
-            "ADMIN" => Ok(3),
-            "OWNER" => Ok(4),
-            _ => Err(WorkspacePermissionError::InvalidRole(role.to_string())),
+            WorkspaceRole::VIEWER => Ok(1),
+            WorkspaceRole::EDITOR => Ok(2),
+            WorkspaceRole::ADMIN => Ok(3),
+            WorkspaceRole::OWNER => Ok(4),
         }
     }
 
@@ -31,7 +30,7 @@ impl WorkspaceRepository {
         &self,
         workspace_id: &str,
         user_id: &str,
-        required_role: &str,
+        required_role: &WorkspaceRole,
     ) -> Result<(), WorkspacePermissionError> {
         let actual_role: Option<String> = sqlx::query_scalar(
             r#"
@@ -47,9 +46,11 @@ impl WorkspaceRepository {
         .await
         .map_err(|e| WorkspacePermissionError::InvalidRole(e.to_string()))?;
 
-        let Some(actual_role) = actual_role else {
+        let Some(actual_role_name) = actual_role else {
             return Err(WorkspacePermissionError::NotMember);
         };
+
+        let actual_role = WorkspaceRole::from_string(&actual_role_name)?;
 
         let actual_level = Self::role_level(&actual_role)?;
         let required_level = Self::role_level(required_role)?;
@@ -57,7 +58,7 @@ impl WorkspaceRepository {
         if actual_level < required_level {
             return Err(WorkspacePermissionError::InsufficientRole {
                 required: required_role.to_string(),
-                actual: actual_role,
+                actual: actual_role.to_string(),
             });
         }
 
@@ -94,7 +95,7 @@ impl WorkspaceRepository {
                         user_id,
                         name,
                         color,
-                        icon,
+                        icon
                     ) VALUES (?, ?, ?, ?, ?)
             "#,
         )
@@ -112,14 +113,13 @@ impl WorkspaceRepository {
                     workspace_members (
                         workspace_id,
                         user_id,
-                        role,
-                        created_at
+                        role
                     ) VALUES (?, ?, ?)
             "#,
         )
         .bind(&id)
         .bind(user_id)
-        .bind("OWNER")
+        .bind(WorkspaceRole::OWNER.to_string())
         .execute(&self.pool)
         .await?;
 
@@ -133,13 +133,13 @@ impl WorkspaceRepository {
             r#"
                 SELECT
                     w.id,
-                    w.user_id,
+                    w.user_id as owner_id,
                     w.name,
                     w.color,
                     w.active_tab_id,
                     w.icon,
                     w.last_accessed_at,
-                    ws.role
+                    wm.role
                 FROM
                     workspaces w
                 INNER JOIN
@@ -170,80 +170,32 @@ impl WorkspaceRepository {
         .await?
         .flatten();
 
-        // 2. If it exists and the user still has access to it, return it.
-        if let Some(workspace_id) = active_workspace_id {
-            if let Some(workspace) = sqlx::query_as::<_, Workspace>(
-                r#"
-                SELECT
-                    w.id,
-                    w.name,
-                    w.color,
-                    w.active_tab_id,
-                    w.icon,
-                    w.last_accessed_at,
-                    w.is_primary,
-                    wm.role
-                FROM workspaces w
-                INNER JOIN workspace_members wm
-                    ON wm.workspace_id = w.id
-                WHERE w.id = ?
-                  AND wm.user_id = ?
-                LIMIT 1
-                "#,
-            )
-            .bind(&workspace_id)
-            .bind(user_id)
-            .fetch_optional(&self.pool)
-            .await?
-            {
-                return Ok(workspace);
-            }
-        }
+        let workspace_id = active_workspace_id.context("No active workspace selected")?;
 
-        // 3. Active workspace doesn't exist or user no longer has access.
-        //    Find the most recently accessed workspace.
         let workspace = sqlx::query_as::<_, Workspace>(
             r#"
             SELECT
                 w.id,
+                w.user_id as owner_id,
                 w.name,
                 w.color,
                 w.active_tab_id,
                 w.icon,
                 w.last_accessed_at,
-                w.created_at,
-                w.is_primary,
                 wm.role
             FROM workspaces w
             INNER JOIN workspace_members wm
                 ON wm.workspace_id = w.id
-            WHERE wm.user_id = ?
-            ORDER BY w.last_accessed_at DESC
+            WHERE w.id = ?
+              AND wm.user_id = ?
             LIMIT 1
             "#,
         )
+        .bind(workspace_id)
         .bind(user_id)
         .fetch_optional(&self.pool)
-        .await?;
-
-        // 4. No workspace at all.
-        let Some(workspace) = workspace else {
-            anyhow::bail!("User does not belong to any workspace");
-        };
-
-        // 5. Save the fallback workspace as the user's active workspace.
-        sqlx::query(
-            r#"
-            UPDATE users
-            SET active_workspace_id = ?,
-                updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-            "#,
-        )
-        .bind(&workspace.id)
-        .bind(user_id)
-        .execute(&self.pool)
-        .await?;
+        .await?
+        .context("Active workspace was not found or is inaccessible")?;
 
         Ok(workspace)
     }
@@ -288,13 +240,12 @@ impl WorkspaceRepository {
             r#"
                 SELECT
                     w.id,
+                    w.user_id as owner_id,
                     w.name,
                     w.color,
                     w.active_tab_id,
                     w.icon,
                     w.last_accessed_at,
-                    w.created_at,
-                    w.is_primary,
                     wm.role
                 FROM workspaces w
                 INNER JOIN workspace_members wm
@@ -389,12 +340,36 @@ impl WorkspaceRepository {
     }
 
     pub async fn add_member(&self, data: CreateWorkspaceMember) -> Result<WorkspaceMember> {
-        sqlx::query("INSERT INTO workspace_members (user_id, workspace_id, role) VALUES (?, ?, ?)")
-            .bind(&data.user_id)
-            .bind(&data.workspace_id)
-            .bind(&data.role)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query(
+            "
+            INSERT INTO
+                workspace_members
+                    (user_id, workspace_id, role)
+                VALUES
+                    (?, ?, ?)",
+        )
+        .bind(&data.user_id)
+        .bind(&data.workspace_id)
+        .bind(&data.role.to_string())
+        .execute(&self.pool)
+        .await?;
+
+        sqlx::query(
+            "UPDATE
+                users
+            SET
+                active_workspace_id = ?
+            WHERE
+                id = ?
+            AND
+                active_workspace_id is NULL",
+        )
+        .bind(&data.user_id)
+        .bind(&data.workspace_id)
+        .bind(&data.role.to_string())
+        .execute(&self.pool)
+        .await?;
+
         self.get_member(&data.user_id, &data.workspace_id)
             .await?
             .context("Added workspace member was not found")
