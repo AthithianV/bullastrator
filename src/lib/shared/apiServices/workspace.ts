@@ -1,6 +1,10 @@
-import { id, snakeCase, type WebCommand } from ".";
+import { id, type WebCommand } from ".";
 
 export const WORKSPACE_ROUTES: Record<string, WebCommand> = {
+  get_all_workspaces: {
+    method: "GET",
+    path: (args) => `/workspaces`,
+  },
   get_workspace_by_id: {
     method: "GET",
     path: (args) => `/workspaces/${id(args.id, "id")}`,
@@ -8,12 +12,12 @@ export const WORKSPACE_ROUTES: Record<string, WebCommand> = {
   create_workspace: {
     method: "POST",
     path: () => "/workspaces",
-    body: (args) => snakeCase(args.data),
+    body: (args) => args.data,
   },
   update_workspace: {
     method: "PATCH",
     path: (args) => `/workspaces/${id(args.id, "id")}`,
-    body: (args) => snakeCase(args.data),
+    body: (args) => args.data,
   },
   delete_workspace: {
     method: "DELETE",

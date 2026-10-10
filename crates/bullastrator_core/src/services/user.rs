@@ -9,34 +9,12 @@ use bullastrator_storage::{
 };
 use chrono::{Duration, Utc};
 use rand::rngs::OsRng;
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
+use crate::models::user::{AuthResponse, LoginRequest, RegisterRequest};
+
 const SESSION_TTL_DAYS: i64 = 30;
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RegisterRequest {
-    pub name: String,
-    pub email: String,
-    pub password: String,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LoginRequest {
-    pub email: String,
-    pub password: String,
-}
-
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct AuthResponse {
-    pub user: User,
-    pub token: String,
-    pub expires_at: chrono::NaiveDateTime,
-}
 
 #[derive(Clone)]
 pub struct UserService {
@@ -118,6 +96,10 @@ impl UserService {
             token,
             expires_at,
         })
+    }
+
+    pub async fn get_user_id(&self, token: &str) -> Result<Option<String>> {
+        self.repository.get_user_id(&hash_token(token)).await
     }
 }
 

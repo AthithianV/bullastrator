@@ -1,15 +1,83 @@
 use crate::controller::ApiResult;
+use crate::models::{connection::RedisVersionRequest, user::AuthenticatedUser};
 use axum::{
-    Json,
+    Extension, Json,
     extract::{Path, State},
 };
 use bullastrator_core::{services::connection as connection_service, state::AppState};
-use bullastrator_storage::models::CreateConnection;
-use serde::Deserialize;
+use bullastrator_storage::models::{
+    Connection, ConnectionDetails, ConnectionWithQueues, CreateConnection, UpdateConnection,
+};
 
-pub(crate) async fn test_redis(Json(request): Json<RedisUrlRequest>) -> ApiResult<Json<bool>> {
+pub(crate) async fn create(
+    State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
+    Json(request): Json<CreateConnection>,
+) -> ApiResult<Json<Connection>> {
+    Ok(Json(state.connections.create(&user.id, request).await?))
+}
+
+pub(crate) async fn list(
+    State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
+) -> ApiResult<Json<Vec<Connection>>> {
+    Ok(Json(state.connections.list(&user.id).await?))
+}
+
+pub(crate) async fn list_queues(
+    State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
+) -> ApiResult<Json<Vec<ConnectionWithQueues>>> {
+    Ok(Json(state.connections.list_queues(&user.id).await?))
+}
+
+pub(crate) async fn get(
+    State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
+    Path(connection_id): Path<String>,
+) -> ApiResult<Json<Option<ConnectionDetails>>> {
+    Ok(Json(state.connections.get(&connection_id, &user.id).await?))
+}
+
+pub(crate) async fn update(
+    State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
+    Path(connection_id): Path<String>,
+    Json(request): Json<UpdateConnection>,
+) -> ApiResult<Json<Connection>> {
     Ok(Json(
-        connection_service::test_redis_connection_service(request.redis_url)
+        state
+            .connections
+            .update(&connection_id, &user.id, request)
+            .await?,
+    ))
+}
+
+pub(crate) async fn delete(
+    State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
+    Path(connection_id): Path<String>,
+) -> ApiResult<Json<u64>> {
+    Ok(Json(
+        state.connections.delete(&connection_id, &user.id).await?,
+    ))
+}
+
+pub(crate) async fn test_redis(Json(request): Json<RedisVersionRequest>) -> ApiResult<Json<bool>> {
+    let connection = CreateConnection {
+        name: String::new(),
+        host: request.host,
+        port: request.port,
+        username: request.username,
+        password: request.password,
+        db: Some(request.db),
+        bullmq_prefix: None,
+        color: None,
+        label: None,
+        is_tls_enabled: request.is_tls_enabled,
+    };
+    Ok(Json(
+        connection_service::test_redis_connection_service(&connection)
             .await
             .map_err(anyhow::Error::msg)?,
     ))
@@ -17,21 +85,25 @@ pub(crate) async fn test_redis(Json(request): Json<RedisUrlRequest>) -> ApiResul
 
 pub(crate) async fn redis_health(
     State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
     Path(connection_id): Path<String>,
 ) -> ApiResult<Json<bool>> {
+    state
+        .connections
+        .authorize(
+            &connection_id,
+            &user.id,
+            bullastrator_storage::models::WorkspaceRole::VIEWER,
+        )
+        .await?;
     Ok(Json(
         connection_service::start_health_check_service(
-            &state.redis_connection(&connection_id)?.pool,
+            &state.get_redis_connection(&connection_id).await?.pool,
         )
         .await?,
     ))
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RedisUrlRequest {
-    redis_url: String,
-}
 pub(crate) async fn redis_version(
     Json(request): Json<RedisVersionRequest>,
 ) -> ApiResult<Json<serde_json::Value>> {
@@ -49,15 +121,4 @@ pub(crate) async fn redis_version(
     };
     connection_service::check_redis_version(&connection).await?;
     Ok(Json(serde_json::json!({"supported": true})))
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct RedisVersionRequest {
-    host: String,
-    port: i32,
-    username: Option<String>,
-    password: Option<String>,
-    db: i32,
-    is_tls_enabled: bool,
 }

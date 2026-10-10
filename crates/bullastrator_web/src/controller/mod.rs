@@ -1,6 +1,7 @@
 pub(crate) mod connection;
 pub(crate) mod job;
 pub(crate) mod queue;
+pub(crate) mod tab;
 pub(crate) mod user;
 pub(crate) mod workspace;
 

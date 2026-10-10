@@ -12,7 +12,6 @@
     } from "../store/folder.context.svelte";
     import { Input } from "shared/components/ui/input";
     import { useGetAllQueuesByConnection } from "queue/hooks/queue.hooks";
-    import type { ReadConnection } from "connection/interface/connection.types";
     import Checkbox from "shared/components/ui/checkbox/checkbox.svelte";
     import { cn } from "shared/utils";
     import {
@@ -36,11 +35,9 @@
     }: {
         tabParams: FolderTabParams;
         tabId: string;
-        connection?: ReadConnection;
     } = $props<{
         tabParams: FolderTabParams;
         tabId: string;
-        connection?: ReadConnection;
     }>();
 
     setFolderState(tabId, tabParams);

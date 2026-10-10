@@ -35,13 +35,11 @@
         if (!tabExists) {
             await createTab({
                 id: queueId,
-                data: {
-                    title: queueName,
-                    connectionId: connectionId,
-                    params: {
-                        ...QueueState.getDefaultParams(connectionId, queueName),
-                        state,
-                    },
+                title: queueName,
+                connectionId: connectionId,
+                params: {
+                    ...QueueState.getDefaultParams(connectionId, queueName),
+                    state,
                 },
             });
         } else {

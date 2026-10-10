@@ -3,8 +3,8 @@ use sqlx::SqlitePool;
 use uuid::Uuid;
 
 use crate::models::{
-    CreateWorkspace, CreateWorkspaceMember, Settings, UpdateWorkspace, UpdateWorkspaceMember,
-    Workspace, WorkspaceMember,
+    CreateWorkspace, CreateWorkspaceMember, UpdateWorkspace, UpdateWorkspaceMember, Workspace,
+    WorkspaceMember, workspace::WorkspacePermissionError, workspace_members::WorkspaceRole,
 };
 
 #[derive(Clone)]
@@ -17,67 +17,284 @@ impl WorkspaceRepository {
         Self { pool }
     }
 
-    pub async fn create(&self, data: CreateWorkspace) -> Result<Workspace> {
+    fn role_level(role: &WorkspaceRole) -> Result<u8, WorkspacePermissionError> {
+        match role {
+            WorkspaceRole::VIEWER => Ok(1),
+            WorkspaceRole::EDITOR => Ok(2),
+            WorkspaceRole::ADMIN => Ok(3),
+            WorkspaceRole::OWNER => Ok(4),
+        }
+    }
+
+    pub async fn check_permission(
+        &self,
+        workspace_id: &str,
+        user_id: &str,
+        required_role: &WorkspaceRole,
+    ) -> Result<(), WorkspacePermissionError> {
+        let actual_role: Option<String> = sqlx::query_scalar(
+            r#"
+                SELECT wm.role
+                FROM workspace_members wm
+                WHERE wm.workspace_id = ?
+                  AND wm.user_id = ?
+            "#,
+        )
+        .bind(workspace_id)
+        .bind(user_id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| WorkspacePermissionError::InvalidRole(e.to_string()))?;
+
+        let Some(actual_role_name) = actual_role else {
+            return Err(WorkspacePermissionError::NotMember);
+        };
+
+        let actual_role = WorkspaceRole::from_string(&actual_role_name)?;
+
+        let actual_level = Self::role_level(&actual_role)?;
+        let required_level = Self::role_level(required_role)?;
+
+        if actual_level < required_level {
+            return Err(WorkspacePermissionError::InsufficientRole {
+                required: required_role.to_string(),
+                actual: actual_role.to_string(),
+            });
+        }
+
+        Ok(())
+    }
+
+    pub async fn create(&self, user_id: &str, data: CreateWorkspace) -> Result<Workspace> {
+        let exists: bool = sqlx::query_scalar(
+            r#"
+            SELECT EXISTS (
+                SELECT 1
+                FROM workspaces
+                WHERE user_id = ?
+                  AND LOWER(name) = LOWER(?)
+            )
+            "#,
+        )
+        .bind(user_id)
+        .bind(&data.name)
+        .fetch_one(&self.pool)
+        .await?;
+
+        if exists {
+            anyhow::bail!("A workspace with this name already exists");
+        }
+
         let id = Uuid::new_v4().to_string();
-        sqlx::query("INSERT INTO workspace (id, user_id, name, color, icon, plan, role, max_connections, last_accessed_at, is_guest_mode, is_primary) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)")
-            .bind(&id).bind(data.user_id).bind(data.name).bind(data.color).bind(data.icon).bind(data.plan).bind(data.role).bind(data.max_connections).bind(data.last_accessed_at).execute(&self.pool).await?;
-        self.get_by_id(&id)
+
+        sqlx::query(
+            r#"
+                INSERT INTO
+                    workspaces (
+                        id,
+                        user_id,
+                        name,
+                        color,
+                        icon
+                    ) VALUES (?, ?, ?, ?, ?)
+            "#,
+        )
+        .bind(&id)
+        .bind(user_id)
+        .bind(data.name)
+        .bind(data.color)
+        .bind(data.icon)
+        .execute(&self.pool)
+        .await?;
+
+        sqlx::query(
+            r#"
+                INSERT INTO
+                    workspace_members (
+                        workspace_id,
+                        user_id,
+                        role
+                    ) VALUES (?, ?, ?)
+            "#,
+        )
+        .bind(&id)
+        .bind(user_id)
+        .bind(WorkspaceRole::OWNER.to_string())
+        .execute(&self.pool)
+        .await?;
+
+        self.get_by_id(&id, user_id)
             .await?
             .context("Created workspace was not found")
     }
 
     pub async fn get_by_user_id(&self, user_id: &str) -> Result<Vec<Workspace>> {
-        Ok(sqlx::query_as::<_, Workspace>("SELECT id, user_id, name, color, active_tab_id, icon, last_accessed_at, created_at, plan, role, max_connections, is_guest_mode, is_primary FROM workspace WHERE user_id = ? ORDER BY created_at").bind(user_id).fetch_all(&self.pool).await?)
-    }
-
-    pub async fn get_all(&self) -> Result<Vec<Workspace>> {
-        Ok(sqlx::query_as::<_, Workspace>("SELECT id, user_id, name, color, active_tab_id, icon, last_accessed_at, created_at, plan, role, max_connections, is_guest_mode, is_primary FROM workspace WHERE is_guest_mode = 0 ORDER BY created_at").fetch_all(&self.pool).await?)
-    }
-
-    pub async fn get_active_workspace(&self) -> Result<Workspace> {
-        let setting = sqlx::query_as::<_, Settings>(
-            "SELECT key, user_id, value FROM settings WHERE key = 'active_workspace_id'",
+        Ok(sqlx::query_as::<_, Workspace>(
+            r#"
+                SELECT
+                    w.id,
+                    w.user_id as owner_id,
+                    w.name,
+                    w.color,
+                    w.active_tab_id,
+                    w.icon,
+                    w.last_accessed_at,
+                    wm.role
+                FROM
+                    workspaces w
+                INNER JOIN
+                    workspace_members wm
+                ON
+                    wm.workspace_id = w.id
+                WHERE
+                    wm.user_id = ?
+                ORDER BY last_accessed_at
+            "#,
         )
+        .bind(user_id)
+        .fetch_all(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_active_workspace(&self, user_id: &str) -> Result<Workspace> {
+        // 1. Get the user's currently selected workspace.
+        let active_workspace_id: Option<String> = sqlx::query_scalar(
+            r#"
+            SELECT active_workspace_id
+            FROM users
+            WHERE id = ?
+            "#,
+        )
+        .bind(user_id)
         .fetch_optional(&self.pool)
+        .await?
+        .flatten();
+
+        let workspace_id = active_workspace_id.context("No active workspace selected")?;
+
+        let workspace = sqlx::query_as::<_, Workspace>(
+            r#"
+            SELECT
+                w.id,
+                w.user_id as owner_id,
+                w.name,
+                w.color,
+                w.active_tab_id,
+                w.icon,
+                w.last_accessed_at,
+                wm.role
+            FROM workspaces w
+            INNER JOIN workspace_members wm
+                ON wm.workspace_id = w.id
+            WHERE w.id = ?
+              AND wm.user_id = ?
+            LIMIT 1
+            "#,
+        )
+        .bind(workspace_id)
+        .bind(user_id)
+        .fetch_optional(&self.pool)
+        .await?
+        .context("Active workspace was not found or is inaccessible")?;
+
+        Ok(workspace)
+    }
+
+    pub async fn set_active_workspace(
+        &self,
+        workspace_id: &str,
+        user_id: &str,
+    ) -> Result<Workspace> {
+        // 5. Save the fallback workspace as the user's active workspace.
+        sqlx::query(
+            r#"
+            UPDATE users
+            SET active_workspace_id = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            "#,
+        )
+        .bind(workspace_id)
+        .bind(user_id)
+        .execute(&self.pool)
         .await?;
-        if let Some(Some(id)) = setting.map(|s| s.value) {
-            if let Some(workspace) = self.get_by_id(&id).await? {
-                return Ok(workspace);
-            }
-        }
-        let workspace = sqlx::query_as::<_, Workspace>("SELECT id, user_id, name, color, active_tab_id, icon, last_accessed_at, created_at, plan, role, max_connections, is_guest_mode, is_primary FROM workspace ORDER BY last_accessed_at DESC LIMIT 1").fetch_optional(&self.pool).await?.context("No workspaces found in the database")?;
-        self.set_active_workspace(&workspace.id).await?;
-        Ok(workspace)
-    }
 
-    pub async fn set_active_workspace(&self, workspace_id: &str) -> Result<()> {
-        sqlx::query("INSERT INTO settings (key, user_id, value) VALUES ('active_workspace_id', NULL, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value, user_id = excluded.user_id").bind(workspace_id).execute(&self.pool).await?;
-        Ok(())
-    }
+        sqlx::query(
+            r#"
+            UPDATE workspaces
+            SET last_accessed_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+            "#,
+        )
+        .bind(workspace_id)
+        .execute(&self.pool)
+        .await?;
 
-    pub async fn go_guest_mode(&self) -> Result<Workspace> {
-        let workspace = sqlx::query_as::<_, Workspace>("SELECT id, user_id, name, color, active_tab_id, icon, last_accessed_at, created_at, plan, role, max_connections, is_guest_mode, is_primary FROM workspace WHERE is_guest_mode = 1 LIMIT 1").fetch_optional(&self.pool).await?.context("Guest mode workspace not found")?;
-        self.set_active_workspace(&workspace.id).await?;
-        Ok(workspace)
-    }
-
-    pub async fn get_by_id(&self, id: &str) -> Result<Option<Workspace>> {
-        Ok(sqlx::query_as::<_, Workspace>("SELECT id, user_id, name, color, active_tab_id, icon, last_accessed_at, created_at, plan, role, max_connections, is_guest_mode, is_primary FROM workspace WHERE id = ?").bind(id).fetch_optional(&self.pool).await?)
-    }
-
-    pub async fn update(&self, id: &str, data: UpdateWorkspace) -> Result<Workspace> {
-        let result = sqlx::query("UPDATE workspace SET name = COALESCE(?, name), icon = COALESCE(?, icon), color = COALESCE(?, color), last_accessed_at = COALESCE(?, last_accessed_at), is_guest_mode = COALESCE(?, is_guest_mode), is_primary = COALESCE(?, is_primary) WHERE id = ?")
-            .bind(data.name).bind(data.icon).bind(data.color).bind(data.last_accessed_at).bind(data.is_guest_mode).bind(data.is_primary).bind(id).execute(&self.pool).await?;
-        if result.rows_affected() == 0 {
-            bail!("Workspace ID {id} not found")
-        }
-        self.get_by_id(id)
+        self.get_by_id(workspace_id, user_id)
             .await?
-            .context("Updated workspace was not found")
+            .context("Created workspace was not found")
+    }
+
+    pub async fn get_by_id(&self, workspace_id: &str, user_id: &str) -> Result<Option<Workspace>> {
+        Ok(sqlx::query_as::<_, Workspace>(
+            r#"
+                SELECT
+                    w.id,
+                    w.user_id as owner_id,
+                    w.name,
+                    w.color,
+                    w.active_tab_id,
+                    w.icon,
+                    w.last_accessed_at,
+                    wm.role
+                FROM workspaces w
+                INNER JOIN workspace_members wm
+                    ON wm.workspace_id = w.id
+                WHERE w.id = ? AND wm.user_id = ?
+                ORDER BY w.last_accessed_at DESC
+                LIMIT 1
+            "#,
+        )
+        .bind(workspace_id)
+        .bind(user_id)
+        .fetch_optional(&self.pool)
+        .await?)
+    }
+
+    pub async fn update(
+        &self,
+        workspace_id: &str,
+        user_id: &str,
+        data: UpdateWorkspace,
+    ) -> Result<Workspace> {
+        let result = sqlx::query(
+            r#"
+                UPDATE
+                    workspaces
+                SET
+                    name = COALESCE(?, name),
+                    icon = COALESCE(?, icon),
+                    color = COALESCE(?, color)
+                WHERE id = ?
+            "#,
+        )
+        .bind(data.name)
+        .bind(data.icon)
+        .bind(data.color)
+        .bind(workspace_id)
+        .execute(&self.pool)
+        .await?;
+        if result.rows_affected() == 0 {
+            bail!("Workspace ID {workspace_id} not found")
+        }
+
+        self.get_by_id(workspace_id, user_id)
+            .await?
+            .context("Created workspace was not found")
     }
 
     pub async fn delete(&self, id: &str) -> Result<u64> {
-        let result = sqlx::query("DELETE FROM workspace WHERE id = ?")
+        let result = sqlx::query("DELETE FROM workspaces WHERE id = ?")
             .bind(id)
             .execute(&self.pool)
             .await?;
@@ -87,29 +304,23 @@ impl WorkspaceRepository {
         Ok(result.rows_affected())
     }
 
-    pub async fn upsert(&self, id: &str, data: CreateWorkspace) -> Result<Workspace> {
-        sqlx::query("INSERT INTO workspace (id, user_id, name, color, icon, plan, role, max_connections, last_accessed_at, is_guest_mode, is_primary) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0) ON CONFLICT(id) DO UPDATE SET user_id = excluded.user_id, name = excluded.name, plan = excluded.plan, role = excluded.role, max_connections = excluded.max_connections, icon = excluded.icon, color = excluded.color")
-            .bind(id).bind(data.user_id).bind(data.name).bind(data.color).bind(data.icon).bind(data.plan).bind(data.role).bind(data.max_connections).bind(data.last_accessed_at).execute(&self.pool).await?;
-        self.get_by_id(id)
-            .await?
-            .context("Upserted workspace was not found")
-    }
-
-    pub async fn select_workspace(&self, id: &str) -> Result<Workspace> {
-        let workspace = self.get_by_id(id).await?.context("Workspace not found")?;
-        sqlx::query("UPDATE workspace SET last_accessed_at = CURRENT_TIMESTAMP WHERE id = ?")
-            .bind(id)
-            .execute(&self.pool)
-            .await?;
-        self.set_active_workspace(id).await?;
-        Ok(workspace)
-    }
-
-    pub async fn get_members(&self, connection_id: &str) -> Result<Vec<WorkspaceMember>> {
+    pub async fn get_members(&self, workspace_id: &str) -> Result<Vec<WorkspaceMember>> {
         Ok(sqlx::query_as::<_, WorkspaceMember>(
-            "SELECT user_id, connection_id, role, created_at FROM workspace_members WHERE connection_id = ? ORDER BY created_at",
+            r#"
+                SELECT
+                    wm.user_id,
+                    wm.workspace_id,
+                    wm.role,
+                    u.name,
+                    u.email
+                FROM workspace_members wm
+                INNER JOIN users u
+                    ON u.id = wm.user_id
+                WHERE wm.workspace_id = ?
+                ORDER BY wm.created_at
+            "#,
         )
-        .bind(connection_id)
+        .bind(workspace_id)
         .fetch_all(&self.pool)
         .await?)
     }
@@ -130,14 +341,36 @@ impl WorkspaceRepository {
 
     pub async fn add_member(&self, data: CreateWorkspaceMember) -> Result<WorkspaceMember> {
         sqlx::query(
-            "INSERT INTO workspace_members (user_id, connection_id, role) VALUES (?, ?, ?)",
+            "
+            INSERT INTO
+                workspace_members
+                    (user_id, workspace_id, role)
+                VALUES
+                    (?, ?, ?)",
         )
         .bind(&data.user_id)
-        .bind(&data.connection_id)
-        .bind(&data.role)
+        .bind(&data.workspace_id)
+        .bind(&data.role.to_string())
         .execute(&self.pool)
         .await?;
-        self.get_member(&data.user_id, &data.connection_id)
+
+        sqlx::query(
+            "UPDATE
+                users
+            SET
+                active_workspace_id = ?
+            WHERE
+                id = ?
+            AND
+                active_workspace_id is NULL",
+        )
+        .bind(&data.user_id)
+        .bind(&data.workspace_id)
+        .bind(&data.role.to_string())
+        .execute(&self.pool)
+        .await?;
+
+        self.get_member(&data.user_id, &data.workspace_id)
             .await?
             .context("Added workspace member was not found")
     }
@@ -145,30 +378,30 @@ impl WorkspaceRepository {
     pub async fn update_member(
         &self,
         user_id: &str,
-        connection_id: &str,
+        workspace_id: &str,
         data: UpdateWorkspaceMember,
     ) -> Result<WorkspaceMember> {
         let result = sqlx::query(
-            "UPDATE workspace_members SET role = COALESCE(?, role) WHERE user_id = ? AND connection_id = ?",
+            "UPDATE workspace_members SET role = COALESCE(?, role) WHERE user_id = ? AND workspace_id = ?",
         )
         .bind(data.role)
         .bind(user_id)
-        .bind(connection_id)
+        .bind(workspace_id)
         .execute(&self.pool)
         .await?;
         if result.rows_affected() == 0 {
             bail!("Workspace member was not found")
         }
-        self.get_member(user_id, connection_id)
+        self.get_member(user_id, workspace_id)
             .await?
             .context("Updated workspace member was not found")
     }
 
-    pub async fn remove_member(&self, user_id: &str, connection_id: &str) -> Result<u64> {
+    pub async fn remove_member(&self, user_id: &str, workspace_id: &str) -> Result<u64> {
         let result =
-            sqlx::query("DELETE FROM workspace_members WHERE user_id = ? AND connection_id = ?")
+            sqlx::query("DELETE FROM workspace_members WHERE user_id = ? AND workspace_id = ?")
                 .bind(user_id)
-                .bind(connection_id)
+                .bind(workspace_id)
                 .execute(&self.pool)
                 .await?;
         if result.rows_affected() == 0 {

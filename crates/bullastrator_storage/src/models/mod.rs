@@ -11,15 +11,17 @@ pub mod user_access_connection;
 pub mod workspace;
 pub mod workspace_members;
 
-pub use connection::{Connection, CreateConnection, UpdateConnection};
+pub use connection::{Connection, ConnectionDetails, CreateConnection, UpdateConnection};
 pub use folder::{CreateFolder, Folder, FolderWithQueues};
 pub use folder_queue::FolderQueue;
-pub use queue::{ConnectionWithQueues, Queue, UpdateQueue};
+pub use queue::{ConnectionWithQueues, Queue};
 pub use queue_actions::QueueAction;
 pub use session::Session;
 pub use settings::Settings;
-pub use tab::{CreateTab, Tab, TabWithConnection, UpdateTab};
+pub use tab::{CreateTab, Tab, UpdateTab};
 pub use user::User;
 pub use user_access_connection::UserAccessConnection;
-pub use workspace::{CreateWorkspace, UpdateWorkspace, Workspace};
-pub use workspace_members::{CreateWorkspaceMember, UpdateWorkspaceMember, WorkspaceMember};
+pub use workspace::{CreateWorkspace, UpdateWorkspace, Workspace, WorkspacePermissionError};
+pub use workspace_members::{
+    CreateWorkspaceMember, UpdateWorkspaceMember, WorkspaceMember, WorkspaceRole,
+};

@@ -8,7 +8,7 @@ import type { JobFilterType } from "job/interface/jobPayload.types";
 
 export interface ConnectionWithQueue {
   id: string;
-  connectionName: string;
+  name: string;
   color: string;
   queues: ReadQueueModel[];
 }
@@ -17,11 +17,6 @@ export interface ReadQueueModel {
   id: string;
   connectionId: string;
   queueName: string;
-  displayName: string | null;
-  isStarred: boolean | null;
-  autoRefreshRate: number | null;
-  notificationSettings: string | null;
-  created_at: Date | string;
 }
 
 export interface CreateQueueModel {

@@ -4,3 +4,4 @@ pub mod models;
 pub mod scripts;
 pub mod services;
 pub mod state;
+pub mod utils;
