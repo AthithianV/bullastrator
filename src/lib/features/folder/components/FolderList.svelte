@@ -33,11 +33,9 @@
     ) {
         await createTab({
             id: queueId,
-            data: {
-                title: queueName,
-                connectionId: connectionId,
-                params: QueueState.getDefaultParams(connectionId, queueName),
-            },
+            title: queueName,
+            connectionId: connectionId,
+            params: QueueState.getDefaultParams(connectionId, queueName),
         });
         queueStore.setActiveNode(queueId);
     }

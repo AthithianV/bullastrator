@@ -13,7 +13,7 @@
 
     $effect(() => {
         if (queueJobsQuery.data) {
-            queueState.jobCounts = queueJobsQuery.data;
+            queueState.jobCounts = queueJobsQuery.data[0];
         }
     });
 </script>

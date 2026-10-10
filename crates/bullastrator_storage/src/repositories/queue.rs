@@ -28,7 +28,7 @@ impl QueueRepository {
                     queues (
                         id,
                         connection_id,
-                        queue_name,
+                        queue_name
                     )
                     VALUES (?, ?, ?)
                     ON CONFLICT (connection_id, queue_name) DO NOTHING

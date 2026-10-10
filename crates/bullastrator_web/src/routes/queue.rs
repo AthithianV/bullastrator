@@ -8,8 +8,8 @@ use bullastrator_core::state::AppState;
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route(
-            "/queues/{connection_id}",
-            get(controller::queue::all_queues),
+            "/queues/sync/{connection_id}",
+            get(controller::queue::sync_queues),
         )
         .route(
             "/queues/{connection_id}/{queue_name}",

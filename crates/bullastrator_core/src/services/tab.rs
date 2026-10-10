@@ -3,7 +3,6 @@ use bullastrator_storage::{
     models::{CreateTab, Tab, UpdateTab, WorkspaceRole},
     repositories::TabRepository,
 };
-use uuid::Uuid;
 
 use crate::services::workspace::WorkspaceService;
 
@@ -43,9 +42,7 @@ impl TabService {
             .check_permission(&workspace_id, user_id, WorkspaceRole::VIEWER)
             .await?;
         request.user_id = Some(user_id.to_owned());
-        self.repository
-            .create(&Uuid::new_v4().to_string(), &workspace_id, request)
-            .await
+        self.repository.create(&workspace_id, request).await
     }
 
     pub async fn get(&self, tab_id: &str, user_id: &str) -> Result<Option<Tab>> {

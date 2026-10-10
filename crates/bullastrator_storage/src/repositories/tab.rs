@@ -13,8 +13,8 @@ impl TabRepository {
         Self { pool }
     }
 
-    pub async fn create(&self, id: &str, workspace_id: &str, data: CreateTab) -> Result<Tab> {
-        if let Some(existing) = self.get_by_id(id).await? {
+    pub async fn create(&self, workspace_id: &str, data: CreateTab) -> Result<Tab> {
+        if let Some(existing) = self.get_by_id(&data.id).await? {
             self.set_active_tab(workspace_id, Some(existing.id.clone()))
                 .await?;
 
@@ -41,31 +41,28 @@ impl TabRepository {
                 user_id,
                 title,
                 params,
-                is_preview,
                 rank
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             "#,
         )
-        .bind(id)
+        .bind(data.id.clone())
         .bind(workspace_id)
         .bind(data.connection_id)
         .bind(data.user_id)
         .bind(data.title)
         .bind(data.params)
-        .bind(data.is_preview)
         .bind(rank)
         .execute(&self.pool)
         .await
         .context("Failed to create tab")?;
 
         let result = self
-            .get_by_id(id)
+            .get_by_id(&data.id)
             .await?
             .context("Created tab was not found")?;
 
-        self.set_active_tab(workspace_id, Some(id.to_string()))
-            .await?;
+        self.set_active_tab(workspace_id, Some(data.id)).await?;
 
         Ok(result)
     }

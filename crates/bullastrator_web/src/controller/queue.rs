@@ -8,14 +8,14 @@ use axum::{
 };
 use bullastrator_core::{services::queue::QueueDetails, state::AppState};
 
-pub(crate) async fn all_queues(
+pub(crate) async fn sync_queues(
     State(state): State<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
     Path(connection_id): Path<String>,
 ) -> ApiResult<Json<Vec<String>>> {
     let queue_service = state.get_queue_service(&connection_id).await?;
 
-    Ok(Json(queue_service.get_all_bullmq_queues(&user.id).await?))
+    Ok(Json(queue_service.sync_queues(&user.id).await?))
 }
 
 pub(crate) async fn queue_details(

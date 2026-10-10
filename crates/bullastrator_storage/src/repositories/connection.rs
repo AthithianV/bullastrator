@@ -12,7 +12,6 @@ struct ConnectionQueueRow {
     connection_id: String,
     workspace_id: String,
     connection_name: String,
-    last_synced_at: Option<chrono::NaiveDateTime>,
     color: Option<String>,
     label: Option<String>,
     queue_id: Option<String>,

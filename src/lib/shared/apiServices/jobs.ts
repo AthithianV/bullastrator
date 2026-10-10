@@ -10,7 +10,7 @@ export const JOB_ROUTES: Record<string, WebCommand> = {
   get_jobs_in_queue: {
     method: "GET",
     path: (args) =>
-      `/jobs/${id(args.connectionId, "connectionId")}/${id(args.queueName, "queueName")}/jobs`,
+      `/connections/${id(args.connectionId, "connectionId")}/queues/${id(args.queueName, "queueName")}/jobs`,
     query: (args) => ({
       status: args.status,
       cursor: args.cursor,

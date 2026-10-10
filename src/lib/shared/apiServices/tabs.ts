@@ -12,7 +12,7 @@ export const TAB_ROUTES: Record<string, WebCommand> = {
   create_tab: {
     method: "POST",
     path: () => "/tabs",
-    body: (args) => args.data,
+    body: (args) => args,
   },
   update_tab: {
     method: "PATCH",

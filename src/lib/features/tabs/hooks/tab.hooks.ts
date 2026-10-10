@@ -69,11 +69,8 @@ export const useCreateTab = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: ({ id, data }: { id: string; data: CreateTabModel }) =>
-      invokeWrapper<ReadTabModel>("create_tab", {
-        id,
-        data,
-      }),
+    mutationFn: (data: CreateTabModel) =>
+      invokeWrapper<ReadTabModel>("create_tab", data),
     onSuccess: (updatedTab) => {
       // Invalidate the list so the new tab appears
       queryClient.invalidateQueries({ queryKey: TAB_QUERY_KEY });

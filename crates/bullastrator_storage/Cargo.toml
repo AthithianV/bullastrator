@@ -11,6 +11,7 @@ name = "bullastrator_storage"
 
 [dependencies]
 serde = { workspace = true }
+serde_json = { workspace = true }
 anyhow = { workspace = true }
 sqlx = { workspace = true }
 chrono = { workspace = true }

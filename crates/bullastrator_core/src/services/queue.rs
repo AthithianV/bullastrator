@@ -45,8 +45,8 @@ impl QueueService {
     }
 
     #[tracing::instrument(skip(self), fields(connection_id = %self.redis.connection_id), err)]
-    pub async fn get_all_bullmq_queues(&self, user_id: &str) -> Result<Vec<String>> {
-        self.authorize(user_id, WorkspaceRole::VIEWER).await?;
+    pub async fn sync_queues(&self, user_id: &str) -> Result<Vec<String>> {
+        self.authorize(user_id, WorkspaceRole::ADMIN).await?;
         tracing::debug!("discovering BullMQ queues");
         let mut connection = self.redis.pool.get().await.context("Connection failed")?;
         let pattern = format!("{}:*:meta", self.redis.prefix);

@@ -21,6 +21,7 @@ export interface ReadTabModel {
 }
 
 export interface CreateTabModel {
+  id: string;
   connectionId?: string | null;
 
   title: string;

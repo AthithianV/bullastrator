@@ -1,9 +1,9 @@
 import { id, type WebCommand } from ".";
 
 export const QUEUE_ROUTES: Record<string, WebCommand> = {
-  get_all_queues_by_connection: {
+  sync_all_queue_names: {
     method: "GET",
-    path: (args) => `/queues/${id(args.connectionId, "connectionId")}`,
+    path: (args) => `/queues/sync/${id(args.connectionId, "connectionId")}`,
   },
   get_queue_details: {
     method: "GET",
