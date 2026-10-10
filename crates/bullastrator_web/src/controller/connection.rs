@@ -1,11 +1,13 @@
+use crate::controller::ApiResult;
 use crate::models::{connection::RedisVersionRequest, user::AuthenticatedUser};
-use crate::{controller::ApiResult, models::connection::RedisUrlRequest};
 use axum::{
     Extension, Json,
     extract::{Path, State},
 };
 use bullastrator_core::{services::connection as connection_service, state::AppState};
-use bullastrator_storage::models::{Connection, CreateConnection, UpdateConnection};
+use bullastrator_storage::models::{
+    Connection, ConnectionDetails, ConnectionWithQueues, CreateConnection, UpdateConnection,
+};
 
 pub(crate) async fn create(
     State(state): State<AppState>,
@@ -22,11 +24,18 @@ pub(crate) async fn list(
     Ok(Json(state.connections.list(&user.id).await?))
 }
 
+pub(crate) async fn list_queues(
+    State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
+) -> ApiResult<Json<Vec<ConnectionWithQueues>>> {
+    Ok(Json(state.connections.list_queues(&user.id).await?))
+}
+
 pub(crate) async fn get(
     State(state): State<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
     Path(connection_id): Path<String>,
-) -> ApiResult<Json<Option<Connection>>> {
+) -> ApiResult<Json<Option<ConnectionDetails>>> {
     Ok(Json(state.connections.get(&connection_id, &user.id).await?))
 }
 
@@ -54,9 +63,21 @@ pub(crate) async fn delete(
     ))
 }
 
-pub(crate) async fn test_redis(Json(request): Json<RedisUrlRequest>) -> ApiResult<Json<bool>> {
+pub(crate) async fn test_redis(Json(request): Json<RedisVersionRequest>) -> ApiResult<Json<bool>> {
+    let connection = CreateConnection {
+        name: String::new(),
+        host: request.host,
+        port: request.port,
+        username: request.username,
+        password: request.password,
+        db: Some(request.db),
+        bullmq_prefix: None,
+        color: None,
+        label: None,
+        is_tls_enabled: request.is_tls_enabled,
+    };
     Ok(Json(
-        connection_service::test_redis_connection_service(request.redis_url)
+        connection_service::test_redis_connection_service(&connection)
             .await
             .map_err(anyhow::Error::msg)?,
     ))

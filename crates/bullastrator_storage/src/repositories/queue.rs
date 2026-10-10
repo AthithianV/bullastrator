@@ -2,7 +2,7 @@ use anyhow::{Context, Result, bail};
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
-use crate::models::{Connection, ConnectionWithQueues, Queue};
+use crate::models::Queue;
 
 #[derive(Clone)]
 pub struct QueueRepository {
@@ -63,44 +63,6 @@ impl QueueRepository {
         }
         tx.commit().await?;
         Ok(())
-    }
-
-    pub async fn get_all_by_workspace(
-        &self,
-        workspace_id: &str,
-    ) -> Result<Vec<ConnectionWithQueues>> {
-        let connections = sqlx::query_as::<_, Connection>(
-            r#"
-                    SELECT
-                        id,
-                        workspace_id,
-                        name,
-                        host,
-                        port,
-                        password,
-                        username,
-                        db,
-                        last_synced_at,
-                        bullmq_prefix,
-                        is_tls_enabled,
-                        color,
-                        label,
-                        created_at
-                    FROM
-                        connections
-                    WHERE workspace_id = ?
-                    ORDER BY name
-                "#,
-        )
-        .bind(workspace_id)
-        .fetch_all(&self.pool)
-        .await?;
-        let mut result = Vec::with_capacity(connections.len());
-        for connection in connections {
-            let queues = self.get_all_by_connection(&connection.id).await?;
-            result.push(ConnectionWithQueues { connection, queues });
-        }
-        Ok(result)
     }
 
     pub async fn get_all_by_connection(&self, connection_id: &str) -> Result<Vec<Queue>> {

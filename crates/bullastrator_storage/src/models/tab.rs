@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Tab {
     pub id: String,
     pub workspace_id: String,
@@ -20,6 +21,7 @@ pub struct Tab {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateTab {
     pub connection_id: Option<String>,
     pub user_id: Option<String>,
@@ -29,6 +31,7 @@ pub struct CreateTab {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateTab {
     pub title: Option<String>,
     pub params: Option<String>,

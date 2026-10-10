@@ -1,4 +1,4 @@
-import { id, snakeCase, type WebCommand } from ".";
+import { id, type WebCommand } from ".";
 
 export const TAB_ROUTES: Record<string, WebCommand> = {
   get_tab: {
@@ -12,12 +12,12 @@ export const TAB_ROUTES: Record<string, WebCommand> = {
   create_tab: {
     method: "POST",
     path: () => "/tabs",
-    body: (args) => snakeCase(args.data),
+    body: (args) => args.data,
   },
   update_tab: {
     method: "PATCH",
     path: (args) => `/tabs/${id(args.id, "id")}`,
-    body: (args) => snakeCase(args.data),
+    body: (args) => args.data,
   },
   delete_tab: {
     method: "DELETE",
@@ -34,6 +34,6 @@ export const TAB_ROUTES: Record<string, WebCommand> = {
   reorder_tabs: {
     method: "POST",
     path: () => "/tabs/reorder",
-    body: (args) => snakeCase(args.data),
+    body: (args) => args.data,
   },
 };

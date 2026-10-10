@@ -12,6 +12,10 @@ pub fn routes() -> Router<AppState> {
             get(controller::connection::list).post(controller::connection::create),
         )
         .route(
+            "/connections/queues/list",
+            get(controller::connection::list_queues),
+        )
+        .route(
             "/connections/{connection_id}",
             get(controller::connection::get)
                 .patch(controller::connection::update)

@@ -3,7 +3,7 @@
   import { COLORS } from "../../constants/colors";
 
   // Svelte 5 bindable prop
-  let { data = $bindable() } = $props<{ data: string }>();
+  let { data = $bindable() } = $props<{ data: string | null }>();
 
   // Use a derived value to find the active color object for the trigger UI
   const selectedColor = $derived(
@@ -13,7 +13,7 @@
 
 <Select.Root
   type="single"
-  value={data}
+  value={data ?? COLORS[0].value}
   onValueChange={(v) => {
     data = v;
   }}

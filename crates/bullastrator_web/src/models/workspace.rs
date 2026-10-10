@@ -7,6 +7,7 @@ pub struct RequiredWorkspaceRole {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct AddMemberRequest {
     pub user_id: String,
     pub role: WorkspaceRole,

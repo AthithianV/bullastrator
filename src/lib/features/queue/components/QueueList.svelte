@@ -1,7 +1,6 @@
 <script lang="ts">
     import * as Accordion from "ui/accordion";
     import Button from "ui/button/button.svelte";
-    import Skeleton from "ui/skeleton/skeleton.svelte";
 
     import {
         ChevronRight,
@@ -99,9 +98,7 @@
 
     {#snippet content()}
         {#if query.isLoading}
-            <div class="flex justify-center items-center h-full">
-                <Skeleton />
-            </div>
+            <InfiniteScanLoader />
         {:else if query.isError}
             <div class="flex justify-center items-center h-full py-2">
                 <p>Error: {query.error.message}</p>
@@ -153,7 +150,7 @@
                                         class="flex-1 flex justify-between items-center"
                                     >
                                         <span class="font-semibold truncate"
-                                            >{conn.connectionName}</span
+                                            >{conn.name}</span
                                         >
                                         <div class="flex gap-2 ms-2">
                                             <Button

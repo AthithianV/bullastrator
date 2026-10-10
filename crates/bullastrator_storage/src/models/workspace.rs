@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Workspace {
     pub id: String,
     pub owner_id: Option<String>,
@@ -15,6 +16,7 @@ pub struct Workspace {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateWorkspace {
     pub name: String,
     pub color: Option<String>,
@@ -22,6 +24,7 @@ pub struct CreateWorkspace {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateWorkspace {
     pub name: Option<String>,
     pub icon: Option<i32>,

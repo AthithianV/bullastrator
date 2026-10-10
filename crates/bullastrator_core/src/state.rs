@@ -78,7 +78,7 @@ impl AppState {
         }
 
         let connection = ConnectionRepository::new(self.db.clone())
-            .get_by_id(connection_id)
+            .get_credential_insecure(connection_id)
             .await?;
 
         if connection.is_none() {

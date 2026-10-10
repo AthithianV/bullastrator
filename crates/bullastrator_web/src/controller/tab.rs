@@ -8,6 +8,7 @@ use bullastrator_storage::models::{CreateTab, Tab, UpdateTab};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct ReorderTabsRequest {
     pub ordered_ids: Vec<String>,
 }

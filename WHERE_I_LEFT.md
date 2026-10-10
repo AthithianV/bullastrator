@@ -1,6 +1,14 @@
+# [10-10-2026]
+
+- [] Test Connection Health is not working
+
+# [09-10-2026]
+
+- [x] Endpoint to fetch connection and all queues.
+
 # [08-10-2026]
 
-- [] Need to fetch all workspace in frontend and if not WS found, prompt user to create one.
+- [x] Need to fetch all workspace in frontend and if not WS found, prompt user to create one.
 
 # [05-10-2026]
 

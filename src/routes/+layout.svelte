@@ -1,5 +1,6 @@
 <script lang="ts">
     import "$lib/styles/app.css";
+    import "shared/stores/theme.svelte";
 
     import { Toaster } from "ui/sonner";
 
@@ -11,6 +12,7 @@
         defaultOptions: {
             queries: {
                 enabled: browser,
+                refetchOnWindowFocus: false,
             },
         },
     });

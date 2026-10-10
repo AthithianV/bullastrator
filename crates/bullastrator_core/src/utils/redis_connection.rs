@@ -1,13 +1,15 @@
 use crate::error::{BullastratorError, Result};
 use crate::services::RedisConnection;
 use anyhow::Context;
-use bullastrator_storage::models::Connection;
+use bullastrator_storage::models::connection::InsecureConnectionCredentials;
 use deadpool_redis::{
     Config as RedisConfig, ConnectionAddr, ConnectionInfo, ProtocolVersion, RedisConnectionInfo,
     Runtime,
 };
 
-pub fn create_redis_connection(connection: &Connection) -> Result<RedisConnection> {
+pub fn create_redis_connection(
+    connection: &InsecureConnectionCredentials,
+) -> Result<RedisConnection> {
     if connection.host.is_empty() {
         return Err(BullastratorError::Validation(format!(
             "Redis host cannot be empty for {}",

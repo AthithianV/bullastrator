@@ -132,7 +132,7 @@
                             {#snippet children(onComplete)}
                                 <ConnectionForm
                                     {onComplete}
-                                    data={connection}
+                                    connectionId={connection.id}
                                 />
                             {/snippet}
                         </DialogWrapper>

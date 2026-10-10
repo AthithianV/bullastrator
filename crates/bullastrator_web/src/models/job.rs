@@ -26,6 +26,7 @@ pub(crate) struct SearchRequest {
 }
 
 #[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct JobDataRequest {
     pub job_ids: Vec<String>,
     pub status: JobStatus,

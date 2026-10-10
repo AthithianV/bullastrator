@@ -6,6 +6,7 @@ use strum_macros::Display;
 use crate::models::workspace::WorkspacePermissionError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct WorkspaceMember {
     pub name: String,
     pub email: String,
@@ -15,6 +16,7 @@ pub struct WorkspaceMember {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateWorkspaceMember {
     pub user_id: String,
     pub workspace_id: String,
@@ -22,6 +24,7 @@ pub struct CreateWorkspaceMember {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UpdateWorkspaceMember {
     pub role: Option<String>,
 }

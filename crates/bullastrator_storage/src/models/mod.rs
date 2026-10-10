@@ -11,10 +11,10 @@ pub mod user_access_connection;
 pub mod workspace;
 pub mod workspace_members;
 
-pub use connection::{Connection, CreateConnection, UpdateConnection};
+pub use connection::{Connection, ConnectionDetails, CreateConnection, UpdateConnection};
 pub use folder::{CreateFolder, Folder, FolderWithQueues};
 pub use folder_queue::FolderQueue;
-pub use queue::{ConnectionWithQueues, Queue, UpdateQueue};
+pub use queue::{ConnectionWithQueues, Queue};
 pub use queue_actions::QueueAction;
 pub use session::Session;
 pub use settings::Settings;

@@ -4,6 +4,7 @@ export interface ReadWorkspaceModel {
   icon: string | null;
   color: string | null;
   role: string;
+  isDefault?: boolean;
 }
 
 export interface CreateWorkspaceModel {

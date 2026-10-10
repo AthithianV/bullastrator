@@ -2,7 +2,23 @@ use anyhow::{Context, Result, bail};
 use sqlx::SqlitePool;
 use uuid::Uuid;
 
-use crate::models::{Connection, CreateConnection, UpdateConnection};
+use crate::models::{
+    Connection, ConnectionDetails, ConnectionWithQueues, CreateConnection, Queue, UpdateConnection,
+    connection::{ConnectionCredentials, InsecureConnectionCredentials},
+};
+
+#[derive(sqlx::FromRow)]
+struct ConnectionQueueRow {
+    connection_id: String,
+    workspace_id: String,
+    connection_name: String,
+    last_synced_at: Option<chrono::NaiveDateTime>,
+    color: Option<String>,
+    label: Option<String>,
+    queue_id: Option<String>,
+    queue_connection_id: Option<String>,
+    queue_name: Option<String>,
+}
 
 #[derive(Clone)]
 pub struct ConnectionRepository {
@@ -60,20 +76,12 @@ impl ConnectionRepository {
         Ok(sqlx::query_as::<_, Connection>(
             r#"
             SELECT
-                id
-                workspace_id
-                name
-                host
-                port
-                username
-                password
-                db
-                is_tls_enabled
-                last_synced_at
-                bullmq_prefix
-                color
+                id,
+                workspace_id,
+                name,
+                last_synced_at,
+                color,
                 label
-                created_at
             FROM
                 connections
             WHERE
@@ -86,24 +94,70 @@ impl ConnectionRepository {
         .await?)
     }
 
+    pub async fn get_all_queues(&self, workspace_id: &str) -> Result<Vec<ConnectionWithQueues>> {
+        let rows = sqlx::query_as::<_, ConnectionQueueRow>(
+            r#"
+                SELECT
+                    c.id AS connection_id,
+                    c.workspace_id,
+                    c.name AS connection_name,
+                    c.last_synced_at,
+                    c.color,
+                    c.label,
+                    q.id AS queue_id,
+                    q.connection_id AS queue_connection_id,
+                    q.queue_name
+                FROM connections c
+                LEFT JOIN queues q ON q.connection_id = c.id
+                WHERE c.workspace_id = ?
+                ORDER BY c.name, q.queue_name
+            "#,
+        )
+        .bind(workspace_id)
+        .fetch_all(&self.pool)
+        .await?;
+
+        let mut result: Vec<ConnectionWithQueues> = Vec::new();
+        for row in rows {
+            let connection_index =
+                if let Some(index) = result.iter().position(|item| item.id == row.connection_id) {
+                    index
+                } else {
+                    result.push(ConnectionWithQueues {
+                        id: row.connection_id.clone(),
+                        workspace_id: row.workspace_id,
+                        name: row.connection_name,
+                        color: row.color,
+                        label: row.label,
+                        queues: Vec::new(),
+                    });
+                    result.len() - 1
+                };
+
+            if let (Some(id), Some(connection_id), Some(queue_name)) =
+                (row.queue_id, row.queue_connection_id, row.queue_name)
+            {
+                result[connection_index].queues.push(Queue {
+                    id,
+                    connection_id,
+                    queue_name,
+                });
+            }
+        }
+
+        Ok(result)
+    }
+
     pub async fn get_by_id(&self, id: &str) -> Result<Option<Connection>> {
         Ok(sqlx::query_as::<_, Connection>(
             r#"
                     SELECT
-                        id
-                        workspace_id
-                        name
-                        host
-                        port
-                        username
-                        password
-                        db
-                        is_tls_enabled
-                        last_synced_at
-                        bullmq_prefix
-                        color
+                        id,
+                        workspace_id,
+                        name,
+                        last_synced_at,
+                        color,
                         label
-                        created_at
                     FROM
                         connections
                     WHERE
@@ -115,8 +169,76 @@ impl ConnectionRepository {
         .await?)
     }
 
-    pub async fn get_by_id_with_password(&self, id: &str) -> Result<Option<Connection>> {
-        self.get_by_id(id).await
+    pub async fn get_details_by_id(&self, id: &str) -> Result<Option<ConnectionDetails>> {
+        Ok(sqlx::query_as::<_, ConnectionDetails>(
+            r#"
+                    SELECT
+                        id,
+                        workspace_id,
+                        name,
+                        host,
+                        port,
+                        username,
+                        db,
+                        is_tls_enabled,
+                        bullmq_prefix,
+                        color,
+                        label
+                    FROM connections
+                    WHERE id = ?
+                    "#,
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_credential_secure(&self, id: &str) -> Result<Option<ConnectionCredentials>> {
+        Ok(sqlx::query_as::<_, ConnectionCredentials>(
+            r#"
+                    SELECT
+                        id,
+                        host,
+                        port,
+                        username,
+                        db,
+                        bullmq_prefix,
+                        is_tls_enabled
+                    FROM
+                        connections
+                    WHERE
+                        id = ?
+                    "#,
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_credential_insecure(
+        &self,
+        id: &str,
+    ) -> Result<Option<InsecureConnectionCredentials>> {
+        Ok(sqlx::query_as::<_, InsecureConnectionCredentials>(
+            r#"
+                    SELECT
+                        id,
+                        host,
+                        port,
+                        password,
+                        username,
+                        db,
+                        bullmq_prefix,
+                        is_tls_enabled
+                    FROM
+                        connections
+                    WHERE
+                        id = ?
+                    "#,
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?)
     }
 
     pub async fn update(&self, id: &str, data: UpdateConnection) -> Result<Connection> {

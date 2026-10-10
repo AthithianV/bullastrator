@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Folder {
     pub id: String,
     pub connection_id: String,
@@ -23,6 +24,7 @@ pub struct FolderWithQueues {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct FolderAndQueues {
     pub folder_id: String,
     pub folder_connection_id: String,

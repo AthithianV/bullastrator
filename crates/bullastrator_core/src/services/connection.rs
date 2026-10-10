@@ -4,11 +4,14 @@ use std::time::Duration;
 use tokio::time::timeout;
 
 use bullastrator_storage::{
-    models::{Connection, CreateConnection, UpdateConnection, WorkspaceRole},
+    models::{
+        Connection, ConnectionDetails, ConnectionWithQueues, CreateConnection, UpdateConnection,
+        WorkspaceRole,
+    },
     repositories::ConnectionRepository,
 };
 
-use crate::services::workspace::WorkspaceService;
+use crate::{error::BullastratorError, services::workspace::WorkspaceService};
 
 #[derive(Clone)]
 pub struct ConnectionService {
@@ -65,12 +68,24 @@ impl ConnectionService {
         self.repository.get_all(&workspace_id).await
     }
 
-    pub async fn get(&self, connection_id: &str, user_id: &str) -> Result<Option<Connection>> {
+    pub async fn list_queues(&self, user_id: &str) -> Result<Vec<ConnectionWithQueues>> {
+        let workspace_id = self.active_workspace(user_id).await?;
+        self.workspaces
+            .check_permission(&workspace_id, user_id, WorkspaceRole::VIEWER)
+            .await?;
+        self.repository.get_all_queues(&workspace_id).await
+    }
+
+    pub async fn get(
+        &self,
+        connection_id: &str,
+        user_id: &str,
+    ) -> Result<Option<ConnectionDetails>> {
         match self
             .authorize(connection_id, user_id, WorkspaceRole::VIEWER)
             .await
         {
-            Ok(connection) => Ok(Some(connection)),
+            Ok(_) => self.repository.get_details_by_id(connection_id).await,
             Err(error) if error.to_string() == "Connection not found" => Ok(None),
             Err(error) => Err(error),
         }
@@ -114,21 +129,35 @@ pub async fn start_health_check_service(pool: &deadpool_redis::Pool) -> Result<b
     ))
 }
 
-#[tracing::instrument(skip(redis_url), err)]
-pub async fn test_redis_connection_service(redis_url: String) -> Result<bool, String> {
+#[tracing::instrument(skip(data), err)]
+pub async fn test_redis_connection_service(data: &CreateConnection) -> Result<bool> {
     tracing::debug!("testing Redis connection");
-    let client = redis::Client::open(redis_url).map_err(|e| e.to_string())?;
-    let mut connection = tokio::time::timeout(
+
+    let url = create_redis_url(
+        &data.host,
+        data.port,
+        data.username.as_deref(),
+        data.password.as_deref(),
+        data.db.unwrap_or(0),
+        data.is_tls_enabled,
+    )?;
+
+    let client = redis::Client::open(url).map_err(|e| BullastratorError::Redis(e))?;
+
+    let mut connection = timeout(
         Duration::from_secs(5),
         client.get_multiplexed_async_connection(),
     )
     .await
-    .map_err(|_| "Timeout".to_string())
-    .and_then(|r| r.map_err(|e| e.to_string()))?;
-    let response: String = redis::cmd("PING")
-        .query_async(&mut connection)
-        .await
-        .map_err(|e| e.to_string())?;
+    .map_err(|_| BullastratorError::Validation("Redis connection timed out".into()))??;
+
+    let response: String = timeout(
+        Duration::from_secs(5),
+        redis::cmd("PING").query_async(&mut connection),
+    )
+    .await
+    .map_err(|_| BullastratorError::Validation("Redis PING timed out".into()))??;
+
     Ok(response == "PONG")
 }
 

@@ -184,8 +184,8 @@ export const useCheckHealthForAllConnections = () => {
 
 export const useManualConnectionsHealth = () => {
   return createMutation(() => ({
-    mutationFn: (payload: CreateConnection) =>
-      invokeWrapper(
+    mutationFn: (payload: CreateConnection) => {
+      return invokeWrapper(
         "test_redis_connection",
         { ...payload },
         {
@@ -194,6 +194,7 @@ export const useManualConnectionsHealth = () => {
           shouldToast: true,
           shouldLogResult: false,
         },
-      ),
+      );
+    },
   }));
 };

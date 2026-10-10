@@ -1,12 +1,22 @@
-import { id, snakeCase, type CommandArgs, type WebCommand } from ".";
+import { id, type CommandArgs, type WebCommand } from ".";
 
 const withoutRouteArgs = (args: CommandArgs, ...keys: string[]) => {
   const body = { ...args };
   for (const key of keys) delete body[key];
-  return snakeCase(body);
+  return body;
 };
 
 export const JOB_ROUTES: Record<string, WebCommand> = {
+  get_jobs_in_queue: {
+    method: "GET",
+    path: (args) =>
+      `/jobs/${id(args.connectionId, "connectionId")}/${id(args.queueName, "queueName")}/jobs`,
+    query: (args) => ({
+      status: args.status,
+      cursor: args.cursor,
+      limit: args.limit,
+    }),
+  },
   get_jobs_by_id: {
     method: "GET",
     path: (args) =>
@@ -28,7 +38,7 @@ export const JOB_ROUTES: Record<string, WebCommand> = {
     method: "POST",
     path: (args) =>
       `/connections/${id(args.connectionId, "connectionId")}/queues/${id(args.queueName, "queueName")}/jobs/counts`,
-    body: (args) => ({ queue_names: [args.queueName] }),
+    body: (args) => ({ queueNames: [args.queueName] }),
   },
   add_job_to_queue: {
     method: "POST",
@@ -40,14 +50,14 @@ export const JOB_ROUTES: Record<string, WebCommand> = {
     method: "POST",
     path: (args) =>
       `/connections/${id(args.connectionId, "connectionId")}/queues/${id(args.queueName, "queueName")}/jobs/update`,
-    body: (args) => ({ job_id: args.jobId, data: args.jobData }),
+    body: (args) => ({ jobId: args.jobId, data: args.jobData }),
   },
   retry_failed_jobs: {
     method: "POST",
     path: (args) =>
       `/connections/${id(args.connectionId, "connectionId")}/queues/${id(args.queueName, "queueName")}/jobs/retry`,
     body: (args) => ({
-      job_ids: args.jobIds,
+      jobIds: args.jobIds,
       strategy: args.strategy,
       status: args.retryJobStatus,
     }),
@@ -62,7 +72,7 @@ export const JOB_ROUTES: Record<string, WebCommand> = {
     method: "POST",
     path: (args) =>
       `/connections/${id(args.connectionId, "connectionId")}/queues/${id(args.queueName, "queueName")}/jobs/promote`,
-    body: (args) => ({ job_ids: args.jobIds }),
+    body: (args) => ({ jobIds: args.jobIds }),
   },
   promote_all_jobs: {
     method: "POST",
@@ -74,8 +84,8 @@ export const JOB_ROUTES: Record<string, WebCommand> = {
     path: (args) =>
       `/connections/${id(args.connectionId, "connectionId")}/queues/${id(args.queueName, "queueName")}/jobs/delete`,
     body: (args) => ({
-      job_ids: args.jobIds,
-      remove_children: args.removeChildren ?? false,
+      jobIds: args.jobIds,
+      removeChildren: args.removeChildren ?? false,
     }),
   },
   delete_all_jobs: {
@@ -84,7 +94,7 @@ export const JOB_ROUTES: Record<string, WebCommand> = {
       `/connections/${id(args.connectionId, "connectionId")}/queues/${id(args.queueName, "queueName")}/jobs/delete-state`,
     body: (args) => ({
       state: args.status,
-      remove_children: args.removeChildren ?? false,
+      removeChildren: args.removeChildren ?? false,
     }),
   },
 };
