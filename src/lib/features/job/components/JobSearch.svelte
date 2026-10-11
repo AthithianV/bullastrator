@@ -228,7 +228,7 @@
             <Separator orientation="vertical" />
             <div class="flex flex-nowrap items-center gap-2">
                 <span class="text-xs uppercase text-gray-400 font-bold"
-                    >Displaying:
+                    >Matched:
                 </span>
                 <span class="text-xs font-mono text-blue-400">
                     {totalJobsFetched}

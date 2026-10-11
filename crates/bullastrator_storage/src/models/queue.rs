@@ -1,29 +1,21 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Queue {
     pub id: String,
     pub connection_id: String,
     pub queue_name: String,
-    pub display_name: Option<String>,
-    pub is_starred: Option<bool>,
-    pub auto_refresh_rate: Option<i32>,
-    pub notification_settings: Option<String>,
-    pub created_at: NaiveDateTime,
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct UpdateQueue {
-    pub display_name: Option<String>,
-    pub is_starred: Option<bool>,
-    pub auto_refresh_rate: Option<i32>,
-    pub notification_settings: Option<String>,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ConnectionWithQueues {
-    pub connection: super::Connection,
+    pub id: String,
+    pub workspace_id: String,
+    pub name: String,
+    pub color: Option<String>,
+    pub label: Option<String>,
     pub queues: Vec<Queue>,
 }

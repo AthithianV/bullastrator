@@ -1,7 +1,6 @@
 <script lang="ts">
     import * as Accordion from "ui/accordion";
     import Button from "ui/button/button.svelte";
-    import Skeleton from "ui/skeleton/skeleton.svelte";
 
     import {
         ChevronRight,
@@ -20,7 +19,6 @@
     import { connectionStore } from "connection/store/connection.store.svelte";
     import { QueueState } from "queue/store/queueContext.svelte";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
-    import Badge from "shared/components/ui/badge/badge.svelte";
     import { useCreateTab } from "tabs/hooks/tab.hooks";
     import FolderList from "../../folder/components/FolderList.svelte";
     import { useCreateFolder } from "../../folder/hooks/folder.hooks.svelte";
@@ -40,11 +38,9 @@
     ) {
         await createTab({
             id: queueId,
-            data: {
-                title: queueName,
-                connectionId: connectionId,
-                params: QueueState.getDefaultParams(connectionId, queueName),
-            },
+            title: queueName,
+            connectionId: connectionId,
+            params: QueueState.getDefaultParams(connectionId, queueName),
         });
         queueStore.setActiveNode(queueId);
     }
@@ -58,15 +54,13 @@
         if (newFolder) {
             await createTab({
                 id: newFolder.id,
-                data: {
-                    title: newFolder.title,
+                title: newFolder.title,
+                connectionId: connectionId,
+                params: {
                     connectionId: connectionId,
-                    params: {
-                        connectionId: connectionId,
-                        folderName: newFolder.title,
-                        type: "FOLDER",
-                        folderId: newFolder.id,
-                    },
+                    folderName: newFolder.title,
+                    type: "FOLDER",
+                    folderId: newFolder.id,
                 },
             });
         }
@@ -99,9 +93,7 @@
 
     {#snippet content()}
         {#if query.isLoading}
-            <div class="flex justify-center items-center h-full">
-                <Skeleton />
-            </div>
+            <InfiniteScanLoader />
         {:else if query.isError}
             <div class="flex justify-center items-center h-full py-2">
                 <p>Error: {query.error.message}</p>
@@ -133,13 +125,6 @@
                                     queueStore.setActiveNode(conn.id)}
                             >
                                 <div class="flex-1 flex items-center gap-2">
-                                    <Badge
-                                        variant={connectionStore
-                                            .connectionsHealth[conn.id]
-                                            ? "default"
-                                            : "destructive"}
-                                        class="rounded-full p-1"
-                                    ></Badge>
                                     <Folder
                                         class="w-4 h-4 block group-data-[state=open]:hidden"
                                         fill="currentColor"
@@ -153,7 +138,7 @@
                                         class="flex-1 flex justify-between items-center"
                                     >
                                         <span class="font-semibold truncate"
-                                            >{conn.connectionName}</span
+                                            >{conn.name}</span
                                         >
                                         <div class="flex gap-2 ms-2">
                                             <Button

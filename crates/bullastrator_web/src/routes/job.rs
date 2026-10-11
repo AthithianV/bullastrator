@@ -12,10 +12,6 @@ pub fn routes() -> Router<AppState> {
             get(controller::job::list_jobs).post(controller::job::add_jobs),
         )
         .route(
-            "/connections/{connection_id}/queues/{queue_name}/jobs/search",
-            post(controller::job::search_jobs),
-        )
-        .route(
             "/connections/{connection_id}/queues/{queue_name}/jobs/data",
             post(controller::job::job_data),
         )

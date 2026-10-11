@@ -149,6 +149,12 @@ Bullastrator can then connect to your local Redis instance:
 127.0.0.1:6379
 ```
 
+### How to start web
+
+```bash
+cd crates && cargo watch -c -x check -x 'run -p bullastrator-web'
+```
+
 ---
 
 ## 🔌 Redis Connection

@@ -9,7 +9,7 @@ export const connectionSchema = z.object({
   db: z.number().int().min(0),
   isDefault: z.boolean(),
   bullmqPrefix: z.string().min(1, "Prefix is required").default("bull"),
-  isTlsEnabled: z.boolean().optional().nullable().default(false),
+  isTlsEnabled: z.boolean().default(false),
   color: z.string().optional().nullable().default("#00BCD4"),
   label: z.string().optional().nullable(),
 });

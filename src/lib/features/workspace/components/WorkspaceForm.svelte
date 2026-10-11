@@ -7,6 +7,7 @@
     import { Input } from "ui/input/index.js";
     import {
         useCreateWorkspace,
+        useSetActiveWorkspace,
         useUpdateWorkspace,
     } from "workspace/hooks/workspace.hooks";
     import { workspaceSchema } from "../schema/workspace.schema";
@@ -18,6 +19,7 @@
     }>();
 
     const { mutateAsync: createWorkspace } = useCreateWorkspace();
+    const { mutateAsync: setActiveWorkspace } = useSetActiveWorkspace();
     const { mutateAsync: updateWorkspace } = useUpdateWorkspace();
 
     // Initialize form with defaults or existing data
@@ -37,13 +39,14 @@
                             data: { ...f.data, lastAccessedAt: new Date() },
                         });
                     } else {
-                        await createWorkspace({
+                        const workspace = await createWorkspace({
                             ...f.data,
                             plan: "FREE",
                             role: "OWNER",
                             lastAccessedAt: new Date(),
                             maxConnections: 10,
                         });
+                        await setActiveWorkspace(workspace.id);
                     }
                     onComplete?.();
                 } catch (err) {
@@ -71,7 +74,7 @@
                 </Field.Field>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <Field.Field data-invalid={$errors.icon ? "" : undefined}>
+                    <!-- <Field.Field data-invalid={$errors.icon ? "" : undefined}>
                         <Field.Label for="icon">Icon / Emoji</Field.Label>
                         <Input
                             id="icon"
@@ -81,22 +84,23 @@
                         {#if $errors.icon}<Field.Error
                                 >{$errors.icon}</Field.Error
                             >{/if}
-                    </Field.Field>
+                    </Field.Field> -->
 
                     <Field.Field data-invalid={$errors.color ? "" : undefined}>
                         <Field.Label for="color">Theme Color</Field.Label>
-                        <div class="flex gap-2">
+                        <div
+                            class="flex gap-2 border justify-center items-center p-2 rounded-lg"
+                        >
                             <Input
                                 id="color"
                                 type="color"
                                 bind:value={$form.color}
-                                class="w-12 p-1 h-10"
+                                aria-label="Choose workspace color"
+                                class="h-7 w-7 cursor-pointer appearance-none rounded-full bg-transparent p-0.5 shadow-sm transition hover:scale-105 [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
                             />
-                            <Input
-                                bind:value={$form.color}
-                                placeholder="#00CADB"
-                                class="font-mono"
-                            />
+                            <div>
+                                {$form.color}
+                            </div>
                         </div>
                         {#if $errors.color}<Field.Error
                                 >{$errors.color}</Field.Error
@@ -105,18 +109,6 @@
                 </div>
 
                 <Field.Separator class="my-4" />
-
-                <!-- <div class="flex items-center justify-between rounded-lg border p-4">
-          <div class="space-y-0.5">
-            <Field.Label class="text-base">Default Workspace</Field.Label>
-            <p class="text-sm text-muted-foreground">
-              Automatically open this workspace on startup.
-            </p>
-          </div>
-          {#if $form.is_default}
-            <Switch bind:checked={$form.is_default} />
-          {/if}
-        </div> -->
 
                 <div class="flex justify-end gap-3 pt-6">
                     <Button

@@ -19,6 +19,8 @@
     const { mutateAsync: createTab } = useCreateTab();
     const { mutateAsync: updateTab } = useUpdateTab();
 
+    $inspect(queue);
+
     let counts = $derived(queue.counts);
     let total = $derived(counts.total);
 
@@ -35,13 +37,11 @@
         if (!tabExists) {
             await createTab({
                 id: queueId,
-                data: {
-                    title: queueName,
-                    connectionId: connectionId,
-                    params: {
-                        ...QueueState.getDefaultParams(connectionId, queueName),
-                        state,
-                    },
+                title: queueName,
+                connectionId: connectionId,
+                params: {
+                    ...QueueState.getDefaultParams(connectionId, queueName),
+                    state,
                 },
             });
         } else {

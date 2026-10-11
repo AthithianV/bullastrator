@@ -13,6 +13,7 @@ import type {
   QueueDetails,
   ReadQueueModel,
 } from "../interface/queue.types";
+import { confirmAction } from "$lib/shared/helpers/confirmAction";
 
 // Define the unique key for the connections list
 export const QUEUE_QUERY_KEY = ["queue"];
@@ -65,7 +66,7 @@ export const usePauseQueue = () => {
 
   return createMutation(() => ({
     mutationFn: async (shouldPause: boolean) => {
-      const confirmation = await confirm(
+      const confirmation = await confirmAction(
         `Are you should want to ${
           shouldPause ? "pause" : "resume"
         } this queue: ${queueState.queueName}`,
@@ -120,35 +121,25 @@ export const useGetQueuesDetails = () => {
 };
 
 /**
- * 🎣 Hook to fetch a All queues of SINGLE connection ID.
- * Calls the Rust command `get_all_queues_by_connection`.
- * @param connectionId The ID of the connection to fetch.
+ * 🎣 Hook to select all queues for one connection from the active-workspace cache.
+ * @param connectionId The ID of the connection to select.
  */
-export const useGetAllQueuesByConnection = (
-  connectionId: string,
-  isSyncing: boolean,
-) => {
+export const useGetAllQueuesByConnection = (connectionId: string) => {
   return createQuery(() => ({
-    queryKey: [...QUEUE_QUERY_KEY, connectionId],
-    queryFn: () =>
-      invokeWrapper<ReadQueueModel[] | null>(
-        "get_all_queues_by_connection",
-        {
-          connectionId,
-        },
-        {
-          shouldToast: false,
-        },
-      ),
+    // Reuse the active-workspace query instead of making a second request
+    // for the same queue data.
+    queryKey: [...QUEUE_QUERY_KEY, "ACTIVE_WORKSPACE", queueStore.isSyncing],
+    queryFn: () => invokeWrapper<ConnectionWithQueue[]>("get_all_queues_by_workspace"),
+    select: (connections) =>
+      connections.find((connection) => connection.id === connectionId)?.queues ?? [],
     enabled: !!connectionId,
-    refetchInterval: isSyncing ? 5000 : false,
+    refetchInterval: false,
     placeholderData: (previousData) => previousData,
   }));
 };
 
 /**
- * 🎣 Hook to fetch a All queues of Active Workspace.
- * Calls the Rust command `get_all_queues_by_connection`.
+ * 🎣 Hook to fetch all queues of the active workspace.
  */
 export const useGetAllQueues = () => {
   return createQuery(() => ({

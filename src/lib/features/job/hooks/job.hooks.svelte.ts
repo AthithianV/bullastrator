@@ -20,12 +20,12 @@ import {
   createQuery,
   useQueryClient,
 } from "@tanstack/svelte-query";
-import { confirm } from "@tauri-apps/plugin-dialog";
 import { QUEUE_QUERY_KEY } from "queue/hooks/queue.hooks";
 import { useQueueState } from "queue/store/queueContext.svelte";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import { useDebounce } from "shared/hooks/useDebounce.svelte";
 import { toast } from "svelte-sonner";
+import { confirmAction } from "shared/helpers/confirmAction";
 
 export const JOB_QUERY_KEY = ["jobs"];
 
@@ -83,7 +83,6 @@ export const useGetJobData = () => {
   const queueState = useQueueState();
 
   return createQuery(() => {
-
     const payload = {
       queueName: queueState.queueName,
       connectionId: queueState.connectionId,
@@ -173,7 +172,7 @@ export const useGetJobCountInQueue = () => {
         queueState.connectionId,
       ],
       queryFn: async () =>
-        invokeWrapper<QueueJobCounts>(
+        invokeWrapper<QueueJobCounts[]>(
           "get_job_count_in_queue",
           {
             queueName: queueState.queueName,
@@ -243,7 +242,7 @@ export const usePromoteJobs = () => {
       confirmationMesssage += ` (${count})`;
       confirmationMesssage += " jobs? ";
 
-      const confirmation = await confirm(
+      const confirmation = await confirmAction(
         `This action cannot be reverted. ${confirmationMesssage}`,
         { title: "Promote", kind: "warning" },
       );
@@ -301,7 +300,7 @@ export const useDeleteJobs = () => {
       confirmationMesssage += ` (${count})`;
       confirmationMesssage += " jobs? ";
 
-      const confirmation = await confirm(
+      const confirmation = await confirmAction(
         `This action cannot be reverted. ${confirmationMesssage}`,
         { title: "Delete job(s)", kind: "warning" },
       );
@@ -330,7 +329,6 @@ export const useDeleteJobs = () => {
     },
     onError: (err: any) => {
       if (err.message === "Cancelled") return;
-      console.error(err);
       toast.error(err.message || "Failed to delete jobs");
     },
     onSettled: () => {
@@ -408,11 +406,7 @@ export const useRefetchJobsinQueue = () => {
 
   return async () => {
     await queryClient.resetQueries({
-      queryKey: [
-        "get_jobs",
-        queueState.connectionId,
-        queueState.queueName,
-      ],
+      queryKey: ["get_jobs", queueState.connectionId, queueState.queueName],
     });
 
     queryClient.invalidateQueries({
@@ -487,17 +481,17 @@ export const useRetryJob = () => {
     mutationFn: async ({
       isAll,
       strategy,
-      retryJobStatus
+      retryJobStatus,
     }: {
       isAll: boolean;
       strategy: "ToBack" | "ToFront";
-      retryJobStatus: JobStatus
+      retryJobStatus: JobStatus;
     }) => {
       const payload: RetryJobPayload = {
         queueName: queueState.queueName,
         connectionId: queueState.connectionId,
         strategy,
-        retryJobStatus: retryJobStatus === 'completed' ? 'completed' : 'failed',
+        retryJobStatus: retryJobStatus === "completed" ? "completed" : "failed",
       };
 
       let count = isAll
@@ -509,7 +503,7 @@ export const useRetryJob = () => {
       confirmationMesssage += ` (${count})`;
       confirmationMesssage += " jobs? ";
 
-      const confirmation = await confirm(
+      const confirmation = await confirmAction(
         `This action cannot be reverted. ${confirmationMesssage}`,
         { title: "Retry", kind: "warning" },
       );

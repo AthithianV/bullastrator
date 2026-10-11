@@ -12,7 +12,6 @@
     } from "../store/folder.context.svelte";
     import { Input } from "shared/components/ui/input";
     import { useGetAllQueuesByConnection } from "queue/hooks/queue.hooks";
-    import type { ReadConnection } from "connection/interface/connection.types";
     import Checkbox from "shared/components/ui/checkbox/checkbox.svelte";
     import { cn } from "shared/utils";
     import {
@@ -36,11 +35,9 @@
     }: {
         tabParams: FolderTabParams;
         tabId: string;
-        connection?: ReadConnection;
     } = $props<{
         tabParams: FolderTabParams;
         tabId: string;
-        connection?: ReadConnection;
     }>();
 
     setFolderState(tabId, tabParams);
@@ -48,10 +45,7 @@
     const folderState = useFolderState();
     let searchKeyword = $state("");
 
-    const queuesQuery = useGetAllQueuesByConnection(
-        folderState.connectionId,
-        false,
-    );
+    const queuesQuery = useGetAllQueuesByConnection(folderState.connectionId);
     const folderQueueQuery = useGetQueuesOfFolder();
     const folderQuery = useGetFolderById();
 
@@ -244,72 +238,76 @@
             </Scroll.ScrollArea>
         </Resizable.Pane>
 
-        <Resizable.Handle />
+        {#if queueEditPanel > 0}
+            <Resizable.Handle />
 
-        <Resizable.Pane class="min-w-0" defaultSize={queueEditPanel}>
-            <Scroll.ScrollArea class="h-full">
-                <div class="px-4 flex flex-col gap-2">
-                    <div class="sticky top-0 z-100 bg-background">
-                        <div class="py-2 flex items-center justify-between">
-                            <Input
-                                bind:ref={folderNameInput}
-                                bind:value={folderState.folderName}
-                                class={cn(
-                                    "bg-transparent dark:bg-transparent",
-                                    "border-none shadow-none px-0 text-2xl! h-10!",
-                                    "font-semibold focus-visible:ring-0 rounded-none text-wrap",
-                                )}
-                                placeholder="Folder Name"
-                                oninput={(e) =>
-                                    handleTitleChange(e.currentTarget.value)}
-                            />
-                            <Button
-                                variant="ghost"
-                                onclick={() => {
-                                    queueEditPanel = 0;
-                                }}
-                                class="hover:text-red-500"
-                            >
-                                <X class="w-5 h-5" />
-                            </Button>
-                        </div>
-                        <div
-                            class="flex items-center bg-background dark:bg-input/30 border px-2 rounded-[5px] max-lg:hidden"
-                        >
-                            <Search class="h-4 w-4" />
-                            <Input
-                                bind:value={searchKeyword}
-                                class="dark:bg-transparent border-none shadow-none w-80 py-0"
-                                placeholder="Search..."
-                                type="text"
-                            />
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-2">
-                        {#each filteredQueues as queue}
-                            {@const isChecked = queueIdSet.has(queue.id)}
-                            <label
-                                class="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
-                            >
-                                <Checkbox
-                                    checked={isChecked}
-                                    onCheckedChange={() =>
-                                        toggleQueue({
-                                            queueId: queue.id,
-                                            folderId: folderState.tabId,
-                                        })}
-                                    class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+            <Resizable.Pane class="min-w-0" defaultSize={queueEditPanel}>
+                <Scroll.ScrollArea class="h-full">
+                    <div class="px-4 flex flex-col gap-2">
+                        <div class="sticky top-0 z-100 bg-background">
+                            <div class="py-2 flex items-center justify-between">
+                                <Input
+                                    bind:ref={folderNameInput}
+                                    bind:value={folderState.folderName}
+                                    class={cn(
+                                        "bg-transparent dark:bg-transparent",
+                                        "border-none shadow-none px-0 text-2xl! h-10!",
+                                        "font-semibold focus-visible:ring-0 rounded-none text-wrap",
+                                    )}
+                                    placeholder="Folder Name"
+                                    oninput={(e) =>
+                                        handleTitleChange(
+                                            e.currentTarget.value,
+                                        )}
                                 />
-                                <span class="text-sm font-medium"
-                                    >{queue.queueName}</span
+                                <Button
+                                    variant="ghost"
+                                    onclick={() => {
+                                        queueEditPanel = 0;
+                                    }}
+                                    class="hover:text-red-500"
                                 >
-                            </label>
-                        {/each}
+                                    <X class="w-5 h-5" />
+                                </Button>
+                            </div>
+                            <div
+                                class="flex items-center bg-background dark:bg-input/30 border px-2 rounded-[5px] max-lg:hidden"
+                            >
+                                <Search class="h-4 w-4" />
+                                <Input
+                                    bind:value={searchKeyword}
+                                    class="dark:bg-transparent border-none shadow-none w-80 py-0"
+                                    placeholder="Search..."
+                                    type="text"
+                                />
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-2">
+                            {#each filteredQueues as queue}
+                                {@const isChecked = queueIdSet.has(queue.id)}
+                                <label
+                                    class="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+                                >
+                                    <Checkbox
+                                        checked={isChecked}
+                                        onCheckedChange={() =>
+                                            toggleQueue({
+                                                queueId: queue.id,
+                                                folderId: folderState.tabId,
+                                            })}
+                                        class="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    <span class="text-sm font-medium"
+                                        >{queue.queueName}</span
+                                    >
+                                </label>
+                            {/each}
+                        </div>
                     </div>
-                </div>
-                <Scroll.Scrollbar orientation="vertical" />
-            </Scroll.ScrollArea>
-        </Resizable.Pane>
+                    <Scroll.Scrollbar orientation="vertical" />
+                </Scroll.ScrollArea>
+            </Resizable.Pane>
+        {/if}
     </Resizable.PaneGroup>
 </div>

@@ -3,20 +3,14 @@ export interface ReadWorkspaceModel {
   name: string;
   icon: string | null;
   color: string | null;
-  isDefault: boolean;
-  createdAt: string;
-  isGuestMode: boolean;
-  isPrimary: boolean;
-  plan: string;
   role: string;
-  maxConnections: number;
+  isDefault?: boolean;
 }
 
 export interface CreateWorkspaceModel {
   name: string;
   icon?: string | null;
   color?: string | null;
-  isDefault: boolean;
 }
 
 export interface UpdateWorkspaceModel {

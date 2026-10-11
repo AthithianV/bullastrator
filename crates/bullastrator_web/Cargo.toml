@@ -15,7 +15,11 @@ serde_json = { workspace = true }
 tokio = { workspace = true }
 anyhow = { workspace = true }
 tracing-subscriber = { workspace = true }
-axum = "0.8"
+
+axum = { version = "0.8", features = ["macros"] }
+axum-extra = { version = "0.12", features = ["cookie"] }
+tower-http = { version = "0.6", features = ["cors"] }
+
 bullastrator-core = { path = "../bullastrator_core" }
 bullastrator-storage = { path = "../bullastrator_storage" }
 

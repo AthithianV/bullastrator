@@ -5,7 +5,7 @@
     import * as Command from "ui/command";
     import * as Avatar from "shared/components/ui/avatar";
 
-    import { Search, Workflow } from "@lucide/svelte";
+    import { Search } from "@lucide/svelte";
     import { QueueState } from "queue/store/queueContext.svelte";
     import { queueStore } from "queue/store/queueStore.svelte";
     import { Input } from "shared/components/ui/input";
@@ -32,7 +32,7 @@
 
     {#snippet content()}
         <div class="p-2 sticky top-8 bg-background z-10">
-            <div class="flex flex-1 gap-1 items-center border px-2 rounded-md">
+            <div class="flex flex-1 gap-1 items-center px-2 rounded-md">
                 <Search size={20} />
                 <Input
                     class="border-none bg-transparent! outline-none px-1"
@@ -46,17 +46,17 @@
         >
             <Command.Input
                 placeholder="Type search keyword..."
-                class="h-0 w-full bg-transparent outline-none hidden"
+                class="h-0 w-full bg-transparent outline-none hidden border-none!"
                 bind:value={keyword}
             />
 
             <Command.List class="flex-1 overflow-y-auto max-h-full">
                 <Command.Empty>No results found.</Command.Empty>
                 {#each connectionsWithQueues as connection}
-                    <Command.Group heading={connection.connectionName}>
+                    <Command.Group heading={connection.name}>
                         {#each connection.queues as queue}
                             <Command.Item
-                                value={`${connection.id}-${connection.connectionName}-${queue.queueName}`}
+                                value={`${connection.id}-${connection.name}-${queue.queueName}`}
                                 class={cn(
                                     "hover:bg-card! text-base hover:text-current! py-2",
                                 )}
@@ -64,14 +64,12 @@
                                     queueStore.setActiveNode(queue.id);
                                     await createTab({
                                         id: queue.id,
-                                        data: {
-                                            title: queue.queueName,
-                                            connectionId: connection.id,
-                                            params: QueueState.getDefaultParams(
-                                                connection.id,
-                                                queue.queueName,
-                                            ),
-                                        },
+                                        title: queue.queueName,
+                                        connectionId: connection.id,
+                                        params: QueueState.getDefaultParams(
+                                            connection.id,
+                                            queue.queueName,
+                                        ),
                                     });
                                     globalStore.toggleSearchCommand(false);
                                 }}
@@ -81,7 +79,7 @@
                                         class="rounded-lg text-white font-bold text-xs"
                                         style={avatarStyle(connection.color)}
                                     >
-                                        {connection.connectionName
+                                        {connection.name
                                             ?.substring(0, 2)
                                             .toUpperCase()}
                                     </Avatar.Fallback>
@@ -94,7 +92,7 @@
                                         style={avatarStyle(connection.color)}
                                         class="text-xs opacity-80 text-white"
                                     >
-                                        {connection.connectionName}
+                                        {connection.name}
                                     </Badge>
                                 </div>
                             </Command.Item>
