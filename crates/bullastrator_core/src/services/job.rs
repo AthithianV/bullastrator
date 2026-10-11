@@ -14,17 +14,17 @@ use crate::services::RedisConnection;
 use crate::services::connection::ConnectionService;
 use bullastrator_storage::models::WorkspaceRole;
 
-pub struct JobService<'a> {
-    connection_pool: &'a RedisConnection,
-    prefix: &'a str,
-    bull_driver: &'a BullmqV5Driver,
+pub struct JobService {
+    connection_pool: RedisConnection,
+    prefix: String,
+    bull_driver: &'static BullmqV5Driver,
 }
 
-impl<'a> JobService<'a> {
-    pub fn new(connection_pool: &'a RedisConnection) -> Self {
+impl JobService {
+    pub fn new(connection_pool: &RedisConnection) -> Self {
         Self {
-            connection_pool,
-            prefix: connection_pool.prefix.as_str(),
+            connection_pool: connection_pool.clone(),
+            prefix: connection_pool.prefix.clone(),
             bull_driver: &BullmqV5Driver,
         }
     }
@@ -42,7 +42,7 @@ impl<'a> JobService<'a> {
     }
 
     pub async fn for_user(
-        connection_pool: &'a RedisConnection,
+        connection_pool: &RedisConnection,
         connections: &ConnectionService,
         user_id: &str,
         role: WorkspaceRole,
@@ -76,7 +76,7 @@ impl<'a> JobService<'a> {
                 JobStatus::Delayed | JobStatus::Prioritized => ("ZRANGE", "ZCARD"),
             };
             let (script_content, key_gen) = self.bull_driver.get();
-            let key = key_gen(self.prefix, &queue_name, status_suffix);
+            let key = key_gen(&self.prefix, &queue_name, status_suffix);
             let start = cursor;
             let end = cursor.saturating_add(limit).saturating_sub(1);
             let (total_count, raw_jobs): (usize, Vec<(String, Vec<Option<String>>)>) =
@@ -226,7 +226,7 @@ impl<'a> JobService<'a> {
             .await
             .context("Connection Failed!")?;
 
-        let prefix = self.prefix;
+        let prefix = &self.prefix;
 
         let (range_cmd, count_cmd) = match status {
             JobStatus::Wait | JobStatus::Active | JobStatus::Paused => ("LRANGE", "LLEN"),
@@ -239,7 +239,7 @@ impl<'a> JobService<'a> {
 
         let (script_content, key_gen) = self.bull_driver.get_job_data();
 
-        let state_key = key_gen(prefix, &queue_name, status.redis_key_suffix());
+        let state_key = key_gen(&prefix, &queue_name, status.redis_key_suffix());
 
         let job_key_prefix = format!("{}:{}:", prefix, queue_name);
 
@@ -343,7 +343,7 @@ impl<'a> JobService<'a> {
             .await
             .context("Connection Failed!")?;
 
-        let prefix = self.prefix;
+        let prefix = &self.prefix;
         let job_prefix = format!("{}:{}:", prefix, queue_name);
 
         // --- 1. DIRECT ID LOOKUP (Fast Path) ---
@@ -355,7 +355,7 @@ impl<'a> JobService<'a> {
 
             let is_in_state = self
                 .check_if_job_exists_in_a_status(
-                    prefix,
+                    &prefix,
                     &queue_name,
                     target_id,
                     status,
@@ -410,7 +410,7 @@ impl<'a> JobService<'a> {
         let (script_content, key_gen) = self.bull_driver.search();
 
         let script = Script::new(script_content);
-        let key = key_gen(prefix, &queue_name, status);
+        let key = key_gen(&prefix, &queue_name, status);
 
         // A. Execute Lua Script
         // This returns ONLY the IDs that matched our criteria
@@ -464,7 +464,7 @@ impl<'a> JobService<'a> {
         &self,
         queue_names: Vec<&str>,
     ) -> Result<Vec<QueueJobCounts>> {
-        let prefix = self.prefix;
+        let prefix = &self.prefix;
 
         let mut redis_conn = self
             .connection_pool
@@ -579,7 +579,7 @@ impl<'a> JobService<'a> {
         let (script_content, key_gen) = self.bull_driver.update();
         let script = Script::new(script_content);
 
-        let key = key_gen(self.prefix, &queue_name, &job_id);
+        let key = key_gen(&self.prefix, &queue_name, &job_id);
 
         // 2. Serialize Data and Options
         let data_json = to_string(&job_data).unwrap_or("{}".to_string());
@@ -626,7 +626,7 @@ impl<'a> JobService<'a> {
             let mut pipe = redis::pipe();
 
             for job_id in chunk {
-                let keys = key_gen(self.prefix, &queue_name, job_id);
+                let keys = key_gen(&self.prefix, &queue_name, job_id);
                 let args = arg_gen(
                     job_id,
                     match strategy {
@@ -707,7 +707,7 @@ impl<'a> JobService<'a> {
 
             for job_id in chunk {
                 // Generate the 9 keys required by the promote script
-                let keys = key_gen(self.prefix, &queue_name);
+                let keys = key_gen(&self.prefix, &queue_name);
                 let mut invocation = script.prepare_invoke();
 
                 for key in &keys {
@@ -771,7 +771,7 @@ impl<'a> JobService<'a> {
             for job_id in chunk {
                 // Generate the keys required for removal
                 // Standard BullMQ remove script usually requires 2 keys: [jobKey, repeatKey]
-                let keys = key_gen(self.prefix, &queue_name, job_id);
+                let keys = key_gen(&self.prefix, &queue_name, job_id);
                 let mut invocation = script.prepare_invoke();
 
                 for key in &keys {

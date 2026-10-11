@@ -1,4 +1,3 @@
-// src-tauri/src/lib.rs
 use tauri::WebviewWindow;
 
 #[tauri::command]

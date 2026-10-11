@@ -555,7 +555,8 @@ dependencies = [
 name = "bullastrator-desktop"
 version = "0.1.0"
 dependencies = [
- "anyhow",
+ "bullastrator-core",
+ "bullastrator-storage",
  "reqwest 0.12.28",
  "rmp-serde",
  "serde",
@@ -574,11 +575,7 @@ dependencies = [
  "tauri-plugin-process",
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
- "thiserror 1.0.69",
  "tokio",
- "tracing",
- "tracing-subscriber",
- "uuid",
 ]
 
 [[package]]

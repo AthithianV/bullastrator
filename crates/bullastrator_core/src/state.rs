@@ -7,6 +7,7 @@ use crate::services::{
     user::UserService, workspace::WorkspaceService,
 };
 use crate::utils::redis_connection::create_redis_connection;
+use bullastrator_storage::models::CreateWorkspace;
 use bullastrator_storage::repositories::{
     ConnectionRepository, FolderRepository, QueueRepository, TabRepository, UserRepository,
     WorkspaceRepository,
@@ -68,6 +69,27 @@ impl AppState {
             queue_services,
             settings,
         })
+    }
+
+    pub async fn initialize_default_desktop_user(&self) -> Result<String> {
+        let user = self.users.ensure_default_user().await?;
+
+        if self.workspaces.active(&user.id).await.is_err() {
+            let workspace = self
+                .workspaces
+                .create(
+                    &user.id,
+                    CreateWorkspace {
+                        name: "Bullastrator".into(),
+                        color: Some("#00CADB".into()),
+                        icon: None,
+                    },
+                )
+                .await?;
+            self.workspaces.select(&workspace.id, &user.id).await?;
+        }
+
+        Ok(user.id)
     }
 
     pub async fn get_redis_connection(&self, connection_id: &str) -> Result<RedisConnection> {

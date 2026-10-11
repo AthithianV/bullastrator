@@ -1,6 +1,8 @@
-use tauri::{Emitter, Manager, State, WindowEvent};
+use bullastrator_core::state::AppState;
+use tauri::{Emitter, Manager, WindowEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
-use tauri_plugin_log::{Target, TargetKind};
+
+pub mod commands;
 
 pub use commands::connection_command::*;
 pub use commands::folder_command::*;
@@ -9,15 +11,23 @@ pub use commands::queue_command::*;
 pub use commands::settings_command::*;
 pub use commands::tab_command::*;
 pub use commands::workspace_command::*;
-pub use utilities::{app_state::AppState, local_db::initialize_local_db};
-
-use crate::repository::workspace_repository::WorkspaceRepository;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    dotenvy::dotenv().ok();
-
-    let app_state = AppState::new();
+    let app_state = tauri::async_runtime::block_on(async {
+        let pool = bullastrator_storage::initialize_database()
+            .await
+            .map_err(|error| format!("Failed to initialize database: {error}"))?;
+        let state = AppState::new(pool)
+            .await
+            .map_err(|error| format!("Failed to initialize application state: {error}"))?;
+        state
+            .initialize_default_desktop_user()
+            .await
+            .map_err(|error| format!("Failed to initialize default desktop user: {error}"))?;
+        Ok::<AppState, String>(state)
+    })
+    .unwrap_or_else(|error| panic!("{error}"));
 
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
@@ -44,25 +54,9 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .target(Target::new(TargetKind::LogDir {
-                    file_name: Some("logs".to_string()),
-                }))
-                .max_file_size(50_000 /* bytes */)
-                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
-                .level(tauri_plugin_log::log::LevelFilter::Info)
-                .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
-                .format(|out, message, record| {
-                    out.finish(format_args!("\n[{}] {}\n", record.level(), message))
-                })
-                .build(),
-        )
         .plugin(tauri_plugin_dialog::init())
         .manage(app_state.clone())
         .setup(|app| {
-            init_logging();
-
             let handle_for_deep_link = app.handle().clone();
             let handle_for_db = app.handle().clone();
 
@@ -113,25 +107,6 @@ pub fn run() {
             if args.len() > 1 && args[1].starts_with("bullastrator://") {
                 println!("Deep link ARG: {}", args[1]);
             }
-
-            // spawn async task to initialize AppState
-            tauri::async_runtime::spawn(async move {
-                match initialize_local_db().await {
-                    Ok(db_conn) => {
-                        let state: State<'_, AppState> = handle_for_db.state();
-
-                        // 1. Initialize DB Connection in State
-                        state.set_app_db_connection(db_conn.clone()).await;
-
-                        // 2. Initialize Workspace
-                        let workspace_repository = WorkspaceRepository::new(&db_conn);
-                        if let Ok(active_ws) = workspace_repository.get_active_workspace().await {
-                            state.set_active_workspace(active_ws).await;
-                        }
-                    }
-                    Err(e) => println!("Failed to initialize DB: {:?}", e),
-                }
-            });
 
             Ok(())
         })

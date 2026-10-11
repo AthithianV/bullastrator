@@ -15,6 +15,7 @@ use uuid::Uuid;
 use crate::models::user::{AuthResponse, LoginRequest, RegisterRequest};
 
 const SESSION_TTL_DAYS: i64 = 30;
+pub const DEFAULT_DESKTOP_USER_EMAIL: &str = "desktop@bullastrator.local";
 
 #[derive(Clone)]
 pub struct UserService {
@@ -24,6 +25,20 @@ pub struct UserService {
 impl UserService {
     pub fn new(repository: UserRepository) -> Self {
         Self { repository }
+    }
+
+    pub async fn ensure_default_user(&self) -> Result<User> {
+        if let Some(user) = self
+            .repository
+            .find_by_email(DEFAULT_DESKTOP_USER_EMAIL)
+            .await?
+        {
+            return Ok(user);
+        }
+
+        self.repository
+            .create_default_user("Bullastrator Desktop", DEFAULT_DESKTOP_USER_EMAIL)
+            .await
     }
 
     #[tracing::instrument(skip(self, request), err)]

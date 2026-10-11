@@ -1,136 +1,42 @@
-use crate::model::queue_model::{ConnectionWithQueues, QueueDetails, ReadQueueModel};
-use crate::repository::queue_repository::QueueRepository;
-use crate::service::queue_service::QueueService;
-use crate::utilities::app_state::AppState;
-use crate::utilities::redis_utils::get_or_create_redis_connection;
-use tauri::{State, command};
-use tracing::error;
-use uuid::Uuid;
+use bullastrator_core::state::AppState;
+use bullastrator_storage::models::{ConnectionWithQueues, Queue};
+use bullastrator_core::services::queue::QueueDetails;
+use tauri::{command, State};
 
-#[command]
-pub async fn sync_all_queue_names(
-    app_state: State<'_, AppState>,
-    connection_id: Uuid,
-) -> Result<(), String> {
-    #[cfg(debug_assertions)]
-    {
-        use std::{thread, time::Duration};
-
-        println!("Dev mode: Sleeping for 5 second...");
-        thread::sleep(Duration::from_secs(5));
-    }
-
-    let db_conn = app_state.get_app_db_connection().await?;
-
-    let connection_pool = get_or_create_redis_connection(&app_state, connection_id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })
-        .unwrap();
-
-    let queue_service = QueueService::new(&connection_pool);
-    // Step 2: Pass redis connection to fetch_all_queues function to get vector of all queue name.
-    queue_service
-        .get_all_bullmq_queues(db_conn)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })?;
-
-    Ok(())
+async fn user_id(state: &AppState) -> Result<String, String> {
+    state.users.ensure_default_user().await.map(|user| user.id).map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn get_all_queues_by_connection(
-    app_state: State<'_, AppState>,
-    connection_id: Uuid,
-) -> Result<Vec<ReadQueueModel>, String> {
-    let db_conn = app_state.get_app_db_connection().await?;
-
-    // Step 1: Get the connection from connection table.
-    let queue_repository = QueueRepository::new(&db_conn);
-    let queues = queue_repository
-        .get_all_by_connection(connection_id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })
-        .unwrap();
-
-    Ok(queues)
+pub async fn sync_all_queue_names(state: State<'_, AppState>, connection_id: String) -> Result<(), String> {
+    let user_id = user_id(&state).await?;
+    let service = state.get_queue_service(&connection_id).await.map_err(|error| error.to_string())?;
+    service.sync_queues(&user_id).await.map(|_| ()).map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn get_all_queues_by_workspace(
-    app_state: State<'_, AppState>,
-) -> Result<Vec<ConnectionWithQueues>, String> {
-    let db_conn = app_state.get_app_db_connection().await?;
-    let workspace = app_state.get_active_workspace().await?;
-
-    // Step 1: Get the connection from connection table.
-    let queue_repository = QueueRepository::new(&db_conn);
-    let queues = queue_repository
-        .get_all_by_workspace(workspace.id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })?;
-
-    Ok(queues)
+pub async fn get_all_queues_by_connection(state: State<'_, AppState>, connection_id: String) -> Result<Vec<Queue>, String> {
+    let user_id = user_id(&state).await?;
+    let service = state.get_queue_service(&connection_id).await.map_err(|error| error.to_string())?;
+    service.list_queues(&user_id).await.map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn pause_queue(
-    app_state: State<'_, AppState>,
-    connection_id: Uuid,
-    queue_name: String,
-    should_pause: bool,
-) -> Result<String, String> {
-    let connection_pool = get_or_create_redis_connection(&app_state, connection_id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })
-        .unwrap();
-
-    let queue_service = QueueService::new(&connection_pool);
-
-    queue_service
-        .pause_queue_service(queue_name, should_pause)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })
+pub async fn get_all_queues_by_workspace(state: State<'_, AppState>) -> Result<Vec<ConnectionWithQueues>, String> {
+    let user_id = user_id(&state).await?;
+    state.connections.list_queues(&user_id).await.map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn get_queue_details(
-    app_state: State<'_, AppState>,
-    connection_id: Uuid,
-    queue_name: String,
-) -> Result<QueueDetails, String> {
-    let connection_pool = get_or_create_redis_connection(&app_state, connection_id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })
-        .unwrap();
+pub async fn pause_queue(state: State<'_, AppState>, connection_id: String, queue_name: String, should_pause: bool) -> Result<String, String> {
+    let user_id = user_id(&state).await?;
+    let service = state.get_queue_service(&connection_id).await.map_err(|error| error.to_string())?;
+    service.pause_queue_service(&queue_name, should_pause, &user_id).await.map_err(|error| error.to_string())
+}
 
-    let queue_service = QueueService::new(&connection_pool);
-
-    queue_service
-        .get_queue_details_service(queue_name)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })
+#[command]
+pub async fn get_queue_details(state: State<'_, AppState>, connection_id: String, queue_name: String) -> Result<QueueDetails, String> {
+    let user_id = user_id(&state).await?;
+    let service = state.get_queue_service(&connection_id).await.map_err(|error| error.to_string())?;
+    service.get_queue_details_service(&queue_name, &user_id).await.map_err(|error| error.to_string())
 }

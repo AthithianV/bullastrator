@@ -1,7 +1,7 @@
 use std::fs;
 use std::io::{self, Error, ErrorKind};
 use std::path::Path;
-pub const LUA_ROOT: &str = "../../src-tauri/lua-scripts";
+pub const LUA_ROOT: &str = "lua-scripts";
 
 pub fn load_script_with_includes(filename: &str, version: &str) -> io::Result<String> {
     let root_dir = Path::new(LUA_ROOT);

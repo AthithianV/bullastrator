@@ -1,214 +1,77 @@
-use anyhow::Result;
-use tauri::{State, command};
-use tracing::error;
-use uuid::Uuid;
+use bullastrator_core::{services::connection, state::AppState};
+use bullastrator_storage::models::{Connection, ConnectionDetails, CreateConnection, UpdateConnection};
+use serde::Serialize;
+use tauri::{command, State};
 
-use crate::model::connection_model::{
-    ConnectionHealth, CreateConnectionModel, ReadConnectionModel, UpdateConnectionModel,
-};
-use crate::repository::connection_repository::ConnectionRepository;
-use crate::service::connection_service::{
-    check_redis_version, start_health_check_service, test_redis_connection_service,
-};
-use crate::utilities::app_state::AppState;
-use crate::utilities::redis_utils::{create_redis_url, get_or_create_redis_connection};
+async fn user_id(state: &AppState) -> Result<String, String> {
+    state.users.ensure_default_user().await.map(|user| user.id).map_err(|error| error.to_string())
+}
 
-#[command]
-pub async fn create_connection(
-    app_state: State<'_, AppState>,
-    data: CreateConnectionModel,
-) -> Result<ReadConnectionModel, String> {
-    let db_conn = app_state.get_app_db_connection().await?;
-    let workspace = app_state.get_active_workspace().await?;
-
-    let connection_repo = ConnectionRepository::new(&db_conn);
-
-    let _ = check_redis_version(&data).await.map_err(|e| {
-        error!("{:?}", e);
-        e.to_string()
-    });
-
-    let new_connection = connection_repo
-        .create(data.clone(), workspace.id)
-        .await
-        .map_err(|e| {
-            error!("{:?}", e);
-            e.to_string()
-        });
-
-    new_connection
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionHealth {
+    pub id: String,
+    pub is_active: bool,
 }
 
 #[command]
-pub async fn update_connection(
-    app_state: State<'_, AppState>,
-    id: Uuid,
-    data: UpdateConnectionModel,
-) -> Result<ReadConnectionModel, String> {
-    let db_conn = app_state.get_app_db_connection().await?;
-    let connection_repo = ConnectionRepository::new(&db_conn);
-
-    let existing = connection_repo
-        .get_by_id_with_password(id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })?
-        .ok_or_else(|| "Connection not found".to_string())?;
-
-    let check_data = CreateConnectionModel {
-        host: data.host.clone().unwrap_or(existing.host),
-        port: data.port.unwrap_or(existing.port),
-        username: data.username.clone().or(existing.username),
-        password: data.password.clone().or(existing.password),
-        db: Some(data.db.unwrap_or(existing.db)),
-        is_tls_enabled: data.is_tls_enabled.unwrap_or(existing.is_tls_enabled),
-        bullmq_prefix: Some(existing.bullmq_prefix),
-        color: data.color.clone().or(existing.color),
-        label: data.label.clone().or(existing.label),
-        name: existing.name,
-    };
-
-    // 3. Perform the Version Check (with the timeout we discussed)
-    check_redis_version(&check_data).await.map_err(|e| {
-        error!("Redis Version Check Failed: {:?}", e);
-        format!("Compatibility Error: {}", e)
-    })?;
-
-    let result = connection_repo.update(id, data).await.map_err(|e| {
-        error!("An error occurred: {:?}", e);
-        e.to_string()
-    });
-
-    app_state.remove_redis_connection(&id).await;
-
-    result
+pub async fn create_connection(state: State<'_, AppState>, data: CreateConnection) -> Result<Connection, String> {
+    let user_id = user_id(&state).await?;
+    connection::check_redis_version(&data).await.map_err(|error| error.to_string())?;
+    state.connections.create(&user_id, data).await.map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn delete_connection(app_state: State<'_, AppState>, id: Uuid) -> Result<String, String> {
-    let db_conn = app_state.get_app_db_connection().await?;
-    let connection_repo = ConnectionRepository::new(&db_conn);
-
-    let result = connection_repo
-        .delete(id)
-        .await
-        .map(|_| "Deleted successfully".to_string())
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        });
-
-    app_state.remove_redis_connection(&id).await;
-
-    result
+pub async fn update_connection(state: State<'_, AppState>, id: String, data: UpdateConnection) -> Result<Connection, String> {
+    let user_id = user_id(&state).await?;
+    state.connections.update(&id, &user_id, data).await.map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn get_connection(
-    app_state: State<'_, AppState>,
-    id: Uuid,
-) -> Result<Option<ReadConnectionModel>, String> {
-    let db_conn = app_state.get_app_db_connection().await?;
-    let connection_repo = ConnectionRepository::new(&db_conn);
-
-    connection_repo.get_by_id(id).await.map_err(|e| {
-        error!("An error occurred: {:?}", e);
-        e.to_string()
-    })
+pub async fn delete_connection(state: State<'_, AppState>, id: String) -> Result<String, String> {
+    let user_id = user_id(&state).await?;
+    state.connections.delete(&id, &user_id).await.map(|_| "Deleted successfully".to_owned()).map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn get_all_connections(
-    app_state: State<'_, AppState>,
-) -> Result<Vec<ReadConnectionModel>, String> {
-    let db_conn = app_state.get_app_db_connection().await?;
-    let active_workspace = app_state.get_active_workspace().await?;
-
-    let connection_repo = ConnectionRepository::new(&db_conn);
-
-    connection_repo
-        .get_all(active_workspace.id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })
+pub async fn get_connection(state: State<'_, AppState>, id: String) -> Result<Option<ConnectionDetails>, String> {
+    let user_id = user_id(&state).await?;
+    state.connections.get(&id, &user_id).await.map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn start_health_check(
-    app_state: State<'_, AppState>,
-    connection_id: Uuid,
-) -> Result<bool, String> {
-    let connection_pool = get_or_create_redis_connection(&app_state, connection_id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })?;
-
-    start_health_check_service(&connection_pool)
-        .await
-        .map_err(|e| {
-            error!("An error occurred: {:?}", e);
-            e.to_string()
-        })
+pub async fn get_all_connections(state: State<'_, AppState>) -> Result<Vec<Connection>, String> {
+    let user_id = user_id(&state).await?;
+    state.connections.list(&user_id).await.map_err(|error| error.to_string())
 }
 
 #[command]
-pub async fn check_health_for_all_connections(
-    app_state: State<'_, AppState>,
-) -> Result<Vec<ConnectionHealth>, String> {
-    let db_conn = app_state.get_app_db_connection().await?;
+pub async fn start_health_check(state: State<'_, AppState>, connection_id: String) -> Result<bool, String> {
+    let user_id = user_id(&state).await?;
+    state.connections.authorize(&connection_id, &user_id, bullastrator_storage::models::WorkspaceRole::VIEWER).await.map_err(|error| error.to_string())?;
+    let redis = state.get_redis_connection(&connection_id).await.map_err(|error| error.to_string())?;
+    connection::start_health_check_service(&redis.pool).await.map_err(|error| error.to_string())
+}
 
-    let active_workspace = app_state.get_active_workspace().await?;
-
-    let connection_repo = ConnectionRepository::new(&db_conn);
-
-    let connections = connection_repo
-        .get_all(active_workspace.id)
-        .await
-        .map_err(|e| {
-            error!("An error occurred getting all connects: {:?}", e);
-            e.to_string()
-        })?;
-
-    let mut connections_status = Vec::new();
-    for connection in &connections {
-        let connection_pool = get_or_create_redis_connection(&app_state, connection.id)
-            .await
-            .map_err(|e| {
-                error!(
-                    "An error occurred while connecting {}: {:?}",
-                    connection.name, e
-                );
-                e.to_string()
-            })?;
-
-        let connection_status = start_health_check_service(&connection_pool).await;
-
-        connections_status.push(ConnectionHealth {
-            id: connection.id,
-            is_active: connection_status.unwrap_or_default(),
-        });
+#[command]
+pub async fn check_health_for_all_connections(state: State<'_, AppState>) -> Result<Vec<ConnectionHealth>, String> {
+    let user_id = user_id(&state).await?;
+    let connections = state.connections.list(&user_id).await.map_err(|error| error.to_string())?;
+    let mut result = Vec::with_capacity(connections.len());
+    for item in connections {
+        let active = match state.get_redis_connection(&item.id).await {
+            Ok(redis) => connection::start_health_check_service(&redis.pool).await.unwrap_or(false),
+            Err(_) => false,
+        };
+        result.push(ConnectionHealth { id: item.id, is_active: active });
     }
-
-    Ok(connections_status)
+    Ok(result)
 }
 
 #[command]
-pub async fn test_redis_connection(
-    host: String,
-    port: i32,
-    username: Option<String>,
-    password: Option<String>,
-    db: i32,
-    is_tls_enabled: bool,
-) -> Result<bool, String> {
-    let redis_url = create_redis_url(host, port, username, password, db, is_tls_enabled)
-        .map_err(|e| e.to_string())?;
-
-    test_redis_connection_service(redis_url).await
+pub async fn test_redis_connection(host: String, port: i32, username: Option<String>, password: Option<String>, db: i32, is_tls_enabled: bool) -> Result<bool, String> {
+    connection::test_redis_connection_service(&CreateConnection {
+        name: String::new(), host, port, username, password, db: Some(db), bullmq_prefix: None,
+        color: None, label: None, is_tls_enabled,
+    }).await.map_err(|error| error.to_string())
 }
