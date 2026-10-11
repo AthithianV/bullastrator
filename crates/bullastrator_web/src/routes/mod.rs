@@ -1,4 +1,5 @@
 pub(crate) mod connection;
+pub(crate) mod folder;
 pub(crate) mod job;
 pub(crate) mod queue;
 pub(crate) mod tab;
@@ -21,6 +22,7 @@ pub fn router(state: AppState) -> Router {
 
     let resource_routes = Router::new()
         .merge(connection::routes())
+        .merge(folder::routes())
         .merge(queue::routes())
         .merge(tab::routes())
         .merge(job::routes());

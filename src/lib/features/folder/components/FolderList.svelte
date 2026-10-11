@@ -2,15 +2,7 @@
     import Button from "ui/button/button.svelte";
     import * as Accordion from "ui/accordion";
 
-    import {
-        ChevronDown,
-        ChevronRight,
-        Eye,
-        Folder,
-        FolderOpen,
-        Trash2,
-        Workflow,
-    } from "@lucide/svelte";
+    import { ChevronRight, Folder, Trash2, Workflow } from "@lucide/svelte";
     import { cn } from "shared/utils";
 
     import {
@@ -48,15 +40,13 @@
         e.stopPropagation();
         await createTab({
             id: folderId,
-            data: {
-                title: title,
+            title: title,
+            connectionId: connectionId,
+            params: {
                 connectionId: connectionId,
-                params: {
-                    connectionId: connectionId,
-                    folderName: title,
-                    type: "FOLDER",
-                    folderId: folderId,
-                },
+                folderName: title,
+                type: "FOLDER",
+                folderId: folderId,
             },
         });
     }
@@ -136,10 +126,7 @@
                                         )}
                                 >
                                     <Workflow class={cn("w-4 h-4")} />
-                                    <span
-                                        >{queue.displayName ??
-                                            queue.queueName}</span
-                                    >
+                                    <span>{queue.queueName}</span>
                                 </Button>
                             </li>
                         {/each}

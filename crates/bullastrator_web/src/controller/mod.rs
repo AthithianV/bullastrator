@@ -1,4 +1,5 @@
 pub(crate) mod connection;
+pub(crate) mod folder;
 pub(crate) mod job;
 pub(crate) mod queue;
 pub(crate) mod tab;

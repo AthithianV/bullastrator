@@ -273,7 +273,7 @@
                                     !queueDetailsQuery.data.isPaused,
                                 )}
                         >
-                            {#if pauseQueueQuery.isPending || queueDetailsQuery.isFetching}
+                            {#if pauseQueueQuery.isPending}
                                 <Spinner />
                             {:else if queueDetailsQuery.data?.isPaused}
                                 <Play fill="currentColor" />

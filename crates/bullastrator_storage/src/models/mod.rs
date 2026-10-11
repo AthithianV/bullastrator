@@ -12,7 +12,7 @@ pub mod workspace;
 pub mod workspace_members;
 
 pub use connection::{Connection, ConnectionDetails, CreateConnection, UpdateConnection};
-pub use folder::{CreateFolder, Folder, FolderWithQueues};
+pub use folder::{CreateFolder, Folder, FolderWithQueues, UpdateFolder};
 pub use folder_queue::FolderQueue;
 pub use queue::{ConnectionWithQueues, Queue};
 pub use queue_actions::QueueAction;

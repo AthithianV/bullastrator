@@ -1,4 +1,5 @@
 pub mod connection;
+pub mod folder;
 pub mod job;
 pub mod queue;
 pub mod tab;

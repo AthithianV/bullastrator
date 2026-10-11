@@ -1,6 +1,9 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 
+use crate::bull_drivers::bullmq_driver_v5::BullmqV5Driver;
+use crate::bull_drivers::driver_registry::BullmqDriver;
+
 use bullastrator_storage::repositories::QueueRepository;
 
 use super::RedisConnection;
@@ -91,13 +94,31 @@ impl QueueService {
     ) -> Result<String> {
         self.authorize(user_id, WorkspaceRole::EDITOR).await?;
         tracing::info!("updating queue pause state");
-        let queue = self.redis.queue(queue_name).await?;
-        if should_pause {
-            queue.pause().await?;
-        } else {
-            queue.resume().await?;
-        }
-        Ok(if should_pause { "paused" } else { "resumed" }.into())
+
+        let arg = if should_pause { "paused" } else { "resumed" };
+
+        let (script_content, key_gen) = BullmqV5Driver.pause();
+        let keys = key_gen(&self.redis.prefix, &queue_name, should_pause);
+        let script = redis::Script::new(script_content);
+        let mut redis_conn = self
+            .redis
+            .pool
+            .get()
+            .await
+            .context("Failed to get Redis connection")?;
+
+        let result: redis::RedisResult<Option<i32>> = script
+            .key(keys)
+            .arg(arg)
+            .invoke_async(&mut redis_conn)
+            .await;
+
+        let _: Option<i32> = result.map_err(|error| {
+            tracing::error!(?error, queue_name, "Redis pause/resume failed");
+            error
+        })?;
+
+        Ok(arg.to_string())
     }
 
     #[tracing::instrument(skip(self), fields(connection_id = %self.redis.connection_id, queue = %queue_name), err)]

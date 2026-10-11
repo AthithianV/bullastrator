@@ -5,6 +5,7 @@ import { TAB_ROUTES } from "./tabs";
 import { USER_ROUTES } from "./users";
 import { WORKSPACE_ROUTES } from "./workspace";
 import { CONNECTION_ROUTES } from "./connection";
+import { FOLDER_ROUTES } from "./folder";
 
 const apiBaseUrl = (PUBLIC_API_URL || "http://127.0.0.1:3000").replace(
   /\/$/,
@@ -36,6 +37,7 @@ export const webCommandMap: Record<string, WebCommand> = {
   ...TAB_ROUTES,
   ...USER_ROUTES,
   ...CONNECTION_ROUTES,
+  ...FOLDER_ROUTES,
 };
 
 export async function callWebApi<T>(

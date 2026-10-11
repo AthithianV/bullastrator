@@ -3,7 +3,7 @@
 - [x]. Search not working.
 - [X]. Waiting job details not showing.
 - [x]. check for job details in Priority too.
-- []. Pause is not working.
+- [x]. Pause is not working.
 - []. Folder Routes and folder features.
 - []. Folders should show for all view.
 

@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 use crate::models::{CreateFolder, Folder, FolderWithQueues, Queue, folder::FolderAndQueues};
 
+#[derive(Clone)]
 pub struct FolderRepository {
     pool: SqlitePool,
 }
@@ -58,12 +59,12 @@ impl FolderRepository {
 
                 q.id AS queue_id,
                 q.connection_id AS queue_connection_id,
-                q.queue_name,
+                q.queue_name
 
             FROM folders f
             LEFT JOIN folder_queues fq
                 ON fq.folder_id = f.id
-            LEFT JOIN queue q
+            LEFT JOIN queues q
                 ON q.id = fq.queue_id
             WHERE f.connection_id = ?
             ORDER BY
@@ -90,11 +91,15 @@ impl FolderRepository {
                     queues: Vec::new(),
                 });
 
-            folder.queues.push(Queue {
-                id: row.queue_id,
-                connection_id: row.queue_connection_id,
-                queue_name: row.queue_name,
-            });
+            if let (Some(id), Some(connection_id), Some(queue_name)) =
+                (row.queue_id, row.queue_connection_id, row.queue_name)
+            {
+                folder.queues.push(Queue {
+                    id,
+                    connection_id,
+                    queue_name,
+                });
+            }
         }
 
         Ok(folders.into_values().collect())
@@ -182,9 +187,9 @@ impl FolderRepository {
                 SELECT
                     q.id,
                     q.connection_id,
-                    q.queue_name,
+                    q.queue_name
                 FROM
-                    queue q
+                    queues q
                 JOIN
                     folder_queues fq
                 ON

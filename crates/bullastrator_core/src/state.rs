@@ -3,12 +3,13 @@ use std::sync::Arc;
 
 use crate::error::{BullastratorError, Result};
 use crate::services::{
-    RedisConnection, queue::QueueService, tab::TabService, user::UserService,
-    workspace::WorkspaceService,
+    RedisConnection, folder::FolderService, queue::QueueService, tab::TabService,
+    user::UserService, workspace::WorkspaceService,
 };
 use crate::utils::redis_connection::create_redis_connection;
 use bullastrator_storage::repositories::{
-    ConnectionRepository, QueueRepository, TabRepository, UserRepository, WorkspaceRepository,
+    ConnectionRepository, FolderRepository, QueueRepository, TabRepository, UserRepository,
+    WorkspaceRepository,
 };
 use sqlx::SqlitePool;
 use tokio::sync::RwLock;
@@ -22,6 +23,7 @@ pub struct AppState {
     pub queue_services: Arc<RwLock<HashMap<String, QueueService>>>,
     pub workspaces: WorkspaceService,
     pub tabs: TabService,
+    pub folders: FolderService,
     pub settings: ServerSettings,
 }
 
@@ -48,17 +50,19 @@ impl AppState {
         let redis_connections = Arc::new(RwLock::new(HashMap::new()));
         let queue_services = Arc::new(RwLock::new(HashMap::new()));
         let workspaces = WorkspaceService::new(WorkspaceRepository::new(pool.clone()));
+        let connections = crate::services::connection::ConnectionService::new(
+            ConnectionRepository::new(pool.clone()),
+            workspaces.clone(),
+        );
 
         tracing::info!("application state initialized");
 
         Ok(Self {
             users: UserService::new(UserRepository::new(pool.clone())),
-            connections: crate::services::connection::ConnectionService::new(
-                ConnectionRepository::new(pool.clone()),
-                workspaces.clone(),
-            ),
+            connections: connections.clone(),
             workspaces: workspaces.clone(),
             tabs: TabService::new(TabRepository::new(pool.clone()), workspaces),
+            folders: FolderService::new(FolderRepository::new(pool.clone()), connections),
             db: pool,
             redis_connections,
             queue_services,

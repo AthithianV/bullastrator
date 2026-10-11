@@ -10,15 +10,24 @@ pub struct Folder {
     pub title: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CreateFolder {
     pub connection_id: String,
+    #[serde(skip)]
     pub user_id: Option<String>,
     pub title: Option<String>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateFolder {
+    pub title: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FolderWithQueues {
+    #[serde(flatten)]
     pub folder: Folder,
     pub queues: Vec<super::Queue>,
 }
@@ -30,7 +39,7 @@ pub struct FolderAndQueues {
     pub folder_connection_id: String,
     pub folder_user_id: Option<String>,
     pub folder_title: String,
-    pub queue_id: String,
-    pub queue_connection_id: String,
-    pub queue_name: String,
+    pub queue_id: Option<String>,
+    pub queue_connection_id: Option<String>,
+    pub queue_name: Option<String>,
 }
