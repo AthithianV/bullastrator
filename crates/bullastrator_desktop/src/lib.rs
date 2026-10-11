@@ -1,12 +1,3 @@
-pub mod bull_drivers;
-pub mod commands;
-pub mod entity;
-pub mod model;
-pub mod repository;
-pub mod scripts;
-pub mod service;
-pub mod utilities;
-
 use tauri::{Emitter, Manager, State, WindowEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_log::{Target, TargetKind};
@@ -18,7 +9,7 @@ pub use commands::queue_command::*;
 pub use commands::settings_command::*;
 pub use commands::tab_command::*;
 pub use commands::workspace_command::*;
-pub use utilities::{app_state::AppState, local_db::initialize_local_db, logging::init_logging};
+pub use utilities::{app_state::AppState, local_db::initialize_local_db};
 
 use crate::repository::workspace_repository::WorkspaceRepository;
 
@@ -68,17 +59,6 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_dialog::init())
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .max_file_size(50_000 /* bytes */)
-                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
-                .target(tauri_plugin_log::Target::new(
-                    tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("logs".to_string()),
-                    },
-                ))
-                .build(),
-        )
         .manage(app_state.clone())
         .setup(|app| {
             init_logging();
