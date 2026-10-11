@@ -15,6 +15,7 @@ export const JOB_ROUTES: Record<string, WebCommand> = {
       status: args.status,
       cursor: args.cursor,
       limit: args.limit,
+      filters: JSON.stringify(args.filters ?? []),
     }),
   },
   get_jobs_by_id: {

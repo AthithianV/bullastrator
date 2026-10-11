@@ -1,13 +1,18 @@
 use bullastrator_core::models::job::{JobFilterType, JobStatus, RetryJobStatus, RetryStrategy};
 
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct JobListQuery {
-    pub status: JobStatus,
-    pub cursor: Option<usize>,
-    pub limit: Option<usize>,
+fn deserialize_filters<'de, D>(deserializer: D) -> Result<Vec<JobFilterType>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let filters = String::deserialize(deserializer)?;
+
+    if filters.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+
+    serde_json::from_str(&filters).map_err(serde::de::Error::custom)
 }
 
 #[derive(Deserialize)]
@@ -18,8 +23,9 @@ pub(crate) struct JobStatusQuery {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct SearchRequest {
+pub(crate) struct JobSearchRequest {
     pub status: JobStatus,
+    #[serde(default, deserialize_with = "deserialize_filters")]
     pub filters: Vec<JobFilterType>,
     pub cursor: Option<usize>,
     pub limit: Option<usize>,

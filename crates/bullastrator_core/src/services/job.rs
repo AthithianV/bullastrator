@@ -57,43 +57,52 @@ impl<'a> JobService<'a> {
         &self,
         queue_name: String,
         status: JobStatus,
+        filters: Vec<JobFilterType>,
         cursor: usize,
         limit: usize,
     ) -> Result<JobSearchResult> {
-        let mut conn = self.connection_pool.pool.get().await?;
-        let status_suffix = status.redis_key_suffix();
-        let (range_cmd, count_cmd) = match status {
-            JobStatus::Wait | JobStatus::Active | JobStatus::Paused => ("LRANGE", "LLEN"),
-            JobStatus::Completed | JobStatus::Failed => ("ZREVRANGE", "ZCARD"),
-            JobStatus::Delayed | JobStatus::Prioritized => ("ZRANGE", "ZCARD"),
-        };
-        let (script_content, key_gen) = self.bull_driver.get();
-        let key = key_gen(self.prefix, &queue_name, status_suffix);
-        let start = cursor;
-        let end = cursor.saturating_add(limit).saturating_sub(1);
-        let (total_count, raw_jobs): (usize, Vec<(String, Vec<Option<String>>)>) =
-            Script::new(script_content)
-                .key(key)
-                .arg(range_cmd)
-                .arg(count_cmd)
-                .arg(start)
-                .arg(end)
-                .arg(format!("{}:{}:", self.prefix, queue_name))
-                .invoke_async(&mut *conn)
+        if !filters.is_empty() {
+            let jobs = self
+                .search_jobs_in_queue_service(queue_name, status, filters, cursor, limit)
                 .await?;
-        let jobs = raw_jobs
-            .into_iter()
-            .filter_map(|(id, fields)| {
-                (!fields.is_empty()).then(|| Job::from_hmget_values(id, &fields))
+
+            Ok(jobs)
+        } else {
+            let mut conn = self.connection_pool.pool.get().await?;
+            let status_suffix = status.redis_key_suffix();
+            let (range_cmd, count_cmd) = match status {
+                JobStatus::Wait | JobStatus::Active | JobStatus::Paused => ("LRANGE", "LLEN"),
+                JobStatus::Completed | JobStatus::Failed => ("ZREVRANGE", "ZCARD"),
+                JobStatus::Delayed | JobStatus::Prioritized => ("ZRANGE", "ZCARD"),
+            };
+            let (script_content, key_gen) = self.bull_driver.get();
+            let key = key_gen(self.prefix, &queue_name, status_suffix);
+            let start = cursor;
+            let end = cursor.saturating_add(limit).saturating_sub(1);
+            let (total_count, raw_jobs): (usize, Vec<(String, Vec<Option<String>>)>) =
+                Script::new(script_content)
+                    .key(key)
+                    .arg(range_cmd)
+                    .arg(count_cmd)
+                    .arg(start)
+                    .arg(end)
+                    .arg(format!("{}:{}:", self.prefix, queue_name))
+                    .invoke_async(&mut *conn)
+                    .await?;
+            let jobs = raw_jobs
+                .into_iter()
+                .filter_map(|(id, fields)| {
+                    (!fields.is_empty()).then(|| Job::from_hmget_values(id, &fields))
+                })
+                .collect::<Vec<_>>();
+            let scanned_count = start + jobs.len();
+            Ok(JobSearchResult {
+                jobs,
+                next_cursor: scanned_count,
+                has_more: scanned_count < total_count,
+                scanned_count,
             })
-            .collect::<Vec<_>>();
-        let scanned_count = start + jobs.len();
-        Ok(JobSearchResult {
-            jobs,
-            next_cursor: scanned_count,
-            has_more: scanned_count < total_count,
-            scanned_count,
-        })
+        }
     }
 
     #[tracing::instrument(skip_all, err)]
@@ -158,7 +167,7 @@ impl<'a> JobService<'a> {
         };
         let actual_state = queue.get_job_state(&job_id).await?;
         let requested_state = match status {
-            JobStatus::Wait | JobStatus::Paused => "waiting",
+            JobStatus::Wait | JobStatus::Paused => "wait",
             JobStatus::Active => "active",
             JobStatus::Completed => "completed",
             JobStatus::Failed => "failed",

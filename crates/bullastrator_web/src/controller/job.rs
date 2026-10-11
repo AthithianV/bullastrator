@@ -3,8 +3,7 @@ use crate::{
     controller::ApiResult,
     models::job::{
         DeleteJobsRequest, DeleteStateRequest, JobCountsRequest, JobDataRequest, JobIdsRequest,
-        JobListQuery, JobStatusQuery, RetryAllRequest, RetryJobsRequest, SearchRequest,
-        UpdateJobRequest,
+        JobSearchRequest, JobStatusQuery, RetryAllRequest, RetryJobsRequest, UpdateJobRequest,
     },
 };
 use axum::{
@@ -22,7 +21,7 @@ pub(crate) async fn list_jobs(
     State(state): State<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
     Path((connection_id, queue)): Path<(String, String)>,
-    Query(query): Query<JobListQuery>,
+    Query(query): Query<JobSearchRequest>,
 ) -> ApiResult<Json<JobSearchResult>> {
     let redis_connection = state.get_redis_connection(&connection_id).await?;
     let s = JobService::for_user(
@@ -36,6 +35,7 @@ pub(crate) async fn list_jobs(
         s.get_jobs_in_queue_service(
             queue,
             query.status,
+            query.filters,
             query.cursor.unwrap_or(0),
             query.limit.unwrap_or(50),
         )
@@ -94,32 +94,6 @@ pub(crate) async fn add_jobs(
     )
     .await?;
     Ok(Json(s.add_job_to_queue_service(queue, jobs).await?))
-}
-
-pub(crate) async fn search_jobs(
-    State(state): State<AppState>,
-    Extension(user): Extension<AuthenticatedUser>,
-    Path((connection_id, queue)): Path<(String, String)>,
-    Json(r): Json<SearchRequest>,
-) -> ApiResult<Json<JobSearchResult>> {
-    let redis_connection = state.get_redis_connection(&connection_id).await?;
-    let s = JobService::for_user(
-        &redis_connection,
-        &state.connections,
-        &user.id,
-        WorkspaceRole::VIEWER,
-    )
-    .await?;
-    Ok(Json(
-        s.search_jobs_in_queue_service(
-            queue,
-            r.status,
-            r.filters,
-            r.cursor.unwrap_or(0),
-            r.limit.unwrap_or(50),
-        )
-        .await?,
-    ))
 }
 
 pub(crate) async fn job_data(

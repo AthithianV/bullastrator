@@ -32,8 +32,6 @@
             queueState.active.selectedJobDetails = selectedJobQuery.data;
         }
     });
-
-    $inspect(queueState.active.selectedJobDetails);
 </script>
 
 {#if queueState.active.selectedJobDetails}
@@ -41,9 +39,7 @@
         class="h-full flex flex-col overflow-auto min-w-0 select-text relative"
     >
         <InfiniteScanLoader loading={selectedJobQuery.isLoading} />
-        <div
-            class="px-6 py-2 border-b flex justify-between items-start"
-        >
+        <div class="px-6 py-2 border-b flex justify-between items-start">
             <div>
                 <div class="flex items-center gap-3 mb-1">
                     <h1 class="text-xl font-bold flex items-center gap-2">
@@ -121,7 +117,9 @@
                 >
                     <div class="w-max px-3">
                         <Tabs.List class="gap-1 bg-transparent">
-                            <Tabs.Trigger value="data" class="px-4 active:text-primary"
+                            <Tabs.Trigger
+                                value="data"
+                                class="px-4 active:text-primary"
                                 >Job Data</Tabs.Trigger
                             >
                             <Tabs.Trigger value="error" class="px-4"

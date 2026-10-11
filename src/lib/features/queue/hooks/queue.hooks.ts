@@ -13,6 +13,7 @@ import type {
   QueueDetails,
   ReadQueueModel,
 } from "../interface/queue.types";
+import { confirmAction } from "$lib/shared/helpers/confirmAction";
 
 // Define the unique key for the connections list
 export const QUEUE_QUERY_KEY = ["queue"];
@@ -65,7 +66,7 @@ export const usePauseQueue = () => {
 
   return createMutation(() => ({
     mutationFn: async (shouldPause: boolean) => {
-      const confirmation = await confirm(
+      const confirmation = await confirmAction(
         `Are you should want to ${
           shouldPause ? "pause" : "resume"
         } this queue: ${queueState.queueName}`,

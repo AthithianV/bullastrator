@@ -1,14 +1,23 @@
+# [11-10-2026]
+
+- [x]. Search not working.
+- [X]. Waiting job details not showing.
+- [x]. check for job details in Priority too.
+- []. Pause is not working.
+- []. Folder Routes and folder features.
+- []. Folders should show for all view.
+
 # [10-10-2026]
 
-- [] Test Connection Health is not working
+- [x]. Test Connection Health is not working
 
 # [09-10-2026]
 
-- [x] Endpoint to fetch connection and all queues.
+- [x]. Endpoint to fetch connection and all queues.
 
 # [08-10-2026]
 
-- [x] Need to fetch all workspace in frontend and if not WS found, prompt user to create one.
+- [x]. Need to fetch all workspace in frontend and if not WS found, prompt user to create one.
 
 # [05-10-2026]
 
