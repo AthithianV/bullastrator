@@ -118,7 +118,6 @@ pub fn run() {
             get_connection,
             get_all_connections,
             start_health_check,
-            check_health_for_all_connections,
             test_redis_connection,
             // Workspace Commands
             create_workspace,
