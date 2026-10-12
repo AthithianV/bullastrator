@@ -97,15 +97,13 @@ pub async fn get_job_count_in_queue(
     state: State<'_, AppState>,
     connection_id: String,
     queue_name: String,
-) -> Result<QueueJobCounts, String> {
+) -> Result<Vec<QueueJobCounts>, String> {
     let service = service(&state, &connection_id, WorkspaceRole::VIEWER).await?;
-    let mut counts = service
+    let counts = service
         .get_job_count_in_queue_service(vec![&queue_name])
         .await
         .map_err(|error| error.to_string())?;
-    counts
-        .pop()
-        .ok_or_else(|| "Queue counts were not returned".to_owned())
+    Ok(counts)
 }
 
 #[command]
