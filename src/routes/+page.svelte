@@ -11,8 +11,12 @@
     import WebTitlebar from "$lib/layouts/WebTitlebar.svelte";
     import MainPanel from "$lib/layouts/MainPanel.svelte";
 
+    const isWeb = PUBLIC_IS_WEB === "true";
+
     onMount(async () => {
-        !PUBLIC_IS_WEB && (await invoke("show_main_window"));
+        if (!isWeb) {
+            await invoke("show_main_window");
+        }
     });
 
     onMount(() => {
@@ -24,7 +28,7 @@
 
 <ProtectedRoute>
     <Zoom />
-    {#if !PUBLIC_IS_WEB}
+    {#if !isWeb}
         <TitleBar />
         <UpdateToaster />
     {:else}

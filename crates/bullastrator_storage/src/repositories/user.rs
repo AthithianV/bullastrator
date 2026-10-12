@@ -46,6 +46,29 @@ impl UserRepository {
             .ok_or_else(|| anyhow::anyhow!("Registered user was not found"))
     }
 
+    pub async fn create_default_user(&self, name: &str, email: &str) -> Result<User> {
+        let now = Utc::now().naive_utc();
+        let id = Uuid::new_v4().to_string();
+
+        sqlx::query(
+            r#"
+            INSERT INTO users (id, name, email, password_hash, created_at, updated_at)
+            VALUES (?, ?, ?, NULL, ?, ?)
+            "#,
+        )
+        .bind(&id)
+        .bind(name)
+        .bind(email)
+        .bind(now)
+        .bind(now)
+        .execute(&self.pool)
+        .await?;
+
+        self.find_by_email(email)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("Default user was not found after creation"))
+    }
+
     pub async fn find_by_email(&self, email: &str) -> Result<Option<User>> {
         Ok(sqlx::query_as::<_, User>(
             r#"

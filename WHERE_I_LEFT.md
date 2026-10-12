@@ -1,28 +1,7 @@
-# [11-10-2026]
+# [TODO]
 
-- [x]. Search not working.
-- [X]. Waiting job details not showing.
-- [x]. check for job details in Priority too.
-- [x]. Pause is not working.
-- []. Folder Routes and folder features.
-- []. Folders should show for all view.
-
-# [10-10-2026]
-
-- [x]. Test Connection Health is not working
-
-# [09-10-2026]
-
-- [x]. Endpoint to fetch connection and all queues.
-
-# [08-10-2026]
-
-- [x]. Need to fetch all workspace in frontend and if not WS found, prompt user to create one.
-
-# [05-10-2026]
-
-- [x]. Workspace Route is throwing errors.
-- [x]. Need to check user routes.
-- [x]. Table name are changed to plural, need same changes in repositories.
-- [x]. Need to send workspace Id from frontend, instead of storing it in App state.
-- [x]. Repos and service and API need for Tabs, workspace create and management, queue management.
+- []. Bullastrator Desktop Crate.
+- []. User Manegemnet Flows.
+- []. Access based UI.
+- []. Check all routes whether access is correct.
+- []. User Action.

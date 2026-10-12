@@ -85,6 +85,13 @@ impl QueueService {
         Ok(result)
     }
 
+    pub async fn list_queues(&self, user_id: &str) -> Result<Vec<bullastrator_storage::models::Queue>> {
+        self.authorize(user_id, WorkspaceRole::VIEWER).await?;
+        self.repository
+            .get_all_by_connection(&self.redis.connection_id)
+            .await
+    }
+
     #[tracing::instrument(skip(self), fields(connection_id = %self.redis.connection_id, queue = %queue_name, paused = should_pause), err)]
     pub async fn pause_queue_service(
         &self,

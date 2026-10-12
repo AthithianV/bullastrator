@@ -19,8 +19,6 @@
     const { mutateAsync: createTab } = useCreateTab();
     const { mutateAsync: updateTab } = useUpdateTab();
 
-    $inspect(queue);
-
     let counts = $derived(queue.counts);
     let total = $derived(counts.total);
 

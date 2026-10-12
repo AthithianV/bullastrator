@@ -6,6 +6,7 @@ members = [
     "bullastrator_web",
     "bullastrator_storage",
     "bullastrator_cli",
+    "bullastrator_desktop",
 ]
 
 [workspace.dependencies]
