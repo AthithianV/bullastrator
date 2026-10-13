@@ -62,7 +62,10 @@ pub fn run() {
 
             #[cfg(target_os = "macos")]
             {
-                use tauri::{LogicalPosition, TitleBarStyle, WebviewUrl, WebviewWindowBuilder};
+                use tauri::{
+                    LogicalPosition, TitleBarStyle, WebviewUrl, WebviewWindowBuilder,
+                    webview::PageLoadEvent,
+                };
                 // macOS: native titlebar
                 WebviewWindowBuilder::new(
                     &handle_for_db,
@@ -76,13 +79,19 @@ pub fn run() {
                 .traffic_light_position(LogicalPosition::new(16.0, 20.0))
                 .maximized(true)
                 .visible(false)
+                .on_page_load(|window, payload| {
+                    if matches!(payload.event(), PageLoadEvent::Finished) {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                })
                 .build()?;
             }
 
             #[cfg(not(target_os = "macos"))]
             {
                 // Windows/Linux: custom titlebar
-                use tauri::{WebviewUrl, WebviewWindowBuilder};
+                use tauri::{WebviewUrl, WebviewWindowBuilder, webview::PageLoadEvent};
                 WebviewWindowBuilder::new(
                     &handle_for_db,
                     "main",
@@ -93,6 +102,12 @@ pub fn run() {
                 .transparent(false)
                 .maximized(true)
                 .visible(false)
+                .on_page_load(|window, payload| {
+                    if matches!(payload.event(), PageLoadEvent::Finished) {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                })
                 .build()?;
             }
 
