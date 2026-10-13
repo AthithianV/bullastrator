@@ -29,6 +29,9 @@ jobs:
         run: npm ci
 
       - name: Build frontend
+        env:
+          PUBLIC_IS_WEB: ${{ secrets.PUBLIC_IS_WEB }}
+          PUBLIC_API_URL: ${{ secrets.PUBLIC_API_URL }}
         run: npm run build
 
   rust:
@@ -37,7 +40,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: src-tauri
+        working-directory: crates
 
     steps:
       - name: Checkout
@@ -49,7 +52,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: "./src-tauri -> target"
+          workspaces: "./crates -> target"
 
       - name: Check
         run: cargo check
