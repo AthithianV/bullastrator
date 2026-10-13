@@ -41,13 +41,7 @@
 </script>
 
 <div class="flex flex-col gap-2 w-full max-w-fit py-0 mx-2">
-    {#if isLoading}
-        <div
-            class="flex h-10 items-center px-3 py-2 border rounded-md animate-pulse bg-muted/50"
-        >
-            <Skeleton class="h-10 w-10" />
-        </div>
-    {:else}
+    {#if !isLoading}
         <Select.Root
             type="single"
             bind:value={selectedId}

@@ -11,6 +11,7 @@ import type {
   UpdateTabModel,
 } from "../interface/tab.types";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
+import { tabStore } from "../store/tabStore.svelte";
 
 export const TAB_QUERY_KEY = ["tabs"];
 
@@ -55,7 +56,12 @@ export const useGetTabById = (id: string) => {
 export const useGetActiveTabId = () => {
   return createQuery(() => ({
     queryKey: [...TAB_QUERY_KEY, "ACTIVE_TAB"],
-    queryFn: () => invokeWrapper<string | null>("get_active_tab"),
+    queryFn: () =>
+      invokeWrapper<string | null>(
+        "get_active_tab",
+        {},
+        { shouldLogResult: true },
+      ),
   }));
 };
 
@@ -74,24 +80,31 @@ export const useCreateTab = () => {
     mutationFn: (data: CreateTabModel) =>
       invokeWrapper<ReadTabModel>("create_tab", isWeb ? data : { data }),
     onSuccess: (updatedTab) => {
-      // Invalidate the list so the new tab appears
-      queryClient.invalidateQueries({ queryKey: TAB_QUERY_KEY });
       queryClient.setQueryData(
         TAB_QUERY_KEY,
         (oldData: ReadTabModel[] | undefined) => {
-          if (!oldData) return [];
-          return oldData.map((tab) =>
-            tab.id === updatedTab.id ? updatedTab : tab,
-          );
+          if (!oldData) return [updatedTab];
+          const exists = oldData.some((tab) => tab.id === updatedTab.id);
+          return exists
+            ? oldData.map((tab) =>
+                tab.id === updatedTab.id ? updatedTab : tab,
+              )
+            : [...oldData, updatedTab];
         },
       );
 
+      // The repository activates the created tab. Reflect that immediately
+      // instead of waiting for the invalidated query to refetch.
+      tabStore.setActiveTab(updatedTab.id);
+      queryClient.setQueryData(
+        [...TAB_QUERY_KEY, "ACTIVE_TAB"],
+        updatedTab.id,
+      );
       queryClient.invalidateQueries({
         queryKey: [...TAB_QUERY_KEY, "ACTIVE_TAB"],
       });
     },
     onError: (err: Error) => {
-      console.error(err);
       toast.error(`Failed to create tab: ${err.message}`);
     },
   }));

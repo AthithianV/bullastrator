@@ -1,0 +1,33 @@
+[Desktop Entry]
+
+# The name displayed in the GNOME app grid and search
+Name=Bullastrator
+
+# A short description shown in search results
+Comment=Desktop GUI for BullMq
+
+# The path where your PKGBUILD installs the binary
+Exec=/usr/bin/bullastrator %u
+
+# The name of the icon file (without .png extension) installed by PKGBUILD
+Icon=bullastrator
+
+# Critical for Tauri: This must match the 'productName' in tauri.conf.json
+# to ensure GNOME groups windows correctly under one icon
+StartupWMClass=bullastrator
+Terminal=false
+Type=Application
+
+MimeType=x-scheme-handler/bullastrator;
+
+# Categories help with menu organization (e.g., in App Grid folders)
+Categories=Development;System;Database;
+
+# Search keywords for the GNOME Activities overview
+Keywords=redis;bullmq;queue;taskforce;monitor;
+
+# Ensures the app uses the discrete GPU if available on laptops
+PrefersNonDefaultGPU=true
+
+# Support for high-DPI scaling (Wayland default)
+X-KDE-Wayland-Interfaces=wayland
