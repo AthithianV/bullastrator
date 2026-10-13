@@ -1,6 +1,6 @@
 # [TODO]
 
-- []. Bullastrator Desktop Crate.
+- [x]. Bullastrator Desktop Crate.
 - []. User Manegemnet Flows.
 - []. Access based UI.
 - []. Check all routes whether access is correct.

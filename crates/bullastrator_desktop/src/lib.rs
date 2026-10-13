@@ -75,7 +75,7 @@ pub fn run() {
                 .hidden_title(true)
                 .traffic_light_position(LogicalPosition::new(16.0, 20.0))
                 .maximized(true)
-                // .visible(false)
+                .visible(false)
                 .build()?;
             }
 
@@ -92,7 +92,7 @@ pub fn run() {
                 .decorations(false)
                 .transparent(false)
                 .maximized(true)
-                // .visible(false)
+                .visible(false)
                 .build()?;
             }
 

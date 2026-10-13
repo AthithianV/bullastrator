@@ -8,6 +8,7 @@ pub fn set_app_zoom(window: WebviewWindow, scale: f64) {
 
 #[tauri::command]
 pub fn show_main_window(window: tauri::Window) {
+    println!("Showing Window");
     window.show().unwrap();
     window.set_focus().unwrap();
 }
