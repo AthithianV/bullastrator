@@ -9,8 +9,13 @@
     import TitleBar from "$lib/layouts/TitleBar.svelte";
     import WebTitlebar from "$lib/layouts/WebTitlebar.svelte";
     import MainPanel from "$lib/layouts/MainPanel.svelte";
+    import { invokeWrapper } from "$lib/shared/helpers/invokeWrapper";
 
     const isWeb = PUBLIC_IS_WEB === "true";
+
+    onMount(async () => {
+        await invokeWrapper("show_main_window");
+    });
 
     onMount(() => {
         window.addEventListener("keydown", globalStore.handleKeyDown);
