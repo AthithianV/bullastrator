@@ -19,14 +19,25 @@ export const FOLDER_QUERY_KEY = ["folder"];
 /**
  * 🎣 Hook to fetch all folders for a specific connection.
  */
-export const useGetAllFolders = (connectionId: string | null) => {
+export const useGetAllFolders = (
+  connectionId: string | null | (() => string | null),
+) => {
   return createQuery(() => ({
-    queryKey: [...FOLDER_QUERY_KEY, "list", connectionId],
-    queryFn: () =>
-      invokeWrapper<ReadFolderWithQueuesModel[]>("get_all_folders", {
-        connectionId,
-      }),
-    enabled: !!connectionId,
+    queryKey: [
+      ...FOLDER_QUERY_KEY,
+      "list",
+      typeof connectionId === "function" ? connectionId() : connectionId,
+    ],
+    queryFn: () => {
+      const currentConnectionId =
+        typeof connectionId === "function" ? connectionId() : connectionId;
+      return invokeWrapper<ReadFolderWithQueuesModel[]>("get_all_folders", {
+        connectionId: currentConnectionId,
+      });
+    },
+    enabled: !!(
+      typeof connectionId === "function" ? connectionId() : connectionId
+    ),
   }));
 };
 

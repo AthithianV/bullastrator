@@ -41,20 +41,22 @@ export const useGetConnections = () => {
  * Calls the Rust command `get_connection`.
  * @param id The ID of the connection to fetch.
  */
-export const useGetConnectionById = (id: string) => {
+export const useGetConnectionById = (id: string | (() => string)) => {
   return createQuery(() => ({
-    queryKey: [...CONNECTION_QUERY_KEY, id],
-    queryFn: () =>
-      invokeWrapper<ReadConnection | null>(
+    queryKey: [...CONNECTION_QUERY_KEY, typeof id === "function" ? id() : id],
+    queryFn: () => {
+      const currentId = typeof id === "function" ? id() : id;
+      return invokeWrapper<ReadConnection | null>(
         "get_connection",
-        { id },
+        { id: currentId },
         {
           shouldToast: false,
           errorMessage: "Failed to fetch connections",
           shouldLogResult: false,
         },
-      ),
-    enabled: !!id,
+      );
+    },
+    enabled: !!(typeof id === "function" ? id() : id),
   }));
 };
 
