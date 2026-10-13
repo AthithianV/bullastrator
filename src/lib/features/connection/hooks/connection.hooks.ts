@@ -1,8 +1,4 @@
-import {
-  createMutation,
-  createQuery,
-  useQueryClient,
-} from "@tanstack/svelte-query";
+import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { queueStore } from "queue/store/queueStore.svelte";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
@@ -133,13 +129,10 @@ export const useDeleteConnection = () => {
 
   return createMutation(() => ({
     mutationFn: async (id: string) => {
-      const confirmation = await confirm(
-        "Do you really want to delete the connection?",
-        {
-          title: "Connection Deletion",
-          kind: "warning",
-        },
-      );
+      const confirmation = await confirm("Do you really want to delete the connection?", {
+        title: "Connection Deletion",
+        kind: "warning",
+      });
 
       if (!confirmation) {
         throw new Error("USER_CANCELLED");
@@ -148,12 +141,9 @@ export const useDeleteConnection = () => {
       return invokeWrapper("delete_connection", { id });
     },
     onSuccess: (_result, deletedId) => {
-      queryClient.setQueryData<ReadConnection[]>(
-        CONNECTION_QUERY_KEY,
-        (oldData) => {
-          return oldData ? oldData.filter((conn) => conn.id !== deletedId) : [];
-        },
-      );
+      queryClient.setQueryData<ReadConnection[]>(CONNECTION_QUERY_KEY, (oldData) => {
+        return oldData ? oldData.filter((conn) => conn.id !== deletedId) : [];
+      });
       queryClient.removeQueries({
         queryKey: [...CONNECTION_QUERY_KEY, deletedId],
       });

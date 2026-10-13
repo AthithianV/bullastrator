@@ -1,15 +1,7 @@
-import {
-  createMutation,
-  createQuery,
-  useQueryClient,
-} from "@tanstack/svelte-query";
+import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { toast } from "svelte-sonner";
 import { PUBLIC_IS_WEB } from "$env/static/public";
-import type {
-  CreateTabModel,
-  ReadTabModel,
-  UpdateTabModel,
-} from "../interface/tab.types";
+import type { CreateTabModel, ReadTabModel, UpdateTabModel } from "../interface/tab.types";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import { tabStore } from "../store/tabStore.svelte";
 
@@ -56,12 +48,7 @@ export const useGetTabById = (id: string) => {
 export const useGetActiveTabId = () => {
   return createQuery(() => ({
     queryKey: [...TAB_QUERY_KEY, "ACTIVE_TAB"],
-    queryFn: () =>
-      invokeWrapper<string | null>(
-        "get_active_tab",
-        {},
-        { shouldLogResult: true },
-      ),
+    queryFn: () => invokeWrapper<string | null>("get_active_tab", {}, { shouldLogResult: true }),
   }));
 };
 
@@ -80,26 +67,18 @@ export const useCreateTab = () => {
     mutationFn: (data: CreateTabModel) =>
       invokeWrapper<ReadTabModel>("create_tab", isWeb ? data : { data }),
     onSuccess: (updatedTab) => {
-      queryClient.setQueryData(
-        TAB_QUERY_KEY,
-        (oldData: ReadTabModel[] | undefined) => {
-          if (!oldData) return [updatedTab];
-          const exists = oldData.some((tab) => tab.id === updatedTab.id);
-          return exists
-            ? oldData.map((tab) =>
-                tab.id === updatedTab.id ? updatedTab : tab,
-              )
-            : [...oldData, updatedTab];
-        },
-      );
+      queryClient.setQueryData(TAB_QUERY_KEY, (oldData: ReadTabModel[] | undefined) => {
+        if (!oldData) return [updatedTab];
+        const exists = oldData.some((tab) => tab.id === updatedTab.id);
+        return exists
+          ? oldData.map((tab) => (tab.id === updatedTab.id ? updatedTab : tab))
+          : [...oldData, updatedTab];
+      });
 
       // The repository activates the created tab. Reflect that immediately
       // instead of waiting for the invalidated query to refetch.
       tabStore.setActiveTab(updatedTab.id);
-      queryClient.setQueryData(
-        [...TAB_QUERY_KEY, "ACTIVE_TAB"],
-        updatedTab.id,
-      );
+      queryClient.setQueryData([...TAB_QUERY_KEY, "ACTIVE_TAB"], updatedTab.id);
       queryClient.invalidateQueries({
         queryKey: [...TAB_QUERY_KEY, "ACTIVE_TAB"],
       });
@@ -163,16 +142,14 @@ export const useReorderTabs = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: (orderedIds: string[]) =>
-      invokeWrapper<void>("reorder_tabs", { orderedIds }),
+    mutationFn: (orderedIds: string[]) => invokeWrapper<void>("reorder_tabs", { orderedIds }),
 
     onMutate: async (orderedIds) => {
       // Cancel outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: TAB_QUERY_KEY });
 
       // Snapshot the previous value
-      const previousTabs =
-        queryClient.getQueryData<ReadTabModel[]>(TAB_QUERY_KEY);
+      const previousTabs = queryClient.getQueryData<ReadTabModel[]>(TAB_QUERY_KEY);
 
       // Optimistically update to the new order
       if (previousTabs) {
@@ -207,8 +184,7 @@ export const useSetActiveTab = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: (tabId: string | null) =>
-      invokeWrapper<void>("set_active_tab", { tabId }),
+    mutationFn: (tabId: string | null) => invokeWrapper<void>("set_active_tab", { tabId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: TAB_QUERY_KEY });
       queryClient.invalidateQueries({

@@ -24,7 +24,7 @@ export interface RetryJobPayload {
   strategy: "ToBack" | "ToFront";
   connectionId: string;
   queueName: string;
-  retryJobStatus: 'failed' | 'completed';
+  retryJobStatus: "failed" | "completed";
 }
 
 export interface PromoteJobsPayload {

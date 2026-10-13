@@ -29,8 +29,7 @@ export const CONNECTION_ROUTES: Record<string, WebCommand> = {
   },
   check_health_for_all_connections: {
     method: "POST",
-    path: (args) =>
-      `/connections/${id(args.connectionId, "connectionId")}/redis/health`,
+    path: (args) => `/connections/${id(args.connectionId, "connectionId")}/redis/health`,
   },
   test_redis_connection: {
     method: "POST",

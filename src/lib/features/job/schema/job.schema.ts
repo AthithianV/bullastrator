@@ -10,7 +10,7 @@ const jsonString = z.string().refine(
       return false;
     }
   },
-  { message: "Invalid JSON format" }
+  { message: "Invalid JSON format" },
 );
 
 export const addJobSchema = z.object({

@@ -1,8 +1,4 @@
-import {
-  createMutation,
-  createQuery,
-  useQueryClient,
-} from "@tanstack/svelte-query";
+import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import { useFolderState } from "../store/folder.context.svelte";
 import type { ReadQueueWithCounts } from "queue/interface/queue.types";
@@ -148,13 +144,7 @@ export const useToggleQueueInFolder = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: ({
-      folderId,
-      queueId,
-    }: {
-      folderId: string;
-      queueId: string;
-    }) =>
+    mutationFn: ({ folderId, queueId }: { folderId: string; queueId: string }) =>
       invokeWrapper<boolean>("toggle_queue_in_folder", { folderId, queueId }),
     onSuccess: (_, variables) => {
       // Invalidate the specific folder's queue list
@@ -172,13 +162,7 @@ export const useReorderFolderQueues = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: ({
-      folderId,
-      orderedQueueIds,
-    }: {
-      folderId: string;
-      orderedQueueIds: string[];
-    }) =>
+    mutationFn: ({ folderId, orderedQueueIds }: { folderId: string; orderedQueueIds: string[] }) =>
       invokeWrapper<void>("reorder_folder_queues", {
         folderId,
         orderedQueueIds,

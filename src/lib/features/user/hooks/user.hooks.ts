@@ -15,10 +15,14 @@ export const USER_QUERY_KEY = ["user"];
 export const useCheckSession = () => {
   return async (): Promise<boolean> => {
     try {
-      await invokeWrapper<AuthenticatedSession>("check_session", {}, {
-        shouldToast: false,
-        shouldLogResult: false,
-      });
+      await invokeWrapper<AuthenticatedSession>(
+        "check_session",
+        {},
+        {
+          shouldToast: false,
+          shouldLogResult: false,
+        },
+      );
       return true;
     } catch {
       return false;
@@ -31,8 +35,7 @@ export const useRegister = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: (data: RegisterRequest) =>
-      invokeWrapper<AuthResponse>("register", { data }),
+    mutationFn: (data: RegisterRequest) => invokeWrapper<AuthResponse>("register", { data }),
     onSuccess: (response) => {
       queryClient.setQueryData(USER_QUERY_KEY, response.user);
       toast.success("Account created successfully");
@@ -46,8 +49,7 @@ export const useLogin = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: (data: LoginRequest) =>
-      invokeWrapper<AuthResponse>("login", { data }),
+    mutationFn: (data: LoginRequest) => invokeWrapper<AuthResponse>("login", { data }),
     onSuccess: (response) => {
       queryClient.setQueryData(USER_QUERY_KEY, response.user);
       toast.success("Logged in successfully");
@@ -61,8 +63,7 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: (token: string) =>
-      invokeWrapper<LogoutResponse>("logout", { token }),
+    mutationFn: (token: string) => invokeWrapper<LogoutResponse>("logout", { token }),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: USER_QUERY_KEY });
       queryClient.clear();
