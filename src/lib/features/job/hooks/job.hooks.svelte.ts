@@ -32,10 +32,7 @@ export const JOB_QUERY_KEY = ["jobs"];
 export const useGetJobById = () => {
   const queueState = useQueueState();
 
-  const getDebouncedJobId = useDebounce(
-    () => queueState.active.selectedJob,
-    300,
-  );
+  const getDebouncedJobId = useDebounce(() => queueState.active.selectedJob, 300);
 
   return createQuery(() => {
     const debouncedId = getDebouncedJobId();
@@ -129,10 +126,7 @@ export const useGetJobLog = () => {
     };
 
     const isEnabled =
-      !!jobId &&
-      !!queueState.queueName &&
-      !!queueState.connectionId &&
-      !!queueState.currentStatus;
+      !!jobId && !!queueState.queueName && !!queueState.connectionId && !!queueState.currentStatus;
 
     return {
       queryKey: [
@@ -165,12 +159,7 @@ export const useGetJobCountInQueue = () => {
 
   return createQuery(() => {
     return {
-      queryKey: [
-        "JOB_COUNT",
-        queueState.queueName,
-        queueState.tabId,
-        queueState.connectionId,
-      ],
+      queryKey: ["JOB_COUNT", queueState.queueName, queueState.tabId, queueState.connectionId],
       queryFn: async () =>
         invokeWrapper<QueueJobCounts[]>(
           "get_job_count_in_queue",
@@ -195,7 +184,7 @@ export const useAddJob = () => {
 
   return createMutation(() => ({
     mutationFn: async (jobs: AddJobPayload[]) => {
-      return invokeWrapper<String[]>(
+      return invokeWrapper<string[]>(
         "add_job_to_queue",
         {
           jobs,
@@ -233,9 +222,7 @@ export const usePromoteJobs = () => {
         connectionId: queueState.connectionId,
       };
 
-      const count = isAll
-        ? queueState.jobCounts.delayed
-        : queueState.active.selectedJobIds.length;
+      const count = isAll ? queueState.jobCounts.delayed : queueState.active.selectedJobIds.length;
 
       let confirmationMesssage = "Are you sure want to promote ";
       confirmationMesssage += isAll ? "all" : "selected";
@@ -420,12 +407,7 @@ export const useRefetchJobsinQueue = () => {
     });
 
     await queryClient.invalidateQueries({
-      queryKey: [
-        "JOB_COUNT",
-        queueState.queueName,
-        queueState.tabId,
-        queueState.connectionId,
-      ],
+      queryKey: ["JOB_COUNT", queueState.queueName, queueState.tabId, queueState.connectionId],
     });
   };
 };
@@ -452,12 +434,7 @@ export const useUpdateJobData = () => {
     onSuccess: ({ result, payload: updatedJobPayload }) => {
       toast.success("Job updated successfully");
       queryClient.invalidateQueries({
-        queryKey: [
-          ...JOB_QUERY_KEY,
-          "JOB_BY_ID",
-          queueState.queueName,
-          updatedJobPayload.jobId,
-        ],
+        queryKey: [...JOB_QUERY_KEY, "JOB_BY_ID", queueState.queueName, updatedJobPayload.jobId],
       });
     },
     onError: (err: any) => {
@@ -494,9 +471,7 @@ export const useRetryJob = () => {
         retryJobStatus: retryJobStatus === "completed" ? "completed" : "failed",
       };
 
-      let count = isAll
-        ? queueState.jobCounts.failed
-        : queueState.active.selectedJobIds.length;
+      let count = isAll ? queueState.jobCounts.failed : queueState.active.selectedJobIds.length;
 
       let confirmationMesssage = "Are you sure want to retry ";
       confirmationMesssage += isAll ? "all" : "selected";

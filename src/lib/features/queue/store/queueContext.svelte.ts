@@ -1,10 +1,5 @@
 import { getContext, setContext } from "svelte";
-import type {
-  JobDetails,
-  JobDetailsTab,
-  JobStatus,
-  QueueJobCounts,
-} from "job/interface/job.types";
+import type { JobDetails, JobDetailsTab, JobStatus, QueueJobCounts } from "job/interface/job.types";
 import type { JobFilterType } from "job/interface/jobPayload.types";
 
 const QUEUE_KEY = Symbol("QUEUE_STATE");
@@ -48,8 +43,7 @@ export class QueueState {
     prioritized: new StatusState("prioritized"),
   };
 
-  actionInProgress: "RETRY" | "PROMOTE" | "DELETE" | "ADD" | "UPDATE" | null =
-    $state(null);
+  actionInProgress: "RETRY" | "PROMOTE" | "DELETE" | "ADD" | "UPDATE" | null = $state(null);
 
   // Helper to get the state of the tab the user is looking at
   get active() {
@@ -89,8 +83,7 @@ export class QueueState {
       const s = status as JobStatus;
       if (params.statusStates?.[s]) {
         this.statusStates[s].selectedJob = params.statusStates[s].selectedJob;
-        this.statusStates[s].jobDetailsTab =
-          params.statusStates[s].jobDetailsTab;
+        this.statusStates[s].jobDetailsTab = params.statusStates[s].jobDetailsTab;
       }
     });
   }

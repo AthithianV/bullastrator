@@ -18,16 +18,12 @@ export async function invokeWrapper<T>(
   args: CommandArgs = {},
   options: InvokeOptions = { shouldToast: false },
 ): Promise<T> {
-  const { shouldToast, successMessage, errorMessage, shouldLogResult } =
-    options;
+  const { shouldToast, successMessage, errorMessage, shouldLogResult } = options;
 
   try {
-    const result = isWeb
-      ? await callWebApi<T>(cmd, args)
-      : await tauriInvoke<T>(cmd, args);
+    const result = isWeb ? await callWebApi<T>(cmd, args) : await tauriInvoke<T>(cmd, args);
 
-    if (shouldToast)
-      toast.success(successMessage || `${cmd} completed successfully`);
+    if (shouldToast) toast.success(successMessage || `${cmd} completed successfully`);
     if (shouldLogResult) {
       console.info(`[API Result] ${cmd}`, result);
     }
@@ -35,8 +31,7 @@ export async function invokeWrapper<T>(
   } catch (err) {
     const errorString = err instanceof Error ? err.message : String(err);
     console.error(`[API Error] ${cmd}: ${errorString}`);
-    if (shouldToast)
-      toast.error(errorString || errorMessage || "Something went wrong");
+    if (shouldToast) toast.error(errorString || errorMessage || "Something went wrong");
     throw new Error(errorString || errorMessage || "Something went wrong");
   }
 }

@@ -1,9 +1,4 @@
-import type {
-  Job,
-  JobDetailsTab,
-  JobStatus,
-  QueueJobCounts,
-} from "job/interface/job.types";
+import type { Job, JobDetailsTab, JobStatus, QueueJobCounts } from "job/interface/job.types";
 import type { JobFilterType } from "job/interface/jobPayload.types";
 
 export interface ConnectionWithQueue {

@@ -2,13 +2,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { check, type Update } from "@tauri-apps/plugin-updater";
 
 export const updateManager = $state({
-  status: "idle" as
-    | "idle"
-    | "checking"
-    | "ready"
-    | "downloading"
-    | "error"
-    | "downloaded",
+  status: "idle" as "idle" | "checking" | "ready" | "downloading" | "error" | "downloaded",
   updater: null as Update | null,
   contentLength: 0,
   downloaded: 0,

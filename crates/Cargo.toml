@@ -2,11 +2,11 @@
 resolver = "2"
 
 members = [
-    "bullastrator_core",
-    "bullastrator_web",
-    "bullastrator_storage",
-    "bullastrator_cli",
-    "bullastrator_desktop",
+  "bullastrator_core",
+  "bullastrator_web",
+  "bullastrator_storage",
+  "bullastrator_cli",
+  "bullastrator_desktop",
 ]
 
 [workspace.dependencies]
@@ -15,18 +15,10 @@ serde_json = "1.0"
 strum_macros = "0.26"
 
 chrono = { version = "0.4", features = ["serde"] }
-sqlx = { version = "0.8", features = [
-    "sqlite",
-    "runtime-tokio-native-tls",
-    "chrono",
-    "macros",
-] }
+sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio-native-tls", "chrono", "macros"] }
 uuid = { version = "1.2", features = ["v4", "serde"] }
 
-tokio = { version = "1.47.1", features = [
-    "macros",
-    "rt-multi-thread",
-] }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
 
 anyhow = "1.0.100"
 thiserror = "2"

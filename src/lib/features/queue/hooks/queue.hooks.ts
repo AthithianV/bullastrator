@@ -1,18 +1,10 @@
-import {
-  createMutation,
-  createQuery,
-  useQueryClient,
-} from "@tanstack/svelte-query";
+import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { useRefetchJobsinQueue } from "job/hooks/job.hooks.svelte";
 import { useQueueState } from "queue/store/queueContext.svelte";
 import { queueStore } from "queue/store/queueStore.svelte";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
-import type {
-  ConnectionWithQueue,
-  QueueDetails,
-  ReadQueueModel,
-} from "../interface/queue.types";
+import type { ConnectionWithQueue, QueueDetails, ReadQueueModel } from "../interface/queue.types";
 import { confirmAction } from "$lib/shared/helpers/confirmAction";
 
 // Define the unique key for the connections list
@@ -144,8 +136,7 @@ export const useGetAllQueuesByConnection = (connectionId: string) => {
 export const useGetAllQueues = () => {
   return createQuery(() => ({
     queryKey: [...QUEUE_QUERY_KEY, "ACTIVE_WORKSPACE", queueStore.isSyncing],
-    queryFn: () =>
-      invokeWrapper<ConnectionWithQueue[]>("get_all_queues_by_workspace"),
+    queryFn: () => invokeWrapper<ConnectionWithQueue[]>("get_all_queues_by_workspace"),
     refetchInterval: queueStore.isSyncing ? 5000 : false,
     placeholderData: (previousData) => previousData,
     staleTime: 0,

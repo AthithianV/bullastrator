@@ -7,10 +7,8 @@ export const QUEUE_STATUS_TAB = [
     countKey: "wait" as keyof QueueJobCounts,
     badgeColor: "bg-amber-500/90",
     color: "text-amber-500",
-    border:
-      "dark:data-[state=active]:border-amber-500 data-[state=active]:border-amber-500",
-    background:
-      "dark:data-[state=active]:bg-amber-500/10 data-[state=active]:bg-amber-500/10",
+    border: "dark:data-[state=active]:border-amber-500 data-[state=active]:border-amber-500",
+    background: "dark:data-[state=active]:bg-amber-500/10 data-[state=active]:bg-amber-500/10",
     hover: "dark:hover:bg-amber-500/90 hover:bg-amber-500/90",
   },
   {
@@ -19,10 +17,8 @@ export const QUEUE_STATUS_TAB = [
     countKey: "delayed" as keyof QueueJobCounts,
     badgeColor: "bg-purple-500/90",
     color: "text-purple-400",
-    border:
-      "dark:data-[state=active]:border-purple-500 data-[state=active]:border-purple-500",
-    background:
-      "dark:data-[state=active]:bg-purple-500/10 data-[state=active]:bg-purple-500/10",
+    border: "dark:data-[state=active]:border-purple-500 data-[state=active]:border-purple-500",
+    background: "dark:data-[state=active]:bg-purple-500/10 data-[state=active]:bg-purple-500/10",
     hover: "dark:hover:bg-purple-500/90 hover:bg-purple-500/90",
   },
   {
@@ -31,10 +27,8 @@ export const QUEUE_STATUS_TAB = [
     countKey: "active" as keyof QueueJobCounts,
     badgeColor: "bg-sky-500/90",
     color: "text-sky-500",
-    border:
-      "dark:data-[state=active]:border-sky-500 data-[state=active]:border-sky-500",
-    background:
-      "dark:data-[state=active]:bg-sky-500/10 data-[state=active]:bg-sky-500/10",
+    border: "dark:data-[state=active]:border-sky-500 data-[state=active]:border-sky-500",
+    background: "dark:data-[state=active]:bg-sky-500/10 data-[state=active]:bg-sky-500/10",
     hover: "dark:hover:bg-sky-500/90 hover:bg-sky-500/90",
   },
   {
@@ -43,10 +37,8 @@ export const QUEUE_STATUS_TAB = [
     countKey: "completed" as keyof QueueJobCounts,
     badgeColor: "bg-emerald-500/90",
     color: "text-emerald-400",
-    border:
-      "dark:data-[state=active]:border-emerald-400 data-[state=active]:border-emerald-400",
-    background:
-      "dark:data-[state=active]:bg-emerald-500/10 data-[state=active]:bg-emerald-500/10",
+    border: "dark:data-[state=active]:border-emerald-400 data-[state=active]:border-emerald-400",
+    background: "dark:data-[state=active]:bg-emerald-500/10 data-[state=active]:bg-emerald-500/10",
     hover: "dark:hover:bg-emerald-500/90 hover:bg-emerald-500/90",
   },
   {
@@ -55,10 +47,8 @@ export const QUEUE_STATUS_TAB = [
     countKey: "failed" as keyof QueueJobCounts,
     badgeColor: "bg-red-400/90",
     color: "text-red-400",
-    border:
-      "dark:data-[state=active]:border-red-400 data-[state=active]:border-red-400",
-    background:
-      "dark:data-[state=active]:bg-red-500/10 data-[state=active]:bg-red-500/10",
+    border: "dark:data-[state=active]:border-red-400 data-[state=active]:border-red-400",
+    background: "dark:data-[state=active]:bg-red-500/10 data-[state=active]:bg-red-500/10",
     hover: "dark:hover:bg-red-500/90 hover:bg-red-500/90",
   },
   {
@@ -67,10 +57,8 @@ export const QUEUE_STATUS_TAB = [
     countKey: "prioritized" as keyof QueueJobCounts,
     badgeColor: "bg-pink-500/90",
     color: "text-pink-500",
-    border:
-      "dark:data-[state=active]:border-pink-500 data-[state=active]:border-pink-500",
-    background:
-      "dark:data-[state=active]:bg-pink-500/10 data-[state=active]:bg-pink-500/10",
+    border: "dark:data-[state=active]:border-pink-500 data-[state=active]:border-pink-500",
+    background: "dark:data-[state=active]:bg-pink-500/10 data-[state=active]:bg-pink-500/10",
     hover: "dark:hover:bg-pink-500/90 hover:bg-pink-500/90",
   },
   {
@@ -79,10 +67,8 @@ export const QUEUE_STATUS_TAB = [
     countKey: "paused" as keyof QueueJobCounts,
     badgeColor: "bg-slate-500/90",
     color: "text-slate-500",
-    border:
-      "dark:data-[state=active]:border-slate-500 data-[state=active]:border-slate-500",
-    background:
-      "dark:data-[state=active]:bg-slate-500/10 data-[state=active]:bg-slate-500/10",
+    border: "dark:data-[state=active]:border-slate-500 data-[state=active]:border-slate-500",
+    background: "dark:data-[state=active]:bg-slate-500/10 data-[state=active]:bg-slate-500/10",
     hover: "dark:hover:bg-slate-500/90 hover:bg-slate-500/90",
   },
 ];

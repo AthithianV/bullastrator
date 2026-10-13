@@ -1,8 +1,4 @@
-import {
-  createMutation,
-  createQuery,
-  useQueryClient,
-} from "@tanstack/svelte-query";
+import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import { toast } from "svelte-sonner";
 import type {
@@ -26,17 +22,21 @@ export const useGetWorkspaces = () => {
 };
 
 /**
-* 🎣 Hook to fetch the DEFAULT workspace.
-*/
+ * 🎣 Hook to fetch the DEFAULT workspace.
+ */
 // Command: file://./../../../../../src-tauri/src/commands/workspace_command.rs
 export const useGetActiveWorkspace = () => {
   return createQuery(() => ({
     queryKey: [...WORKSPACE_QUERY_KEY, "active_workspace"],
     queryFn: () =>
-      invokeWrapper<ReadWorkspaceModel>("get_active_workspace", {}, {
-        shouldToast: false,
-        shouldLogResult: false,
-      }),
+      invokeWrapper<ReadWorkspaceModel>(
+        "get_active_workspace",
+        {},
+        {
+          shouldToast: false,
+          shouldLogResult: false,
+        },
+      ),
   }));
 };
 
@@ -46,8 +46,7 @@ export const useGetActiveWorkspace = () => {
 export const useGetWorkspaceById = (id: string | null) => {
   return createQuery(() => ({
     queryKey: [...WORKSPACE_QUERY_KEY, id],
-    queryFn: () =>
-      invokeWrapper<ReadWorkspaceModel | null>("get_workspace_by_id", { id }),
+    queryFn: () => invokeWrapper<ReadWorkspaceModel | null>("get_workspace_by_id", { id }),
     enabled: !!id,
   }));
 };
@@ -130,13 +129,11 @@ export const useDeleteWorkspace = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: (id: string) =>
-      invokeWrapper<string>("delete_workspace", { id }),
+    mutationFn: (id: string) => invokeWrapper<string>("delete_workspace", { id }),
     onSuccess: (_msg, deletedId) => {
       // Optimistic update: remove from list
-      queryClient.setQueryData<ReadWorkspaceModel[]>(
-        WORKSPACE_QUERY_KEY,
-        (old) => (old ? old.filter((ws) => ws.id !== deletedId) : []),
+      queryClient.setQueryData<ReadWorkspaceModel[]>(WORKSPACE_QUERY_KEY, (old) =>
+        old ? old.filter((ws) => ws.id !== deletedId) : [],
       );
       queryClient.removeQueries({
         queryKey: [...WORKSPACE_QUERY_KEY, deletedId],

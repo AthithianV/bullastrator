@@ -7,10 +7,7 @@ import { WORKSPACE_ROUTES } from "./workspace";
 import { CONNECTION_ROUTES } from "./connection";
 import { FOLDER_ROUTES } from "./folder";
 
-const apiBaseUrl = (PUBLIC_API_URL || "http://127.0.0.1:3000").replace(
-  /\/$/,
-  "",
-);
+const apiBaseUrl = (PUBLIC_API_URL || "http://127.0.0.1:3000").replace(/\/$/, "");
 
 export type CommandArgs = Record<string, any>;
 export type HttpMethod = "GET" | "POST" | "PATCH" | "DELETE";
@@ -40,10 +37,7 @@ export const webCommandMap: Record<string, WebCommand> = {
   ...FOLDER_ROUTES,
 };
 
-export async function callWebApi<T>(
-  cmd: string,
-  args: CommandArgs,
-): Promise<T> {
+export async function callWebApi<T>(cmd: string, args: CommandArgs): Promise<T> {
   const route = webCommandMap[cmd];
   if (!route) throw new Error(`No web API mapping exists for command: ${cmd}`);
 
