@@ -14,7 +14,7 @@
     import { QueueState } from "queue/store/queueContext.svelte";
 
     const { connectionId } = $props();
-    const folderQuery = useGetAllFolders(connectionId);
+    const folderQuery = useGetAllFolders(() => connectionId);
     const { mutateAsync: createTab } = useCreateTab();
     const { mutateAsync: deleteFolder } = useDeleteFolder();
 

@@ -5,6 +5,7 @@
 
     import { dndzone } from "svelte-dnd-action";
     import { flip } from "svelte/animate";
+    import { untrack } from "svelte";
 
     import {
         setFolderState,
@@ -40,7 +41,9 @@
         tabId: string;
     }>();
 
-    setFolderState(tabId, tabParams);
+    const initialTabId = untrack(() => tabId);
+    const initialTabParams = untrack(() => tabParams);
+    setFolderState(initialTabId, initialTabParams);
 
     const folderState = useFolderState();
     let searchKeyword = $state("");

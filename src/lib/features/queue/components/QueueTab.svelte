@@ -24,11 +24,13 @@
             tabId: string;
         }>();
 
-    setQueueState(tabId, tabParams);
+    const initialTabId = untrack(() => tabId);
+    const initialTabParams = untrack(() => tabParams);
+    setQueueState(initialTabId, initialTabParams);
 
     let queueState = useQueueState();
     const { mutateAsync: updateTab } = useUpdateTab();
-    const tabQuery = useGetTabById(tabId);
+    const tabQuery = useGetTabById(() => tabId);
 
     $effect(() => {
         const externalParams = tabQuery.data?.params;

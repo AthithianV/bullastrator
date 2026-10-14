@@ -26,8 +26,8 @@
         connectionId?: string | null;
         onComplete: () => void;
     }>();
-    const isEditing = !!connectionId;
-    const connectionQuery = useGetConnectionById(connectionId ?? "");
+    const isEditing = $derived(!!connectionId);
+    const connectionQuery = useGetConnectionById(() => connectionId ?? "");
     let errorTitle = $state<string | null>(null);
     let errorDescription = $state<string | null>(null);
 

@@ -116,15 +116,21 @@ export const useGetQueuesDetails = () => {
  * 🎣 Hook to select all queues for one connection from the active-workspace cache.
  * @param connectionId The ID of the connection to select.
  */
-export const useGetAllQueuesByConnection = (connectionId: string) => {
+export const useGetAllQueuesByConnection = (
+  connectionId: string | (() => string),
+) => {
   return createQuery(() => ({
     // Reuse the active-workspace query instead of making a second request
     // for the same queue data.
     queryKey: [...QUEUE_QUERY_KEY, "ACTIVE_WORKSPACE", queueStore.isSyncing],
     queryFn: () => invokeWrapper<ConnectionWithQueue[]>("get_all_queues_by_workspace"),
     select: (connections) =>
-      connections.find((connection) => connection.id === connectionId)?.queues ?? [],
-    enabled: !!connectionId,
+      connections.find(
+        (connection) =>
+          connection.id ===
+          (typeof connectionId === "function" ? connectionId() : connectionId),
+      )?.queues ?? [],
+    enabled: !!(typeof connectionId === "function" ? connectionId() : connectionId),
     refetchInterval: false,
     placeholderData: (previousData) => previousData,
   }));

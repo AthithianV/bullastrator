@@ -33,11 +33,14 @@ export const useGetTabs = () => {
  * 🎣 Hook to fetch a SINGLE tab by ID.
  * Calls the Rust command `get_tab`.
  */
-export const useGetTabById = (id: string) => {
+export const useGetTabById = (id: string | (() => string)) => {
   return createQuery(() => ({
-    queryKey: [...TAB_QUERY_KEY, id],
-    queryFn: () => invokeWrapper<ReadTabModel | null>("get_tab", { id }),
-    enabled: !!id, // Only run if ID is valid
+    queryKey: [...TAB_QUERY_KEY, typeof id === "function" ? id() : id],
+    queryFn: () => {
+      const currentId = typeof id === "function" ? id() : id;
+      return invokeWrapper<ReadTabModel | null>("get_tab", { id: currentId });
+    },
+    enabled: !!(typeof id === "function" ? id() : id), // Only run if ID is valid
   }));
 };
 
