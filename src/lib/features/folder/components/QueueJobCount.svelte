@@ -11,10 +11,9 @@
         useUpdateTab,
     } from "tabs/hooks/tab.hooks";
     import { QUEUE_STATUS_TAB } from "queue/constants/queueConstants";
+    import { Play } from "@lucide/svelte";
 
-    let { queue }: { queue: ReadQueueWithCounts } = $props<{
-        queue: ReadQueueWithCounts;
-    }>();
+    let { queue }: { queue: ReadQueueWithCounts } = $props();
 
     const { mutateAsync: createTab } = useCreateTab();
     const { mutateAsync: updateTab } = useUpdateTab();
@@ -59,7 +58,7 @@
 </script>
 
 <Card
-    class="flex flex-col gap-2 p-4 w-full h-full flex-1 rounded-sm bg-background"
+    class="flex flex-col gap-2 p-4 w-full h-full flex-1 rounded-md bg-background border-2 border-card shadow-sm transition-colors"
 >
     <CardHeader class="h-fit ps-0"
         ><Button
@@ -125,9 +124,28 @@
     </div>
 
     <div class="flex justify-between items-center px-1">
-        <span class="text-[12px] font-medium text-muted-foreground">
-            {total.toLocaleString()}
-            {total === 1 ? "Job" : "Jobs"}
+        <div
+            class="flex items-center gap-3 text-[12px] font-medium text-muted-foreground"
+        >
+            <span>
+                {total.toLocaleString()}
+                {total === 1 ? "Job" : "Jobs"}
+            </span>
+            <span
+                >{counts.activeWorkers}
+                {counts.activeWorkers === 1 ? "Worker" : "Workers"}</span
+            >
+        </div>
+        <span
+            class={cn(
+                "text-[11px] font-semibold flex justify-center items-center gap-1",
+                counts.isPaused ? "text-amber-500" : "text-emerald-500",
+            )}
+        >
+            {#if counts.isPaused}
+                <Play fill={"currentColor"} class="h-3 w-3" />
+                {"Paused"}
+            {/if}
         </span>
     </div>
 </Card>
