@@ -125,6 +125,10 @@
                                     queueStore.setActiveNode(conn.id)}
                             >
                                 <div class="flex-1 flex items-center gap-2">
+                                    <span
+                                        class="h-2 w-2 rounded-full"
+                                        style="background-color: {conn.color};"
+                                    ></span>
                                     <Folder
                                         class="w-4 h-4 block group-data-[state=open]:hidden"
                                         fill="currentColor"

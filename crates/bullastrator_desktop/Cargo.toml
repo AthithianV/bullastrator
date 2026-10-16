@@ -1,6 +1,6 @@
 [package]
 name = "bullastrator-desktop"
-version = "0.2.0"
+version = "0.2.1"
 description = "Bullastrator Desktop - Desktop Version of Bullastrator Web."
 authors = ["Athithian"]
 edition = "2021"
@@ -37,10 +37,3 @@ serde_json = { workspace = true }
 
 bullastrator-core = { path = "../bullastrator_core" }
 bullastrator-storage = { path = "../bullastrator_storage" }
-
-
-[profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 16
-panic = "abort"

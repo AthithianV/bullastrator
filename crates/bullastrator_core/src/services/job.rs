@@ -503,7 +503,7 @@ impl JobService {
             // Map and append to our main result vector
             let chunk_results = raw_data
                 .into_iter()
-                .filter(|row| row.len() >= 8)
+                .filter(|row| row.len() >= 10)
                 .map(|row| {
                     let wait: i64 = redis::from_redis_value(&row[1]).unwrap_or(0);
                     let active: i64 = redis::from_redis_value(&row[2]).unwrap_or(0);
@@ -512,6 +512,8 @@ impl JobService {
                     let delayed: i64 = redis::from_redis_value(&row[5]).unwrap_or(0);
                     let paused: i64 = redis::from_redis_value(&row[6]).unwrap_or(0);
                     let prioritized: i64 = redis::from_redis_value(&row[7]).unwrap_or(0);
+                    let is_paused: i64 = redis::from_redis_value(&row[8]).unwrap_or(0);
+                    let active_workers: i64 = redis::from_redis_value(&row[9]).unwrap_or(0);
 
                     // Sum them up here
                     let total = wait + active + completed + failed + delayed + paused;
@@ -526,6 +528,8 @@ impl JobService {
                         delayed,
                         paused,
                         prioritized,
+                        is_paused: is_paused != 0,
+                        active_workers,
                         total,
                     }
                 });
@@ -542,24 +546,65 @@ impl JobService {
         queue_name: String,
         jobs: Vec<AddJobModel>,
     ) -> Result<Vec<String>> {
+        let mut redis_conn = self
+            .connection_pool
+            .pool
+            .get()
+            .await
+            .context("Connection Failed!")?;
+
         if jobs.is_empty() {
             return Ok(Vec::new());
         }
-        let queue = self.connection_pool.queue(&queue_name).await?;
-        let bulk = jobs
-            .into_iter()
-            .map(|job| {
-                let opts = bullmq::options::JobOptions {
-                    delay: job.opts.delay,
-                    priority: job.opts.priority,
-                    attempts: job.opts.attempts,
-                    ..Default::default()
-                };
-                bullmq::BulkJob::with_options(job.name, job.data, opts)
-            })
-            .collect();
-        let added = queue.add_bulk(bulk).await?;
-        Ok(added.into_iter().map(|job| job.id().to_string()).collect())
+
+        let first_job_opts = &jobs[0].opts;
+        let (script_content, key_gen) = if first_job_opts.delay.unwrap_or(0) > 0 {
+            self.bull_driver.add_delayed()
+        } else if first_job_opts.priority.unwrap_or(0) > 0 {
+            self.bull_driver.add_prioritized()
+        } else {
+            self.bull_driver.add()
+        };
+        let keys = key_gen(&self.prefix, &queue_name);
+
+        let script = Script::new(script_content);
+
+        // Pre-load the script into Redis memory to ensure we use EVALSHA in the pipeline
+        script
+            .load_async(&mut *redis_conn)
+            .await
+            .context("Failed to load script")?;
+        let mut all_job_ids = Vec::with_capacity(jobs.len());
+
+        for chunk in jobs.chunks(200) {
+            let mut pipe = redis::pipe();
+
+            for job in chunk {
+                let args = self.bull_driver.add_job_args(
+                    &self.prefix,
+                    &queue_name,
+                    &job.name,
+                    &job.data,
+                    &job.opts,
+                );
+
+                let mut invocation = script.prepare_invoke();
+                for key in &keys {
+                    invocation.key(key);
+                }
+                for arg in &args {
+                    invocation.arg(arg);
+                }
+
+                pipe.invoke_script(&invocation);
+            }
+
+            // Execute the chunk
+            let results: Vec<String> = pipe.query_async(&mut *redis_conn).await?;
+            all_job_ids.extend(results);
+        }
+
+        Ok(all_job_ids)
     }
 
     #[tracing::instrument(skip_all, err)]
@@ -666,15 +711,41 @@ impl JobService {
         strategy: RetryStrategy,
         retry_job_status: &RetryJobStatus,
     ) -> Result<String> {
-        let queue = self.connection_pool.queue(&queue_name).await?;
-        queue
-            .retry_jobs(retry_job_status.redis_key_suffix(), 1000, None)
-            .await?;
-        let _ = strategy;
-        Ok(format!(
-            "Successfully retried all {} jobs",
-            retry_job_status.redis_key_suffix()
-        ))
+        let mut redis_conn = self
+            .connection_pool
+            .pool
+            .get()
+            .await
+            .context("Connection Failed!")?;
+
+        let raw_prefix = self.prefix.trim_end_matches(':');
+        let job_status = retry_job_status.redis_key_suffix();
+        let failed_key = format!("{}:{}:{}", raw_prefix, queue_name, job_status);
+        let chunk_size = 1000;
+        let mut total_retried = 0;
+
+        loop {
+            // 1. Fetch a batch of IDs (Always 0 to chunk_size because the list shrinks!)
+            let job_ids: Vec<String> = redis_conn.zrange(&failed_key, 0, chunk_size - 1).await?;
+
+            if job_ids.is_empty() {
+                break; // No more jobs to retry
+            }
+
+            // 2. Reuse your existing pipeline logic
+            let _ = self
+                .retry_failed_jobs_service(
+                    queue_name.clone(),
+                    job_ids.clone(),
+                    strategy.clone(),
+                    &retry_job_status,
+                )
+                .await?;
+
+            total_retried += job_ids.len();
+        }
+
+        Ok(format!("Successfully retried {} jobs", total_retried))
     }
 
     #[tracing::instrument(skip_all, err)]
@@ -733,9 +804,33 @@ impl JobService {
 
     #[tracing::instrument(skip_all, err)]
     pub async fn promote_all_jobs_service(&self, queue_name: String) -> Result<String> {
-        let queue = self.connection_pool.queue(&queue_name).await?;
-        queue.promote_jobs(1000).await?;
-        Ok("Successfully promoted all delayed jobs".into())
+        let mut redis_conn = self
+            .connection_pool
+            .pool
+            .get()
+            .await
+            .context("Connection Failed!")?;
+
+        let raw_prefix = self.prefix.trim_end_matches(':');
+        let delayed_key = format!("{}:{}:delayed", raw_prefix, queue_name);
+        let chunk_size = 1000;
+        let mut total_retried = 0;
+
+        loop {
+            let job_ids: Vec<String> = redis_conn.zrange(&delayed_key, 0, chunk_size - 1).await?;
+
+            if job_ids.is_empty() {
+                break;
+            }
+
+            let _ = self
+                .promote_jobs_service(queue_name.clone(), job_ids.clone())
+                .await?;
+
+            total_retried += job_ids.len();
+        }
+
+        Ok(format!("Successfully retried {} jobs", total_retried))
     }
 
     #[tracing::instrument(skip_all, err)]
@@ -803,12 +898,54 @@ impl JobService {
         state: JobStatus, // "failed", "completed", "delayed", "wait"
         remove_children: bool,
     ) -> Result<String> {
-        let queue = self.connection_pool.queue(&queue_name).await?;
-        let removed = queue.clean(0, 0, state.redis_key_suffix()).await?;
-        let _ = remove_children;
+        let mut redis_conn = self
+            .connection_pool
+            .pool
+            .get()
+            .await
+            .context("Connection Failed!")?;
+
+        let raw_prefix = self.prefix.trim_end_matches(':');
+        let prefix = format!("{}:{}:", raw_prefix, queue_name);
+
+        // Determine the key for the state
+        let suffix = state.redis_key_suffix();
+
+        let target_key = format!("{}{}", prefix, suffix);
+
+        let chunk_size = 1000;
+        let mut total_deleted = 0;
+
+        loop {
+            // 1. Fetch IDs based on structure type
+            // Wait/Active/Paused are LISTS (LRANGE). Failed/Completed/Delayed are ZSETS (ZRANGE).
+            let job_ids: Vec<String> = match state {
+                JobStatus::Wait | JobStatus::Paused | JobStatus::Active => {
+                    redis_conn.lrange(&target_key, 0, chunk_size - 1).await?
+                }
+                _ => redis_conn.zrange(&target_key, 0, chunk_size - 1).await?,
+            };
+
+            if job_ids.is_empty() {
+                break;
+            }
+
+            // 2. Call the bulk delete logic
+            // For now, we call the service we just wrote (which works, but less efficient to reconnect repeatedly)
+            let _ = self
+                .delete_jobs_service(queue_name.clone(), job_ids.clone(), remove_children)
+                .await?;
+
+            total_deleted += job_ids.len();
+            // Safety Break: If we deleted 0 (shouldn't happen if list was not empty), break loop
+            if job_ids.is_empty() {
+                break;
+            }
+        }
+
         Ok(format!(
             "Successfully deleted {} jobs from {}",
-            removed.len(),
+            total_deleted,
             state.redis_key_suffix()
         ))
     }

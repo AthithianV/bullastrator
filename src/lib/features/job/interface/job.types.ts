@@ -87,4 +87,6 @@ export interface QueueJobCounts {
   delayed: number;
   paused: number;
   prioritized: number;
+  isPaused: boolean;
+  activeWorkers: number;
 }

@@ -264,7 +264,7 @@
                 <Button
                     variant="ghost"
                     {...props}
-                    class="gap-2 border py-1 hover:bg-slate-800!"
+                    class="gap-2 border py-1 hover:bg-card!"
                 >
                     <Funnel class="h-4 w-4" />
                     {#if queueState.searchFilters.length > 0}

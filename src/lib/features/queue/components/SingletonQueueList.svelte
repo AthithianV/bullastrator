@@ -20,15 +20,7 @@
             connectionId: string,
         ) => void;
         refetch: (e: MouseEvent, connectionId: string) => void;
-    } = $props<{
-        queuesWithConnection: ConnectionWithQueue[];
-        handleClickOnQueue: (
-            queueId: string,
-            queueName: string,
-            connectionId: string,
-        ) => void;
-        refetch: (e: MouseEvent, connectionId: string) => void;
-    }>();
+    } = $props();
 
     let keyword = $state("");
     let queues = $derived(

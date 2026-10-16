@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use crate::bull_drivers::bullmq_driver_v5::BullmqV5Driver;
 use crate::bull_drivers::driver_registry::BullmqDriver;
@@ -85,7 +86,10 @@ impl QueueService {
         Ok(result)
     }
 
-    pub async fn list_queues(&self, user_id: &str) -> Result<Vec<bullastrator_storage::models::Queue>> {
+    pub async fn list_queues(
+        &self,
+        user_id: &str,
+    ) -> Result<Vec<bullastrator_storage::models::Queue>> {
         self.authorize(user_id, WorkspaceRole::VIEWER).await?;
         self.repository
             .get_all_by_connection(&self.redis.connection_id)
@@ -136,17 +140,35 @@ impl QueueService {
     ) -> Result<QueueDetails> {
         self.authorize(user_id, WorkspaceRole::VIEWER).await?;
         tracing::debug!("loading queue details");
-        let queue = self.redis.queue(queue_name).await?;
-        let workers = queue.get_workers_count().await?;
+        let mut redis_conn = self.redis.pool.get().await.context("Connection Failed!")?;
+
+        let prefix = format!("{}:{}", &self.redis.prefix, queue_name);
+        let meta_key = format!("{}:meta", prefix);
+
+        let mut pipe = redis::pipe();
+        pipe.hgetall(&meta_key) // Get all metadata fields
+            .scard(format!("{}:workers", prefix));
+
+        let (meta, worker_count): (HashMap<String, String>, usize) =
+            pipe.query_async(&mut redis_conn).await?;
+
+        // 2. Extract specific values from metadata
+        let is_paused = meta.get("paused").map(|v| v == "1").unwrap_or(false);
+        let bull_version = meta
+            .get("version")
+            .cloned()
+            .unwrap_or_else(|| "unknown".to_string());
+        let prefix = meta
+            .get("prefix")
+            .cloned()
+            .unwrap_or_else(|| "unknown".to_string());
+
         Ok(QueueDetails {
-            name: queue_name.into(),
-            is_paused: queue.is_paused().await?,
-            version: queue
-                .get_version()
-                .await?
-                .unwrap_or_else(|| "unknown".into()),
-            prefix: self.redis.prefix.clone(),
-            active_workers: workers,
+            name: queue_name.to_string(),
+            prefix,
+            is_paused,
+            version: bull_version,
+            active_workers: worker_count,
         })
     }
 }

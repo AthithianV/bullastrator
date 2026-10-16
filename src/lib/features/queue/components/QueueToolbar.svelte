@@ -245,7 +245,7 @@
                             variant="ghost"
                             class={cn(
                                 "py-2 px-3! cursor-pointer rounded-sm",
-                                "bg-accent hover:text-primary shadow border hover:bg-slate-800!",
+                                "bg-accent hover:text-primary shadow border hover:bg-card!",
                             )}
                             disabled={jobsQuery.isFetching}
                             onclick={refetchJobQuery}
@@ -261,11 +261,10 @@
                             variant="ghost"
                             class={cn(
                                 " py-2 px-3! cursor-pointer rounded-sm",
-                                "bg-accent hover:text-primary shadow border hover:bg-slate-800!",
+                                "bg-accent hover:text-primary shadow border hover:bg-card!",
                             )}
                             size="default"
                             disabled={queueDetailsQuery.isFetching ||
-                                !queueDetailsQuery.data ||
                                 pauseQueueQuery.isPending}
                             onclick={() =>
                                 queueDetailsQuery.data &&

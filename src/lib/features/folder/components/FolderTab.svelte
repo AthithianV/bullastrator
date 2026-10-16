@@ -36,10 +36,7 @@
     }: {
         tabParams: FolderTabParams;
         tabId: string;
-    } = $props<{
-        tabParams: FolderTabParams;
-        tabId: string;
-    }>();
+    } = $props();
 
     const initialTabId = untrack(() => tabId);
     const initialTabParams = untrack(() => tabParams);
@@ -190,7 +187,7 @@
                                         if (queueEditPanel === 0)
                                             queueEditPanel = 30;
                                     }}
-                                    class="border shadow"
+                                    class="border shadow hover:bg-card!"
                                 >
                                     <Pencil />
                                 </Button>
@@ -201,7 +198,7 @@
                                 onclick={() => {
                                     folderQueueQuery.refetch();
                                 }}
-                                class="border shadow"
+                                class="border shadow hover:bg-card!"
                             >
                                 <RefreshCcw />
                             </Button>

@@ -47,7 +47,7 @@
             },
             "py-2 px-2! cursor-pointer rounded-sm border",
             "shadow",
-            " hover:bg-slate-800!",
+            " hover:bg-card!",
             className,
         )}
     >
@@ -68,7 +68,7 @@
                         "py-2 px-2! cursor-pointer rounded-sm border",
                         "rounded-s-none px-2 border",
                         "p-1 py-2",
-                        "cursor-pointer hover:bg-slate-800!",
+                        "cursor-pointer hover:bg-card!",
                         className,
                     )}
                     disabled={isDropdownDisabled}

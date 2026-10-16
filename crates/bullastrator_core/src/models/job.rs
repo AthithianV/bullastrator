@@ -22,6 +22,8 @@ pub struct QueueJobCounts {
     pub delayed: i64,
     pub paused: i64,
     pub prioritized: i64,
+    pub is_paused: bool,
+    pub active_workers: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
