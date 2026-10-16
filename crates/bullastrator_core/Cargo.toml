@@ -33,9 +33,3 @@ deadpool-redis = { version = "0.22.1", features = ["rt_tokio_1", "tokio-native-t
 url = "2.5.7"
 semver = "1.0"
 hex = "0.4.3"
-
-[profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 16
-panic = "abort"

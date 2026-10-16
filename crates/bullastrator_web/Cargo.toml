@@ -22,9 +22,3 @@ tower-http = { version = "0.6", features = ["cors"] }
 
 bullastrator-core = { path = "../bullastrator_core" }
 bullastrator-storage = { path = "../bullastrator_storage" }
-
-[profile.release]
-opt-level = 3
-lto = "thin"
-codegen-units = 16
-panic = "abort"
