@@ -58,7 +58,9 @@
 </script>
 
 <Card
-    class="flex flex-col gap-2 p-4 w-full h-full flex-1 rounded-md bg-background border-2 border-card shadow-sm transition-colors"
+    class="flex flex-col gap-2 p-4 w-full h-full flex-1 rounded-md border-2 border-card shadow-sm transition-colors {counts.isPaused
+        ? 'bg-background'
+        : 'bg-card'}"
 >
     <CardHeader class="h-fit ps-0"
         ><Button
@@ -74,6 +76,7 @@
                 "font-semibold truncate ps-0 text-wrap! text-left",
                 "w-fit max-w-full h-fit!",
                 "hover:underline hover:text-primary hover:bg-transparent!",
+                counts.isPaused ? "text-muted-foreground" : "",
             )}>{queue.queueName}</Button
         ></CardHeader
     >
@@ -139,7 +142,7 @@
         <span
             class={cn(
                 "text-[11px] font-semibold flex justify-center items-center gap-1",
-                counts.isPaused ? "text-amber-500" : "text-emerald-500",
+                counts.isPaused ? "text-gray-500" : "text-emerald-500",
             )}
         >
             {#if counts.isPaused}
