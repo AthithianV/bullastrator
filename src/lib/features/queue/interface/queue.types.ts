@@ -70,4 +70,5 @@ export interface QueueDetails {
 
 export interface ReadQueueWithCounts extends ReadQueueModel {
   counts: QueueJobCounts;
+  details: QueueDetails;
 }

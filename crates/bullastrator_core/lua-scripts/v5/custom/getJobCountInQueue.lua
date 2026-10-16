@@ -12,6 +12,7 @@ local results = {}
 for i = 1, #ARGV do
     local queue = ARGV[i]
     local prefix = redisPrefix .. ":" .. queue
+    local metaKey = prefix .. ":meta"
 
     table.insert(results, {
         queue,
@@ -21,7 +22,9 @@ for i = 1, #ARGV do
         redis.call("ZCARD", prefix .. ":failed"),
         redis.call("ZCARD", prefix .. ":delayed"),
         redis.call("LLEN", prefix .. ":paused"),
-        redis.call("ZCARD", prefix .. ":prioritized")
+        redis.call("ZCARD", prefix .. ":prioritized"),
+        redis.call("HEXISTS", metaKey, "paused"),
+        redis.call("SCARD", prefix .. ":workers")
     })
 end
 

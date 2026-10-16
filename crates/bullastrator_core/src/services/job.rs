@@ -503,7 +503,7 @@ impl JobService {
             // Map and append to our main result vector
             let chunk_results = raw_data
                 .into_iter()
-                .filter(|row| row.len() >= 8)
+                .filter(|row| row.len() >= 10)
                 .map(|row| {
                     let wait: i64 = redis::from_redis_value(&row[1]).unwrap_or(0);
                     let active: i64 = redis::from_redis_value(&row[2]).unwrap_or(0);
@@ -512,6 +512,8 @@ impl JobService {
                     let delayed: i64 = redis::from_redis_value(&row[5]).unwrap_or(0);
                     let paused: i64 = redis::from_redis_value(&row[6]).unwrap_or(0);
                     let prioritized: i64 = redis::from_redis_value(&row[7]).unwrap_or(0);
+                    let is_paused: i64 = redis::from_redis_value(&row[8]).unwrap_or(0);
+                    let active_workers: i64 = redis::from_redis_value(&row[9]).unwrap_or(0);
 
                     // Sum them up here
                     let total = wait + active + completed + failed + delayed + paused;
@@ -526,6 +528,8 @@ impl JobService {
                         delayed,
                         paused,
                         prioritized,
+                        is_paused: is_paused != 0,
+                        active_workers,
                         total,
                     }
                 });
