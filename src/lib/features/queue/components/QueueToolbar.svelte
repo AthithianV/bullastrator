@@ -265,7 +265,6 @@
                             )}
                             size="default"
                             disabled={queueDetailsQuery.isFetching ||
-                                !queueDetailsQuery.data ||
                                 pauseQueueQuery.isPending}
                             onclick={() =>
                                 queueDetailsQuery.data &&
