@@ -57,7 +57,20 @@ impl ConnectionService {
         self.workspaces
             .check_permission(&workspace_id, user_id, WorkspaceRole::ADMIN)
             .await?;
-        self.repository.create(&workspace_id, request).await
+
+        if self
+            .repository
+            .get_by_name(&workspace_id, &request.name)
+            .await?
+            .is_some()
+        {
+            bail!(
+                "A connection named '{}' already exists in this workspace",
+                request.name
+            );
+        }
+
+        self.repository.create(&workspace_id, user_id, request).await
     }
 
     pub async fn list(&self, user_id: &str) -> Result<Vec<Connection>> {

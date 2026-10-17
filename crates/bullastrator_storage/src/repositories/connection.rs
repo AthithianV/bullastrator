@@ -29,8 +29,14 @@ impl ConnectionRepository {
         Self { pool }
     }
 
-    pub async fn create(&self, workspace_id: &str, data: CreateConnection) -> Result<Connection> {
+    pub async fn create(
+        &self,
+        workspace_id: &str,
+        user_id: &str,
+        data: CreateConnection,
+    ) -> Result<Connection> {
         let id = Uuid::new_v4().to_string();
+        let mut tx = self.pool.begin().await?;
         sqlx::query(
             r#"
                 INSERT INTO
@@ -63,9 +69,25 @@ impl ConnectionRepository {
         .bind(data.is_tls_enabled)
         .bind(data.color)
         .bind(data.label)
-        .execute(&self.pool)
+        .execute(&mut *tx)
         .await
         .context("Failed to create connection")?;
+
+        // Every connection gets a built-in folder representing all queues.
+        // It intentionally has no folder_queues rows; its ID matches the
+        // connection so the folder service can resolve it dynamically.
+        sqlx::query(
+            "INSERT INTO folders (id, connection_id, user_id, title) VALUES (?, ?, ?, ?)",
+        )
+        .bind(&id)
+        .bind(&id)
+        .bind(user_id)
+        .bind("All Queues")
+        .execute(&mut *tx)
+        .await
+        .context("Failed to create default all-queues folder")?;
+
+        tx.commit().await.context("Failed to commit connection")?;
         self.get_by_id(&id)
             .await?
             .context("Created connection was not found")
@@ -90,6 +112,31 @@ impl ConnectionRepository {
         )
         .bind(workspace_id)
         .fetch_all(&self.pool)
+        .await?)
+    }
+
+    pub async fn get_by_name(
+        &self,
+        workspace_id: &str,
+        name: &str,
+    ) -> Result<Option<Connection>> {
+        Ok(sqlx::query_as::<_, Connection>(
+            r#"
+            SELECT
+                id,
+                workspace_id,
+                name,
+                last_synced_at,
+                color,
+                label
+            FROM connections
+            WHERE workspace_id = ? AND name = ?
+            LIMIT 1
+            "#,
+        )
+        .bind(workspace_id)
+        .bind(name)
+        .fetch_optional(&self.pool)
         .await?)
     }
 
