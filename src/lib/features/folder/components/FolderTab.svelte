@@ -65,7 +65,6 @@
     let queueIdSet = $derived(
         new Set((folderQueueQuery.data ?? []).map((q) => q.id)),
     );
-
     let queueEditPanel = $state(0);
 
     const { mutateAsync: toggleQueue } = useToggleQueueInFolder();
@@ -110,7 +109,6 @@
             q.queueName.toLowerCase().includes(searchKeyword.toLowerCase()),
         ),
     );
-
     const flipDurationMs = 300;
 
     function handleDndConsider(e: CustomEvent) {

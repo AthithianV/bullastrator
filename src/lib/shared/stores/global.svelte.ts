@@ -35,8 +35,9 @@ class GlobalStore {
   shouldShowSidebar: boolean = $state(true);
   shouldShowSearchCommand: boolean = $state(false);
 
-  shortcut(key: string) {
-    return `${getShortcutModifier(this.os)} + ${key}`;
+  shortcut(key: string, shift = false) {
+    const displayKey = key === "Enter" ? "↵" : key;
+    return `${getShortcutModifier(this.os)}${shift ? " + Shift" : ""} + ${displayKey}`;
   }
 
   toggleSearchCommand(newState: boolean) {

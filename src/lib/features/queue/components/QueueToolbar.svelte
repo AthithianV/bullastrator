@@ -9,7 +9,6 @@
         RotateCcw,
         Shredder,
         Trash2,
-        Zap,
     } from "@lucide/svelte";
     import JobActionButton from "job/components/JobActionButton.svelte";
     import JobForm from "job/components/JobForm.svelte";
@@ -35,6 +34,8 @@
     import TooltipContent from "ui/tooltip/tooltip-content.svelte";
     import TooltipTrigger from "ui/tooltip/tooltip-trigger.svelte";
     import Tooltip from "ui/tooltip/tooltip.svelte";
+    import { useQueueShortcuts } from "../hooks/queue.shortcuts.svelte";
+    import { globalStore } from "shared/stores/global.svelte";
 
     let queueState = useQueueState();
 
@@ -56,10 +57,63 @@
 
     let hasSelection = $derived(queueState.active.selectedJobIds.length > 0);
     let hasJobsInState = $derived(allJobInSelectedState > 0);
+    let toolbarElement = $state<HTMLElement | null>(null);
+
+    useQueueShortcuts({
+        tabId: () => queueState.tabId,
+        toolbar: () => toolbarElement,
+        hasSelection: () => hasSelection,
+        hasJobsInState: () => hasJobsInState,
+        onPromoteSelected: () => {
+            if (queueState.currentStatus === "delayed") void promoteJobs(false);
+        },
+        onPromoteAll: () => {
+            if (queueState.currentStatus === "delayed") void promoteJobs(true);
+        },
+        onRetrySelected: () => {
+            if (
+                queueState.currentStatus === "failed" ||
+                queueState.currentStatus === "completed"
+            ) {
+                void retryJob({
+                    strategy: "ToBack",
+                    isAll: false,
+                    retryJobStatus: queueState.currentStatus,
+                });
+            }
+        },
+        onRetryAll: () => {
+            if (
+                queueState.currentStatus === "failed" ||
+                queueState.currentStatus === "completed"
+            ) {
+                void retryJob({
+                    strategy: "ToBack",
+                    isAll: true,
+                    retryJobStatus: queueState.currentStatus,
+                });
+            }
+        },
+        onDeleteSelected: () => {
+            if (queueState.currentStatus !== "active") void deleteJobs(false);
+        },
+        onDeleteAll: () => {
+            if (queueState.currentStatus !== "active") void deleteJobs(true);
+        },
+        onRefresh: () => void refetchJobQuery(),
+        onPause: () => {
+            if (queueDetailsQuery.data && !pauseQueueQuery.isPending) {
+                void pauseQueueQuery.mutateAsync(
+                    !queueDetailsQuery.data.isPaused,
+                );
+            }
+        },
+    });
 </script>
 
 <Scroll.ScrollArea class="space-y-4 bg-muted/10 p-1 flex justify-between">
     <div
+        bind:this={toolbarElement}
         class="flex justify-between items-center h-(--queue-toolbar-height) min-w-[50vw]"
     >
         <!-- LEFT ACTIONS: ADD, PROMOTE, RETRY, DELETE -->
@@ -74,22 +128,29 @@
                     isDropdownDisabled={!hasJobsInState}
                     onclick={() => promoteJobs(false)}
                     title="Promote selected jobs"
+                    shortcut={globalStore.shortcut("P")}
                 >
                     {#snippet menuContent()}
                         <DropdownMenu.Item
                             onclick={() => promoteJobs(false)}
                             disabled={!hasSelection}
                         >
-                            <ArrowBigUpDash class="mr-2 h-4 w-4" />
+                            <ArrowBigUpDash class="mr-2 h-4" />
                             <span>Promote Selected</span>
+                            <kbd class="ml-auto font-mono text-xs opacity-70"
+                                >{globalStore.shortcut("P")}</kbd
+                            >
                         </DropdownMenu.Item>
                         <DropdownMenu.Separator />
                         <DropdownMenu.Item
                             onclick={() => promoteJobs(true)}
                             disabled={!hasJobsInState}
                         >
-                            <Asterisk class="mr-2 h-4 w-4" />
+                            <Asterisk class="mr-2 h-4" />
                             <span>Promote All</span>
+                            <kbd class="ml-auto font-mono text-xs opacity-70"
+                                >{globalStore.shortcut("P", true)}</kbd
+                            >
                         </DropdownMenu.Item>
                     {/snippet}
                 </JobActionButton>
@@ -108,6 +169,7 @@
                             retryJobStatus: queueState.currentStatus,
                         })}
                     title="Retry selected jobs"
+                    shortcut={globalStore.shortcut("Z")}
                 >
                     {#snippet menuContent()}
                         <DropdownMenu.Item
@@ -121,36 +183,11 @@
                             disabled={!hasSelection}
                         >
                             <div class="flex items-center gap-2">
-                                <RotateCcw class="h-4 w-4" />
+                                <RotateCcw class="h-4" />
                                 <span>Retry Selected</span>
                             </div>
-                            <span class="text-xs opacity-70 ml-2"
-                                >RPUSH ({queueState.active.selectedJobIds
-                                    .length})</span
-                            >
-                        </DropdownMenu.Item>
-
-                        <DropdownMenu.Separator />
-
-                        <DropdownMenu.Item
-                            onclick={() =>
-                                retryJob({
-                                    strategy: "ToFront",
-                                    isAll: false,
-                                    retryJobStatus: queueState.currentStatus,
-                                })}
-                            disabled={!hasSelection}
-                            class="text-orange-500 hover:text-orange-600 hover:bg-orange-50 flex justify-between items-center"
-                        >
-                            <div class="flex items-center gap-2">
-                                <Zap class="h-4 w-4" fill={"currentColor"} />
-                                <span class="font-medium"
-                                    >Quick Retry Selected</span
-                                >
-                            </div>
-                            <span class="text-xs opacity-70 ml-2"
-                                >LPUSH ({queueState.active.selectedJobIds
-                                    .length})</span
+                            <kbd class="text-xs opacity-70"
+                                >{globalStore.shortcut("Z")}</kbd
                             >
                         </DropdownMenu.Item>
 
@@ -172,31 +209,8 @@
                                 />
                                 <span class="font-medium">Retry All</span>
                             </div>
-                            <span class="text-xs opacity-70 ml-2"
-                                >LPUSH ({allJobInSelectedState})</span
-                            >
-                        </DropdownMenu.Item>
-
-                        <DropdownMenu.Separator />
-
-                        <DropdownMenu.Item
-                            onclick={() =>
-                                retryJob({
-                                    strategy: "ToFront",
-                                    isAll: true,
-                                    retryJobStatus: queueState.currentStatus,
-                                })}
-                            class="flex justify-between items-center text-orange-500 hover:text-orange-600 hover:bg-slate-800"
-                            disabled={!hasJobsInState}
-                        >
-                            <div class="flex items-center gap-2">
-                                <Asterisk
-                                    class="mr-2 h-4 w-4 fill-orange-500/20"
-                                />
-                                <span class="font-medium">Quick Retry All</span>
-                            </div>
-                            <span class="text-xs opacity-70 ml-2"
-                                >RPUSH ({allJobInSelectedState})</span
+                            <kbd class="text-xs opacity-70"
+                                >{globalStore.shortcut("Z", true)}</kbd
                             >
                         </DropdownMenu.Item>
                     {/snippet}
@@ -211,6 +225,7 @@
                     isDropdownDisabled={!hasJobsInState}
                     onclick={() => deleteJobs(false)}
                     title="Delete selected jobs"
+                    shortcut={globalStore.shortcut("Delete")}
                     class="text-red-500 hover:text-red-600"
                 >
                     {#snippet menuContent()}
@@ -223,11 +238,17 @@
                                 >Delete Selected ({queueState.active
                                     .selectedJobIds.length})</span
                             >
+                            <kbd class="text-xs opacity-70"
+                                >{globalStore.shortcut("Delete")}</kbd
+                            >
                         </DropdownMenu.Item>
                         <DropdownMenu.Separator />
                         <DropdownMenu.Item onclick={() => deleteJobs(true)}>
                             <Shredder class="text-red-500 h-4 w-4" />
                             <span>Delete All ({allJobInSelectedState})</span>
+                            <kbd class="ml-auto font-mono text-xs opacity-70"
+                                >{globalStore.shortcut("Delete", true)}</kbd
+                            >
                         </DropdownMenu.Item>
                     {/snippet}
                 </JobActionButton>
@@ -253,7 +274,14 @@
                             <RefreshCcw class={cn("h-4 w-4")} />
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Refresh</TooltipContent>
+                    <TooltipContent>
+                        Refresh
+                        <kbd
+                            class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]"
+                        >
+                            {globalStore.shortcut("R")}
+                        </kbd>
+                    </TooltipContent>
                 </Tooltip>
                 <Tooltip>
                     <TooltipTrigger>
@@ -281,7 +309,14 @@
                             {/if}
                         </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Pause/Resume Queue Globally</TooltipContent>
+                    <TooltipContent>
+                        Pause/Resume Queue Globally
+                        <kbd
+                            class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]"
+                        >
+                            Ctrl + U
+                        </kbd>
+                    </TooltipContent>
                 </Tooltip>
             </ButtonGroup.Root>
         </div>

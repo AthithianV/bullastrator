@@ -21,6 +21,8 @@
     import { queueStore } from "queue/store/queueStore.svelte";
     import ColorPicker from "shared/components/form/ColorPicker.svelte";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
+    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
+    import { submitOnModEnter } from "shared/helpers/formShortcuts";
 
     let { connectionId = null, onComplete } = $props();
     const isEditing = $derived(!!connectionId);
@@ -189,7 +191,8 @@
         </Alert.Root>
     {/if}
 
-    <form use:enhance>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <form use:enhance onkeydown={submitOnModEnter}>
         <Field.Set>
             <Field.Group>
                 <Field.Field data-invalid={$errors.name ? "" : undefined}>
@@ -327,7 +330,7 @@
                         >Test Connection</Button
                     >
                     <Button disabled={$submitting} type="submit"
-                        >{isEditing ? "Update" : "Save"}</Button
+                        >{isEditing ? "Update" : "Save"}<SubmitShortcut /></Button
                     >
                 </div>
             </Field.Group>

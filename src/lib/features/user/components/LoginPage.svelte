@@ -7,6 +7,8 @@
     import AuthCard from "./AuthCard.svelte";
     import { useCheckSession, useLogin } from "../hooks/user.hooks";
     import { Eye } from "@lucide/svelte";
+    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
+    import { submitOnModEnter } from "shared/helpers/formShortcuts";
 
     let email = $state("");
     let password = $state("");
@@ -41,7 +43,8 @@
     title="Welcome back"
     description="Log in to continue to Bullastrator."
 >
-    <form class="space-y-6 pt-10" onsubmit={submit}>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <form class="space-y-6 pt-10" onsubmit={submit} onkeydown={submitOnModEnter}>
         <div class="space-y-2">
             <Label class="text-muted-foreground" for="email">Email</Label>
             <Input
@@ -75,6 +78,7 @@
         <div class="flex justify-center items-center pt-5">
             <Button class="font-semibold" type="submit" disabled={submitting}>
                 {submitting ? "Logging in..." : "Log in"}
+                <SubmitShortcut />
             </Button>
         </div>
 

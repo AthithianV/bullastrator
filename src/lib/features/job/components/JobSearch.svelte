@@ -1,5 +1,8 @@
 <script lang="ts">
     import { Search, Square, X } from "@lucide/svelte";
+    import TooltipContent from "components/ui/tooltip/tooltip-content.svelte";
+    import TooltipTrigger from "components/ui/tooltip/tooltip-trigger.svelte";
+    import Tooltip from "components/ui/tooltip/tooltip.svelte";
     import {
         useAbortJobsFetch,
         useGetJobsInQueues,
@@ -13,6 +16,7 @@
     import Button from "shared/components/ui/button/button.svelte";
     import { Card } from "shared/components/ui/card";
     import Separator from "shared/components/ui/separator/separator.svelte";
+    import { globalStore } from "shared/stores/global.svelte";
     import { cn } from "shared/utils";
     import { defaults, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
@@ -20,6 +24,8 @@
     import { Input } from "ui/input";
     import * as Popover from "ui/popover";
     import * as Select from "ui/select/";
+    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
+    import { submitOnModEnter } from "shared/helpers/formShortcuts";
 
     const filters: {
         id: string;
@@ -202,7 +208,8 @@
     }
 </script>
 
-<form use:enhance class="flex gap-2">
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<form use:enhance class="flex gap-2" onkeydown={submitOnModEnter}>
     <Card
         class="flex flex-row items-center py-1 px-2 gap-2 shadow pb-0 bg-accent border rounded-[5px]"
     >
@@ -250,9 +257,10 @@
     >
         <Search class="h-4 w-4" />
         <Input
+            data-queue-shortcut="search"
             bind:value={$form.keyword}
             class="bg-transparent dark:bg-transparent border-none shadow-none w-80 py-0"
-            placeholder="Search Keyword"
+            placeholder="Search Keyword [{globalStore.shortcut('F')}]"
             type="text"
             onkeydown={(e) => e.key === "Enter" && handleApply()}
         />
@@ -261,31 +269,44 @@
     <Popover.Root bind:open>
         <Popover.Trigger>
             {#snippet child({ props })}
-                <Button
-                    variant="ghost"
-                    {...props}
-                    class="gap-2 border py-1 hover:bg-card!"
-                >
-                    <Funnel class="h-4 w-4" />
-                    {#if queueState.searchFilters.length > 0}
-                        <Badge
-                            class="group relative h-5 min-w-5 overflow-hidden rounded-full px-0 font-mono tabular-nums transition-all hover:bg-red-500"
-                            onclick={clearFilters}
+                <Tooltip>
+                    <TooltipTrigger>
+                        <Button
+                            data-queue-shortcut="filter"
+                            variant="ghost"
+                            {...props}
+                            class="gap-2 border py-1 hover:bg-card!"
                         >
-                            <span
-                                class="inline-flex items-center group-hover:hidden"
-                            >
-                                {queueState.searchFilters.length}
-                            </span>
+                            <Funnel class="h-4 w-4" />
+                            {#if queueState.searchFilters.length > 0}
+                                <Badge
+                                    class="group relative h-5 min-w-5 overflow-hidden rounded-full px-0 font-mono tabular-nums transition-all hover:bg-red-500"
+                                    onclick={clearFilters}
+                                >
+                                    <span
+                                        class="inline-flex items-center group-hover:hidden"
+                                    >
+                                        {queueState.searchFilters.length}
+                                    </span>
 
-                            <span
-                                class="hidden items-center group-hover:inline-flex"
-                            >
-                                <X class="h-1 w-1" />
-                            </span>
-                        </Badge>
-                    {/if}
-                </Button>
+                                    <span
+                                        class="hidden items-center group-hover:inline-flex"
+                                    >
+                                        <X class="h-1 w-1" />
+                                    </span>
+                                </Badge>
+                            {/if}
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        Advanced Search
+                        <kbd
+                            class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]"
+                        >
+                            {globalStore.shortcut("F", true)}
+                        </kbd>
+                    </TooltipContent>
+                </Tooltip>
             {/snippet}
         </Popover.Trigger>
 
@@ -478,7 +499,10 @@
                 <Button variant="ghost" size="sm" onclick={() => (open = false)}
                     >Cancel</Button
                 >
-                <Button size="sm" onclick={handleApply}>Apply Filter</Button>
+                <Button size="sm" onclick={handleApply}>
+                    Apply Filter
+                    <SubmitShortcut />
+                </Button>
             </div>
         </Popover.Content>
     </Popover.Root>

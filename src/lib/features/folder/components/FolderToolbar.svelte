@@ -72,8 +72,12 @@
             <TooltipContent
                 class="bg-card border text-white"
                 arrowClasses="bg-card rounded-none"
-                >Search queues ({globalStore.shortcut("F")})</TooltipContent
             >
+                Search queues
+                <kbd class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]">
+                    {globalStore.shortcut("F")}
+                </kbd>
+            </TooltipContent>
         </Tooltip>
 
         {#if onEdit}
@@ -95,9 +99,14 @@
                     class="bg-card text-white border"
                     arrowClasses="bg-card rounded-none"
                 >
-                    {isAllQueuesFolder
-                        ? "The All Queues folder cannot be edited"
-                        : `Edit folder (${globalStore.shortcut("E")})`}
+                    {#if isAllQueuesFolder}
+                        The All Queues folder cannot be edited
+                    {:else}
+                        Edit folder
+                        <kbd class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]">
+                            {globalStore.shortcut("E")}
+                        </kbd>
+                    {/if}
                 </TooltipContent>
             </Tooltip>
         {/if}
@@ -118,8 +127,12 @@
             <TooltipContent
                 class="bg-card text-white border"
                 arrowClasses="bg-card rounded-none"
-                >Refresh queues ({globalStore.shortcut("R")})</TooltipContent
             >
+                Refresh queues
+                <kbd class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]">
+                    {globalStore.shortcut("R")}
+                </kbd>
+            </TooltipContent>
         </Tooltip>
     </div>
 </div>
