@@ -204,12 +204,15 @@
         </Resizable.Pane>
 
         {#if queueEditPanel > 0 && !isAllQueuesFolder}
-            <Resizable.Handle />
+            <Resizable.Handle class="bg-background hover:bg-primary" />
 
-            <Resizable.Pane class="min-w-0" defaultSize={queueEditPanel}>
-                <Scroll.ScrollArea class="h-full">
+            <Resizable.Pane
+                class="min-w-0 p-2 ps-0 py-4"
+                defaultSize={queueEditPanel}
+            >
+                <Scroll.ScrollArea class="h-full bg-card rounded-sm">
                     <div class="px-4 flex flex-col gap-2">
-                        <div class="sticky top-0 z-100 bg-background">
+                        <div class="sticky top-0 z-100 bg-card">
                             <div class="py-2 flex items-center justify-between">
                                 <Input
                                     bind:ref={folderNameInput}
@@ -236,7 +239,7 @@
                                 </Button>
                             </div>
                             <div
-                                class="flex items-center bg-background dark:bg-input/30 border px-2 rounded-[5px] max-lg:hidden"
+                                class="flex items-center bg-background border px-2 rounded-[5px] max-lg:hidden"
                             >
                                 <Search class="h-4 w-4" />
                                 <Input
@@ -248,11 +251,11 @@
                             </div>
                         </div>
 
-                        <div class="flex flex-col gap-2">
+                        <div class="flex flex-col gap-1">
                             {#each filteredQueues as queue}
                                 {@const isChecked = queueIdSet.has(queue.id)}
                                 <label
-                                    class="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+                                    class="flex items-center gap-2 p-2 rounded-md hover:bg-background cursor-pointer transition-colors"
                                 >
                                     <Checkbox
                                         checked={isChecked}

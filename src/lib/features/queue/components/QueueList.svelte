@@ -86,7 +86,7 @@
                     >
                         <div
                             class={cn(
-                                "sticky top-10 z-10",
+                                "sticky top-10 z-10 bg-background",
                                 queueStore.makeActive(conn.id),
                             )}
                         >

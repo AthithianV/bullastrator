@@ -10,6 +10,7 @@ import type {
 import { TAB_QUERY_KEY } from "tabs/hooks/tab.hooks";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { tabStore } from "$lib/features/tabs/store/tabStore.svelte";
+import { CONNECTION_QUERY_KEY } from "connection/hooks/connection.hooks";
 
 // Unique keys for caching
 export const FOLDER_QUERY_KEY = ["folder"];
@@ -162,6 +163,8 @@ export const useToggleQueueInFolder = () => {
       queryClient.invalidateQueries({
         queryKey: [...FOLDER_QUERY_KEY, "queues", variables.folderId],
       });
+      queryClient.invalidateQueries({ queryKey: [ ...FOLDER_QUERY_KEY,
+      "list"] });
     },
   }));
 };
@@ -170,8 +173,6 @@ export const useToggleQueueInFolder = () => {
  * 🚀 Hook to reorder queues within a folder.
  */
 export const useReorderFolderQueues = () => {
-  const queryClient = useQueryClient();
-
   return createMutation(() => ({
     mutationFn: ({ folderId, orderedQueueIds }: { folderId: string; orderedQueueIds: string[] }) =>
       invokeWrapper<void>("reorder_folder_queues", {

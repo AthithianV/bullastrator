@@ -62,7 +62,6 @@ impl FolderRepository {
                 q.id AS queue_id,
                 q.connection_id AS queue_connection_id,
                 q.queue_name
-
             FROM folders f
             LEFT JOIN folder_queues fq
                 ON fq.folder_id = f.id
@@ -137,6 +136,12 @@ impl FolderRepository {
             .bind(id)
             .execute(&self.pool)
             .await?;
+
+        sqlx::query("DELETE FROM tabs WHERE id = ?")
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+
         if result.rows_affected() == 0 {
             bail!("Folder with ID {id} not found")
         }
