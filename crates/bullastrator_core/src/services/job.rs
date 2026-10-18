@@ -508,7 +508,8 @@ impl JobService {
             // Map and append to our main result vector
             let chunk_results = raw_data
                 .into_iter()
-                .filter(|row| row.len() >= 10)
+                // The script returns the queue name plus eight counters.
+                .filter(|row| row.len() >= 9)
                 .map(|row| {
                     let wait: i64 = redis::from_redis_value(&row[1]).unwrap_or(0);
                     let active: i64 = redis::from_redis_value(&row[2]).unwrap_or(0);

@@ -51,7 +51,7 @@ export const useGetTabById = (id: string | (() => string)) => {
 export const useGetActiveTabId = () => {
   return createQuery(() => ({
     queryKey: [...TAB_QUERY_KEY, "ACTIVE_TAB"],
-    queryFn: () => invokeWrapper<string | null>("get_active_tab", {}, { shouldLogResult: true }),
+    queryFn: () => invokeWrapper<string | null>("get_active_tab", {}, { shouldLogResult: false }),
   }));
 };
 

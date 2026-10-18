@@ -29,6 +29,7 @@
     import type { FolderTabParams } from "../interface/folder.types";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
     import FolderToolbar from "./FolderToolbar.svelte";
+    import { useFolderShortcuts } from "../hooks/folder.shortcuts.svelte";
 
     const {
         tabParams,
@@ -47,6 +48,9 @@
         folderState.tabId === folderState.connectionId,
     );
     let searchKeyword = $state("");
+    let showSearch = $state(false);
+    let searchInput = $state<HTMLInputElement | null>(null);
+    let folderContainer = $state<HTMLDivElement | null>(null);
 
     const queuesQuery = useGetAllQueuesByConnection(folderState.connectionId);
     const folderQueueQuery = useGetQueuesOfFolder();
@@ -82,8 +86,27 @@
         }
     });
 
+    const { handleQueueCardKeydown } = useFolderShortcuts({
+        tabId: () => tabId,
+        isAllQueuesFolder: () => isAllQueuesFolder,
+        folderContainer: () => folderContainer,
+        searchInput: () => searchInput,
+        onSearch: () => {
+            showSearch = !showSearch;
+        },
+        onEdit: () => {
+            queueEditPanel = queueEditPanel === 0 ? 30 : 0;
+        },
+        onRefresh: () => void folderQueueQuery.refetch(),
+    });
+
     const filteredQueues = $derived(
         (queuesQuery.data ?? []).filter((q) =>
+            q.queueName.toLowerCase().includes(searchKeyword.toLowerCase()),
+        ),
+    );
+    const visibleFolderQueues = $derived(
+        (folderQueueQuery.data ?? []).filter((q) =>
             q.queueName.toLowerCase().includes(searchKeyword.toLowerCase()),
         ),
     );
@@ -107,6 +130,7 @@
 </script>
 
 <div
+    bind:this={folderContainer}
     class="h-(--tab-content-height) flex flex-col overflow-x-auto no-scrollbar min-w-0"
 >
     <Separator />
@@ -116,11 +140,27 @@
             <FolderToolbar
                 {tabId}
                 {tabParams}
-                position="top-right"
                 onEdit={() => {
-                    queueEditPanel = 30;
+                    queueEditPanel = queueEditPanel === 0 ? 30 : 0;
+                }}
+                onSearch={() => {
+                    showSearch = !showSearch;
                 }}
             />
+            {#if showSearch}
+                <div
+                    class="absolute top-2 left-1/2 z-10 flex w-64 -translate-x-1/2 items-center rounded-md border bg-background px-2"
+                >
+                    <Search class="h-4 w-4 shrink-0" />
+                    <Input
+                        bind:ref={searchInput}
+                        bind:value={searchKeyword}
+                        class="border-none shadow-none dark:bg-transparent"
+                        placeholder="Search queues..."
+                        type="text"
+                    />
+                </div>
+            {/if}
             <InfiniteScanLoader loading={folderQueueQuery.isFetching} />
             <Scroll.ScrollArea class="h-full @container">
                 <div class="flex flex-col gap-4">
@@ -135,7 +175,8 @@
                             </p>
                         {/if}
                         <ul
-                            class="grid @[1600px]:grid-cols-5 @[1200px]:grid-cols-4 @[900px]:grid-cols-3 @[600px]:grid-cols-2 grid-cols-1 gap-2"
+                            data-folder-queue-grid
+                            class="grid @[1600px]:grid-cols-5 @[1200px]:grid-cols-4 @[900px]:grid-cols-3 @[600px]:grid-cols-2 grid-cols-1 gap-2 p-2"
                             use:dndzone={{
                                 items: folderQueueQuery.data ?? [],
                                 flipDurationMs,
@@ -144,9 +185,14 @@
                             onconsider={handleDndConsider}
                             onfinalize={handleDndFinalize}
                         >
-                            {#each folderQueueQuery.data ?? [] as queue (queue.id)}
+                            {#each visibleFolderQueues as queue (queue.id)}
+                                <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
                                 <li
-                                    class="text-sm rounded-md h-full"
+                                    data-folder-queue-card
+                                    aria-label={queue.queueName}
+                                    tabindex="0"
+                                    onkeydowncapture={handleQueueCardKeydown}
+                                    class="text-sm rounded-md h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                                     animate:flip={{ duration: flipDurationMs }}
                                 >
                                     <QueueJobCount {queue} />

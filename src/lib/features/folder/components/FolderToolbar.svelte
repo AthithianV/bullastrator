@@ -10,41 +10,25 @@
         useGetQueuesOfFolder,
     } from "../hooks/folder.hooks.svelte";
     import { Button } from "shared/components/ui/button";
-    import { Pencil, RefreshCcw } from "@lucide/svelte";
+    import { Pencil, RefreshCcw, Search } from "@lucide/svelte";
     import type { FolderTabParams } from "../interface/folder.types";
-    import { tabStore } from "$lib/features/tabs/store/tabStore.svelte";
     import { cn } from "shared/utils";
-
-    export type FolderToolbarPosition =
-        | "top-left"
-        | "top-center"
-        | "top-right"
-        | "bottom-right"
-        | "left"
-        | "center";
+    import TooltipContent from "shared/components/ui/tooltip/tooltip-content.svelte";
+    import TooltipTrigger from "shared/components/ui/tooltip/tooltip-trigger.svelte";
+    import Tooltip from "shared/components/ui/tooltip/tooltip.svelte";
+    import { globalStore } from "shared/stores/global.svelte";
 
     const {
         tabParams,
         tabId,
-        position = "center",
         onEdit,
+        onSearch,
     }: {
         tabParams: FolderTabParams;
         tabId: string;
-        position?: FolderToolbarPosition;
         onEdit?: () => void;
+        onSearch: () => void;
     } = $props();
-
-    const positionClasses: Record<FolderToolbarPosition, string> = {
-        "top-left": "top-2 left-2",
-        "top-center": "top-2 left-1/2 -translate-x-1/2",
-        "top-right": "top-2 right-2",
-        "bottom-right": "bottom-2 right-2",
-        left: "left-2 top-1/2 -translate-y-1/2",
-        center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-    };
-
-    const toolbarPosition = position ?? "top-right";
 
     const initialTabId = untrack(() => tabId);
     const initialTabParams = untrack(() => tabParams);
@@ -63,28 +47,6 @@
             folderState.folderName = folderQuery.data.title;
         }
     });
-
-    let refreshCountdown = $state(5);
-
-    $effect(() => {
-        if (!folderState.tabId) return;
-
-        refreshCountdown = 5;
-
-        const timer = setInterval(async () => {
-            refreshCountdown -= 1;
-            if (
-                refreshCountdown === 0 &&
-                folderState.tabId === tabStore.activeTab &&
-                folderState.shouldRefresh
-            ) {
-                await folderQueueQuery.refetch();
-                refreshCountdown = 5;
-            }
-        }, 1000);
-
-        return () => clearInterval(timer);
-    });
 </script>
 
 <div
@@ -92,58 +54,72 @@
         "absolute z-20 w-fit max-w-[calc(100%-1rem)] rounded-md border",
         "bg-background/70 backdrop-blur-sm shadow-sm opacity-75",
         "transition-opacity hover:opacity-100",
-        positionClasses[toolbarPosition],
+        "bottom-2 left-1/2 -translate-x-1/2",
     )}
 >
     <div class="flex w-fit items-center gap-1 p-1">
-        {#if folderState.shouldRefresh}
-            <Button
-                class="text-sm pb-2 text-sky-400"
-                onclick={() => {
-                    folderState.shouldRefresh = false;
-                    refreshCountdown = 5;
-                }}
-                variant="link"
+        <Tooltip>
+            <TooltipTrigger>
+                <Button
+                    variant="ghost"
+                    onclick={onSearch}
+                    class="h-8 w-8 p-1 hover:bg-card!"
+                    aria-label="Search queues"
+                >
+                    <Search class="h-4 w-4" />
+                </Button>
+            </TooltipTrigger>
+            <TooltipContent
+                class="bg-card border text-white"
+                arrowClasses="bg-card rounded-none"
+                >Search queues ({globalStore.shortcut("F")})</TooltipContent
             >
-                {#if !folderQueueQuery.isFetching}
-                    Refreshs in {refreshCountdown}s
-                {:else}
-                    Refreshs in 0s
-                {/if}
-            </Button>
-        {:else}
-            <Button
-                class="text-sm text-muted-foreground pb-2 hover:text-sky-400"
-                onclick={() => {
-                    folderState.shouldRefresh = true;
-                    refreshCountdown = 5;
-                }}
-                variant="link"
-            >
-                Turn on auto-refresh
-            </Button>
+        </Tooltip>
+
+        {#if onEdit}
+            <Tooltip>
+                <TooltipTrigger>
+                    <Button
+                        variant="ghost"
+                        disabled={isAllQueuesFolder}
+                        onclick={() => {
+                            if (!isAllQueuesFolder) onEdit?.();
+                        }}
+                        class="h-8 w-8 p-1 hover:bg-card!"
+                        aria-label="Edit folder"
+                    >
+                        <Pencil class="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent
+                    class="bg-card text-white border"
+                    arrowClasses="bg-card rounded-none"
+                >
+                    {isAllQueuesFolder
+                        ? "The All Queues folder cannot be edited"
+                        : `Edit folder (${globalStore.shortcut("E")})`}
+                </TooltipContent>
+            </Tooltip>
         {/if}
 
-        {#if !isAllQueuesFolder && onEdit}
-            <Button
-                variant="ghost"
-                onclick={() => {
-                    onEdit?.();
-                }}
-                class="h-8 w-8 p-1 hover:bg-card!"
+        <Tooltip>
+            <TooltipTrigger>
+                <Button
+                    variant="ghost"
+                    onclick={() => {
+                        folderQueueQuery.refetch();
+                    }}
+                    class="h-8 w-8 p-1 hover:bg-card!"
+                    aria-label="Refresh queues"
+                >
+                    <RefreshCcw class="h-4 w-4" />
+                </Button>
+            </TooltipTrigger>
+            <TooltipContent
+                class="bg-card text-white border"
+                arrowClasses="bg-card rounded-none"
+                >Refresh queues ({globalStore.shortcut("R")})</TooltipContent
             >
-                <Pencil class="h-4 w-4" />
-            </Button>
-        {/if}
-
-        <Button
-            variant="ghost"
-            onclick={() => {
-                folderQueueQuery.refetch();
-            }}
-            class="h-8 w-8 p-1 hover:bg-card!"
-        >
-            <RefreshCcw class="h-4 w-4" />
-        </Button>
+        </Tooltip>
     </div>
 </div>
