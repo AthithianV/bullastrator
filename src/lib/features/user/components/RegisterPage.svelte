@@ -6,6 +6,8 @@
     import AuthCard from "./AuthCard.svelte";
     import { useRegister } from "../hooks/user.hooks";
     import { Eye } from "@lucide/svelte";
+    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
+    import { submitOnModEnter } from "shared/helpers/formShortcuts";
 
     let name = $state("");
     let email = $state("");
@@ -31,7 +33,8 @@
     title="Create an account"
     description="Start managing your BullMQ queues."
 >
-    <form class="space-y-5 py-5" onsubmit={submit}>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <form class="space-y-5 py-5" onsubmit={submit} onkeydown={submitOnModEnter}>
         <div class="space-y-2">
             <Label class="text-muted-foreground" for="name">Name</Label>
             <Input
@@ -75,6 +78,7 @@
         <div class="flex justify-center items-center">
             <Button type="submit" disabled={submitting}>
                 {submitting ? "Creating account..." : "Register"}
+                <SubmitShortcut />
             </Button>
         </div>
 

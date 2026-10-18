@@ -169,7 +169,6 @@ export const useGetJobCountInQueue = () => {
           },
           {
             shouldToast: false,
-            shouldLogResult: false,
           },
         ),
       staleTime: 5 * 1000,

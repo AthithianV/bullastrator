@@ -21,11 +21,10 @@
     import { queueStore } from "queue/store/queueStore.svelte";
     import ColorPicker from "shared/components/form/ColorPicker.svelte";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
+    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
+    import { submitOnModEnter } from "shared/helpers/formShortcuts";
 
-    let { connectionId = null, onComplete } = $props<{
-        connectionId?: string | null;
-        onComplete: () => void;
-    }>();
+    let { connectionId = null, onComplete } = $props();
     const isEditing = $derived(!!connectionId);
     const connectionQuery = useGetConnectionById(() => connectionId ?? "");
     let errorTitle = $state<string | null>(null);
@@ -37,7 +36,22 @@
 
     const syncQuery = useSyncAllQueues();
 
-    const initialData = defaults(zod4(connectionSchema));
+    const initialData = defaults(
+        {
+            name: null,
+            host: null,
+            port: null,
+            username: null,
+            password: null,
+            db: 0,
+            isDefault: false,
+            bullmqPrefix: "bull",
+            isTlsEnabled: false,
+            color: "#00BCD4",
+            label: "",
+        },
+        zod4(connectionSchema),
+    );
 
     const { form, errors, enhance, reset, submitting } = superForm(
         initialData,
@@ -49,6 +63,14 @@
             invalidateAll: false,
             async onUpdate({ form: f }) {
                 if (!f.valid) return;
+
+                if (f.data.username && !f.data.password) {
+                    errorTitle = "Invalid data";
+                    errorDescription =
+                        "Password is required when username is passed";
+                    return;
+                }
+
                 try {
                     let connection;
                     if (connectionId) {
@@ -91,8 +113,8 @@
                         errorTitle = "Unsupported Version";
                         errorDescription = msg;
                     } else {
-                        errorTitle = "Unknow Error";
-                        errorDescription = "Something went wrong";
+                        errorTitle = "Something went wrong";
+                        errorDescription = error.message;
                     }
                 }
             },
@@ -109,7 +131,7 @@
                 host: connection.host,
                 port: connection.port,
                 username: connection.username,
-                password: null,
+                password: "",
                 db: connection.db ?? 0,
                 isDefault: false,
                 bullmqPrefix: connection.bullmqPrefix ?? "bull",
@@ -144,7 +166,7 @@
     <InfiniteScanLoader loading={$submitting || connectionQuery.isLoading} />
 
     {#if connectionQuery.isError}
-        <Alert.Root variant="destructive" class="my-2">
+        <Alert.Root variant="destructive" class="my-2 bg-card text-xs">
             <Alert.Title>Unable to load connection</Alert.Title>
             <Alert.Description>
                 {connectionQuery.error?.message ?? "Connection was not found."}
@@ -159,9 +181,9 @@
     </Alert.Root>
 
     {#if errorTitle || errorDescription}
-        <Alert.Root variant="destructive" class="my-2">
-            <Alert.Title class="flex gap-2 items-center my-2"
-                ><CircleAlert size={20} /> {errorTitle}</Alert.Title
+        <Alert.Root variant="destructive" class="my-2 mb-4">
+            <Alert.Title class="flex gap-2 items-center bg-card"
+                ><CircleAlert size={12} /> {errorTitle}</Alert.Title
             >
             <Alert.Description>
                 {errorDescription}
@@ -169,7 +191,8 @@
         </Alert.Root>
     {/if}
 
-    <form use:enhance>
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <form use:enhance onkeydown={submitOnModEnter}>
         <Field.Set>
             <Field.Group>
                 <Field.Field data-invalid={$errors.name ? "" : undefined}>
@@ -207,6 +230,7 @@
                             id="port"
                             type="number"
                             bind:value={$form.port}
+                            placeholder="6379"
                         />
                         {#if $errors.port}<Field.Error
                                 >{$errors.port}</Field.Error
@@ -306,7 +330,7 @@
                         >Test Connection</Button
                     >
                     <Button disabled={$submitting} type="submit"
-                        >{isEditing ? "Update" : "Save"}</Button
+                        >{isEditing ? "Update" : "Save"}<SubmitShortcut /></Button
                     >
                 </div>
             </Field.Group>

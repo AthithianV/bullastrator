@@ -65,7 +65,6 @@ export interface QueueDetails {
   isPaused: boolean;
   version: string;
   prefix: string;
-  activeWorkers: number;
 }
 
 export interface ReadQueueWithCounts extends ReadQueueModel {

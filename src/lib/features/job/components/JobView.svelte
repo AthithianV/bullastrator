@@ -1,10 +1,12 @@
 <script lang="ts">
     import * as Tabs from "ui/tabs";
     import * as Scroll from "ui/scroll-area/index";
+    import * as Alert from "ui/alert";
+
     import Button from "ui/button/button.svelte";
     import { Spinner } from "ui/spinner";
 
-    import { CircleAlert, X } from "@lucide/svelte";
+    import { CircleAlert, Info, TriangleAlertIcon, X } from "@lucide/svelte";
 
     import JobTimeline from "job/components/JobTimeline.svelte";
     import { cn } from "tailwind-variants";
@@ -34,7 +36,26 @@
     });
 </script>
 
-{#if queueState.active.selectedJobDetails}
+{#if selectedJobQuery.isLoading}
+    <div class="h-full w-full flex justify-center items-center">
+        <Spinner class="text-primary h-15 w-15" />
+    </div>
+{:else if !queueState.active.selectedJobDetails}
+    <div class="p-4">
+        <Alert.Root
+            variant="default"
+            class="rounded-sm w-full overflow-auto space-y-2"
+        >
+            <Alert.Title
+                class="flex justify-start items-center gap-2 text-yellow-500"
+                ><TriangleAlertIcon class="h-4 w-4" /> Job Not found</Alert.Title
+            >
+            <Alert.Description class="relative select text-yellow-200">
+                Job must be moved to a different state.
+            </Alert.Description>
+        </Alert.Root>
+    </div>
+{:else if queueState.active.selectedJobDetails}
     <div
         class="h-full flex flex-col overflow-auto min-w-0 select-text relative"
     >
@@ -208,10 +229,5 @@
                 <Scroll.Scrollbar orientation="vertical" />
             </Scroll.ScrollArea>
         </Tabs.Root>
-    </div>
-{/if}
-{#if selectedJobQuery.isLoading && !queueState.active.selectedJobDetails}
-    <div class="h-full w-full flex justify-center items-center">
-        <Spinner class="text-primary h-15 w-15" />
     </div>
 {/if}

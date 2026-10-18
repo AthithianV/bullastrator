@@ -8,6 +8,10 @@
     import { cn } from "utils";
     import { useQueueState } from "$lib/features/queue/store/queueContext.svelte";
     import Badge from "$lib/shared/components/ui/badge/badge.svelte";
+    import TooltipContent from "shared/components/ui/tooltip/tooltip-content.svelte";
+    import TooltipTrigger from "shared/components/ui/tooltip/tooltip-trigger.svelte";
+    import Tooltip from "shared/components/ui/tooltip/tooltip.svelte";
+    import { globalStore } from "shared/stores/global.svelte";
 
     const jobDataQuery = useGetJobData();
     const queueState = useQueueState();
@@ -20,13 +24,24 @@
 </script>
 
 <Dialog.Root onOpenChange={handleOpenChange}>
-    <Dialog.Trigger
-        class={cn(
-            "py-2 px-3! cursor-pointer rounded-sm border",
-            "shadow",
-            " hover:bg-card hover:text-primary",
-        )}><Share class="h-4 w-4" /></Dialog.Trigger
-    >
+    <Tooltip>
+        <TooltipTrigger>
+            <Dialog.Trigger
+                data-queue-shortcut="export"
+                class={cn(
+                    "py-2 px-3! cursor-pointer rounded-sm border",
+                    "shadow",
+                    " hover:bg-card hover:text-primary",
+                )}><Share class="h-4 w-4" /></Dialog.Trigger
+            >
+        </TooltipTrigger>
+        <TooltipContent>
+            Export
+            <kbd class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]">
+                {globalStore.shortcut("E")}
+            </kbd>
+        </TooltipContent>
+    </Tooltip>
     <Dialog.Content
         class="bg-card! w-[50vw] max-w-[50vw] sm:max-w-[50vw] border-none p-0 gap-1"
     >

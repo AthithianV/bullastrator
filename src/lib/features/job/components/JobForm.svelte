@@ -16,6 +16,12 @@
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
     import { useAddJob } from "../hooks/job.hooks.svelte";
     import { cn } from "utils";
+    import TooltipContent from "shared/components/ui/tooltip/tooltip-content.svelte";
+    import TooltipTrigger from "shared/components/ui/tooltip/tooltip-trigger.svelte";
+    import Tooltip from "shared/components/ui/tooltip/tooltip.svelte";
+    import { globalStore } from "shared/stores/global.svelte";
+    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
+    import { submitOnModEnter } from "shared/helpers/formShortcuts";
 
     const { mutateAsync: addJob } = useAddJob();
     const queueState = useQueueState();
@@ -61,19 +67,31 @@
 </script>
 
 <Dialog.Root bind:open={isFormOpen}>
-    <Dialog.Trigger
-        class={cn(
-            "py-2 px-3! cursor-pointer rounded-sm",
-            "shadow",
-            " hover:bg-card! hover:text-primary",
-        )}><Plus class="h-4 w-4" /></Dialog.Trigger
-    >
+    <Tooltip>
+        <TooltipTrigger>
+            <Dialog.Trigger
+                data-queue-shortcut="new-job"
+                class={cn(
+                    "py-2 px-3! cursor-pointer rounded-sm",
+                    "shadow",
+                    " hover:bg-card! hover:text-primary",
+                )}><Plus class="h-4 w-4" /></Dialog.Trigger
+            >
+        </TooltipTrigger>
+        <TooltipContent>
+            New job
+            <kbd class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]">
+                {globalStore.shortcut("N")}
+            </kbd>
+        </TooltipContent>
+    </Tooltip>
     <Dialog.Content
         class="bg-card! w-[80vw] max-w-[80vw] sm:max-w-[80vw] border-none p-0"
     >
         <div class="max-h-[90vh] overflow-y-auto shadow relative">
             <InfiniteScanLoader loading={$submitting} />
-            <form use:enhance>
+            <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+            <form use:enhance onkeydown={submitOnModEnter}>
                 <h3 class="p-3 font-semibold text-lg">
                     Add New Job ({queueState.queueName})
                 </h3>
@@ -209,6 +227,7 @@
                                     queueState.actionInProgress === "ADD"
                                         ? "Adding..."
                                         : "Add Job"}
+                                    <SubmitShortcut />
                                 </Button>
                             </div>
                         </div>

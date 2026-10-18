@@ -1,6 +1,16 @@
 CHANGELOG.md
 
-## [0.1.0] - 2026-09-16
+### [0.2.2] - 19-10-2026
+- Every Connection will have default folder that will have all queues in the connection. This is not editable.
+- Added Short cut support for both folder and Queue Views.
+- Search Queue inside Folder View
+- Improve UI for Search Command
+
+### [0.2.1] - 17-10-2026
+- Show Workers in Folder View.
+- Changes Card color for Queues inside Folder View.
+
+## [0.2.0] - 2026-09-16
 
 ### Added
 

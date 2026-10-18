@@ -10,7 +10,7 @@ import type {
 } from "../interface/connection.types";
 
 // Define the unique key for the connections list
-const CONNECTION_QUERY_KEY = ["connections"];
+export const CONNECTION_QUERY_KEY = ["connections"];
 
 // --- QUERY HOOKS (READ) ---
 

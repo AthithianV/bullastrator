@@ -10,6 +10,7 @@ import type {
 import { TAB_QUERY_KEY } from "tabs/hooks/tab.hooks";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { tabStore } from "$lib/features/tabs/store/tabStore.svelte";
+import { CONNECTION_QUERY_KEY } from "connection/hooks/connection.hooks";
 
 // Unique keys for caching
 export const FOLDER_QUERY_KEY = ["folder"];
@@ -39,6 +40,31 @@ export const useGetAllFolders = (
       typeof connectionId === "function" ? connectionId() : connectionId
     ),
   }));
+};
+
+/** Fetch folders for all connections in the active workspace. */
+export const useGetAllFoldersByConnections = (
+  connectionIds: () => string[],
+) => {
+  return createQuery(() => {
+    const ids = connectionIds();
+
+    return {
+      queryKey: [...FOLDER_QUERY_KEY, "workspace", ids],
+      queryFn: async () => {
+        const folders = await Promise.all(
+          ids.map((connectionId) =>
+            invokeWrapper<ReadFolderWithQueuesModel[]>("get_all_folders", {
+              connectionId,
+            }),
+          ),
+        );
+
+        return folders.flat();
+      },
+      enabled: ids.length > 0,
+    };
+  });
 };
 
 /**
@@ -162,6 +188,8 @@ export const useToggleQueueInFolder = () => {
       queryClient.invalidateQueries({
         queryKey: [...FOLDER_QUERY_KEY, "queues", variables.folderId],
       });
+      queryClient.invalidateQueries({ queryKey: [ ...FOLDER_QUERY_KEY,
+      "list"] });
     },
   }));
 };
@@ -170,8 +198,6 @@ export const useToggleQueueInFolder = () => {
  * 🚀 Hook to reorder queues within a folder.
  */
 export const useReorderFolderQueues = () => {
-  const queryClient = useQueryClient();
-
   return createMutation(() => ({
     mutationFn: ({ folderId, orderedQueueIds }: { folderId: string; orderedQueueIds: string[] }) =>
       invokeWrapper<void>("reorder_folder_queues", {

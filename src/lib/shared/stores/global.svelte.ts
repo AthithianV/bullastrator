@@ -1,8 +1,44 @@
 import { handleZoom } from "shared/helpers/zoom";
+import { platform, type Platform } from "@tauri-apps/plugin-os";
+import { PUBLIC_IS_WEB } from "$env/static/public";
+
+export type OperatingSystem = Platform | "unknown";
+
+export function getShortcutModifier(os: OperatingSystem): "⌘" | "Ctrl" {
+  return os === "macos" || os === "ios" ? "⌘" : "Ctrl";
+}
+
+const isWebEnvironment = [true, "true", "1"].includes(PUBLIC_IS_WEB);
+
+function detectOperatingSystem(): OperatingSystem {
+  if (!isWebEnvironment) {
+    try {
+      return platform();
+    } catch {
+      return "unknown";
+    }
+  }
+
+  if (typeof navigator === "undefined") return "unknown";
+
+  const userAgent = navigator.userAgent.toLowerCase();
+  if (userAgent.includes("mac")) return "macos";
+  if (userAgent.includes("win")) return "windows";
+  if (userAgent.includes("linux")) return "linux";
+
+  return "unknown";
+}
 
 class GlobalStore {
+  readonly isWeb = isWebEnvironment;
+  readonly os: OperatingSystem = detectOperatingSystem();
   shouldShowSidebar: boolean = $state(true);
   shouldShowSearchCommand: boolean = $state(false);
+
+  shortcut(key: string, shift = false) {
+    const displayKey = key === "Enter" ? "↵" : key;
+    return `${getShortcutModifier(this.os)}${shift ? " + Shift" : ""} + ${displayKey}`;
+  }
 
   toggleSearchCommand(newState: boolean) {
     this.shouldShowSearchCommand = newState;
@@ -25,7 +61,7 @@ class GlobalStore {
     }
 
     // Search Command
-    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+    if (key === "p") {
       e.preventDefault();
       this.toggleSearchCommand(!globalStore.shouldShowSearchCommand);
     }

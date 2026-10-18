@@ -49,6 +49,8 @@ impl FolderRepository {
     }
 
     pub async fn get_all(&self, connection_id: &str) -> Result<Vec<FolderWithQueues>> {
+        self.ensure_default_folders(connection_id).await?;
+
         let rows = sqlx::query_as::<_, FolderAndQueues>(
             r#"
             SELECT
@@ -60,16 +62,17 @@ impl FolderRepository {
                 q.id AS queue_id,
                 q.connection_id AS queue_connection_id,
                 q.queue_name
-
             FROM folders f
             LEFT JOIN folder_queues fq
                 ON fq.folder_id = f.id
             LEFT JOIN queues q
-                ON q.id = fq.queue_id
+                ON q.connection_id = f.connection_id
+                AND (f.id = f.connection_id OR q.id = fq.queue_id)
             WHERE f.connection_id = ?
             ORDER BY
                 f.created_at,
-                fq.sort_order
+                CASE WHEN f.id = f.connection_id THEN q.queue_name END,
+                CASE WHEN f.id <> f.connection_id THEN fq.sort_order END
             "#,
         )
         .bind(connection_id)
@@ -133,6 +136,12 @@ impl FolderRepository {
             .bind(id)
             .execute(&self.pool)
             .await?;
+
+        sqlx::query("DELETE FROM tabs WHERE id = ?")
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+
         if result.rows_affected() == 0 {
             bail!("Folder with ID {id} not found")
         }
@@ -162,6 +171,30 @@ impl FolderRepository {
         Ok(!existing)
     }
 
+    pub async fn ensure_default_folders(&self, connection_id: &str) -> Result<()> {
+        sqlx::query(
+            r#"
+            INSERT OR IGNORE INTO folders (id, connection_id, user_id, title)
+            SELECT c.id, c.id, w.user_id, 'All Queues'
+            FROM connections c
+            LEFT JOIN workspaces w
+            ON w.id = c.workspace_id
+            WHERE c.id = ?
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM folders f
+                    WHERE f.id = c.id
+                )
+            "#,
+        )
+        .bind(connection_id)
+        .bind(connection_id)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn reorder_queues(
         &self,
         folder_id: &str,
@@ -188,16 +221,15 @@ impl FolderRepository {
                     q.id,
                     q.connection_id,
                     q.queue_name
-                FROM
-                    queues q
-                JOIN
-                    folder_queues fq
-                ON
-                    fq.queue_id = q.id
-                WHERE
-                    fq.folder_id = ?
+                FROM folders f
+                JOIN queues q ON q.connection_id = f.connection_id
+                LEFT JOIN folder_queues fq
+                    ON fq.folder_id = f.id AND fq.queue_id = q.id
+                WHERE f.id = ?
+                  AND (f.id = f.connection_id OR fq.queue_id IS NOT NULL)
                 ORDER BY
-                    fq.sort_order
+                    CASE WHEN f.id = f.connection_id THEN q.queue_name END,
+                    CASE WHEN f.id <> f.connection_id THEN fq.sort_order END
             "#,
         )
         .bind(folder_id)

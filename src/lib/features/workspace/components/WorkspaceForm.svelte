@@ -5,6 +5,8 @@
     import { Button } from "ui/button/index.js";
     import * as Field from "ui/field/index.js";
     import { Input } from "ui/input/index.js";
+    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
+    import { submitOnModEnter } from "shared/helpers/formShortcuts";
     import {
         useCreateWorkspace,
         useSetActiveWorkspace,
@@ -58,7 +60,8 @@
 </script>
 
 <div class="max-h-[80vh] overflow-auto border rounded-lg p-6 shadow-sm">
-    <form use:enhance class="space-y-6">
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <form use:enhance class="space-y-6" onkeydown={submitOnModEnter}>
         <Field.Set>
             <Field.Group>
                 <Field.Field data-invalid={$errors.name ? "" : undefined}>
@@ -120,6 +123,7 @@
                             <Loader class="mr-2 h-4 w-4 animate-spin" />
                         {/if}
                         {data ? "Update Workspace" : "Create Workspace"}
+                        <SubmitShortcut />
                     </Button>
                 </div>
             </Field.Group>

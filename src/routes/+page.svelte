@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { PUBLIC_IS_WEB } from "$env/static/public";
 
     import UpdateToaster from "$lib/shared/components/updater/UpdateToaster.svelte";
     import Zoom from "settings/components/Zoom.svelte";
@@ -10,8 +9,6 @@
     import WebTitlebar from "$lib/layouts/WebTitlebar.svelte";
     import MainPanel from "$lib/layouts/MainPanel.svelte";
     import { invokeWrapper } from "$lib/shared/helpers/invokeWrapper";
-
-    const isWeb = PUBLIC_IS_WEB === "true";
 
     onMount(async () => {
         await invokeWrapper("show_main_window");
@@ -26,7 +23,7 @@
 
 <ProtectedRoute>
     <Zoom />
-    {#if !isWeb}
+    {#if !globalStore.isWeb}
         <TitleBar />
         <UpdateToaster />
     {:else}

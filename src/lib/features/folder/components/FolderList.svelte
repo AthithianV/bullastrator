@@ -54,6 +54,7 @@
 
 <Accordion.Root class="w-full" type="multiple">
     {#each folderQuery.data ?? [] as folder (folder.id)}
+        {@const isAllQueuesFolder = folder.id === connectionId}
         <Accordion.Item
             value={folder.id.toString()}
             class="border-b-0 last:border-b-0"
@@ -63,11 +64,11 @@
                 tabindex="0"
                 class={cn(
                     "ps-6 flex items-center gap-2 w-full group transition-colors",
-                    queueStore.makeActive(folder.id),
+                    queueStore.makeActive(`${folder.id}-${folder.title}`),
                 )}
                 onmousedown={(e) => {
                     e.preventDefault();
-                    queueStore.setActiveNode(folder.id);
+                    queueStore.setActiveNode(`${folder.id}-${folder.title}`);
                     openFolder(e, folder.id, folder.title);
                 }}
             >
@@ -81,7 +82,7 @@
                 </Accordion.Trigger>
 
                 <div
-                    class="flex-1 flex justify-between items-center cursor-pointer py-1"
+                    class="flex-1 flex justify-between items-center cursor-pointer py-1.5"
                 >
                     <div class="flex gap-2 items-center">
                         <Folder class="w-4 h-4" />
@@ -90,18 +91,22 @@
                         >
                     </div>
 
-                    <div class="px-2 opacity-0 group-hover:opacity-100 gap-2">
-                        <Button
-                            variant="ghost"
-                            class="h-6 w-6 p-1 text-red-500 hover:text-red-600 hover:p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-                            onclick={(e) => {
-                                e.stopPropagation(); // Prevents openFolder from firing
-                                deleteFolder(folder.id);
-                            }}
+                    {#if !isAllQueuesFolder}
+                        <div
+                            class="px-2 opacity-0 group-hover:opacity-100 gap-2"
                         >
-                            <Trash2 class="w-4 h-4" />
-                        </Button>
-                    </div>
+                            <Button
+                                variant="ghost"
+                                class="h-6 w-6 p-1 text-red-500 hover:text-red-600 hover:p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
+                                onclick={(e) => {
+                                    e.stopPropagation(); // Prevents openFolder from firing
+                                    deleteFolder(folder.id);
+                                }}
+                            >
+                                <Trash2 class="w-4 h-4" />
+                            </Button>
+                        </div>
+                    {/if}
                 </div>
             </div>
             <Accordion.Content class="pl-0">

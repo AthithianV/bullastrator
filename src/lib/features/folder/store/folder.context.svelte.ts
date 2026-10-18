@@ -9,7 +9,6 @@ export class FolderState {
   folderName = $state<string>("");
   tabId = $state<string>("");
   queues = $state<string[]>([]);
-  shouldRefresh = $state<boolean>(false);
 
   constructor(tabId: string, initialParams: any) {
     this.tabId = tabId;
