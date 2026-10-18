@@ -6,19 +6,20 @@
     import { queueStore } from "queue/store/queueStore.svelte";
     import { globalStore } from "shared/stores/global.svelte";
     import { useCreateTab } from "tabs/hooks/tab.hooks";
+    import { useGetAllFoldersByConnections } from "folder/hooks/folder.hooks.svelte";
     import Badge from "components/ui/badge/badge.svelte";
-    import { Workflow } from "@lucide/svelte";
+    import { Folder, Workflow } from "@lucide/svelte";
     import Button from "components/ui/button/button.svelte";
 
     const query = useGetAllQueues();
     const { mutateAsync: createTab } = useCreateTab();
 
     const connectionsWithQueues = $derived(query.data ? query.data : []);
-    const connectionsForFilter = $derived(
-        connectionsWithQueues.filter(
-            (connection) => connection.queues.length > 0,
-        ),
+    const folderQuery = useGetAllFoldersByConnections(() =>
+        connectionsWithQueues.map((connection) => connection.id),
     );
+    const folders = $derived(folderQuery.data ?? []);
+    const connectionsForFilter = $derived(connectionsWithQueues);
     let selectedConnectionIds = $state<string[]>([]);
     const visibleConnections = $derived(
         selectedConnectionIds.length === 0
@@ -27,21 +28,46 @@
                   selectedConnectionIds.includes(connection.id),
               ),
     );
+    const visibleFolders = $derived(
+        selectedConnectionIds.length === 0
+            ? folders
+            : folders.filter((folder) =>
+                  selectedConnectionIds.includes(folder.connectionId),
+              ),
+    );
 
     function toggleConnection(connectionId: string) {
         selectedConnectionIds = selectedConnectionIds.includes(connectionId)
             ? selectedConnectionIds.filter((id) => id !== connectionId)
             : [...selectedConnectionIds, connectionId];
     }
+
+    async function openFolder(folder: (typeof folders)[number]) {
+        await createTab({
+            id: folder.id,
+            title: folder.title,
+            connectionId: folder.connectionId,
+            params: {
+                connectionId: folder.connectionId,
+                folderName: folder.title,
+                type: "FOLDER",
+                folderId: folder.id,
+            },
+        });
+        globalStore.toggleSearchCommand(false);
+    }
 </script>
 
 <Command.Dialog
     bind:open={globalStore.shouldShowSearchCommand}
-    class="bg-background"
+    class="bg-background h-full! p-5 px-3"
 >
-    <Command.Input placeholder="Type a command or search..." />
+    <Command.Input
+        placeholder="Type a command or search..."
+        class={"bg-card px-4 py-2 mb-2"}
+    />
     {#if connectionsForFilter.length > 0}
-        <div class="flex flex-wrap gap-2 px-2 py-2">
+        <div class="flex flex-wrap gap-2 px-4 py-2">
             {#each connectionsForFilter as connection}
                 {@const selected = selectedConnectionIds.includes(
                     connection.id,
@@ -70,11 +96,31 @@
             {/each}
         </div>
     {/if}
-    <Command.List>
+    <Command.List class="max-h-none flex-1">
         <Command.Empty>No results found.</Command.Empty>
         {#each visibleConnections as connection}
-            {#if connection.queues.length > 0}
-                <Command.Group heading={connection.name}>
+            {@const connectionFolders = visibleFolders.filter(
+                (folder) => folder.connectionId === connection.id,
+            )}
+            {#if connection.queues.length > 0 || connectionFolders.length > 0}
+                <Command.Group>
+                    {#each connectionFolders as folder}
+                        <Command.Item
+                            value={`${connection.id}-${connection.name}-${folder.title}`}
+                            onSelect={() => openFolder(folder)}
+                            class="aria-selected:bg-card! aria-selected:font-bold py-3 px-4"
+                        >
+                            <Folder fill={"currentColor"} />
+                            <span>{folder.title}</span>
+
+                            <Badge
+                                class="ml-2 text-[10px] opacity-50 rounded-sm font-bold"
+                                style="background-color: {connection.color};"
+                            >
+                                {connection.name}
+                            </Badge>
+                        </Command.Item>
+                    {/each}
                     {#each connection.queues as queue}
                         <Command.Item
                             value={`${connection.id}-${connection.name}-${queue.queueName}`}
@@ -97,7 +143,7 @@
                             <span>{queue.queueName}</span>
 
                             <Badge
-                                class="ml-2 text-xs opacity-50 rounded-sm"
+                                class="ml-2 text-[10px] font-bold opacity-50 rounded-sm"
                                 style="background-color: {connection.color};"
                             >
                                 {connection.name}

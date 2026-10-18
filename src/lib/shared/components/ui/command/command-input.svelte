@@ -11,7 +11,7 @@
 </script>
 
 <div
-  class="flex items-center gap-2 border-b ps-3 pe-8"
+  class="flex items-center gap-2 ps-3 pe-8"
   data-slot="command-input-wrapper"
 >
   <!-- <SearchIcon class="size-4 shrink-0 opacity-50" /> -->

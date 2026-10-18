@@ -32,7 +32,7 @@
 
     {#snippet content()}
         <div class="p-2 sticky top-8 bg-background z-10">
-            <div class="flex flex-1 gap-1 items-center px-2 rounded-md">
+            <div class="flex flex-1 gap-1 items-center bg-card px-2 rounded-md">
                 <Search size={20} />
                 <Input
                     class="border-none bg-transparent! outline-none px-1"

@@ -42,6 +42,31 @@ export const useGetAllFolders = (
   }));
 };
 
+/** Fetch folders for all connections in the active workspace. */
+export const useGetAllFoldersByConnections = (
+  connectionIds: () => string[],
+) => {
+  return createQuery(() => {
+    const ids = connectionIds();
+
+    return {
+      queryKey: [...FOLDER_QUERY_KEY, "workspace", ids],
+      queryFn: async () => {
+        const folders = await Promise.all(
+          ids.map((connectionId) =>
+            invokeWrapper<ReadFolderWithQueuesModel[]>("get_all_folders", {
+              connectionId,
+            }),
+          ),
+        );
+
+        return folders.flat();
+      },
+      enabled: ids.length > 0,
+    };
+  });
+};
+
 /**
  * 🎣 Hook to fetch all folders for a specific connection.
  */
