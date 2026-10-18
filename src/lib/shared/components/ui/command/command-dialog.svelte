@@ -15,11 +15,13 @@
         title = "Command Palette",
         description = "Search for a command to run",
         portalProps,
+        showCloseButton = true,
         children,
         ...restProps
     }: WithoutChildrenOrChild<DialogPrimitive.RootProps> &
         WithoutChildrenOrChild<CommandPrimitive.RootProps> & {
             portalProps?: DialogPrimitive.PortalProps;
+            showCloseButton?: boolean;
             children: Snippet;
             title?: string;
             description?: string;
@@ -33,6 +35,7 @@
     </Dialog.Header>
     <Dialog.Content
         class="mt-[-10vh] h-[70vh] max-h-[90vh] w-[40vw] max-w-[calc(100vw-2rem)] overflow-hidden p-2 sm:max-w-[85vw]"
+        showCloseButton={showCloseButton}
         {portalProps}
     >
         <Command

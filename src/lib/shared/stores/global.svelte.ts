@@ -61,7 +61,7 @@ class GlobalStore {
     }
 
     // Search Command
-    if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+    if (key === "p") {
       e.preventDefault();
       this.toggleSearchCommand(!globalStore.shouldShowSearchCommand);
     }

@@ -60,14 +60,15 @@
 
 <Command.Dialog
     bind:open={globalStore.shouldShowSearchCommand}
+    showCloseButton={false}
     class="bg-background h-full! p-5 px-3"
 >
     <Command.Input
         placeholder="Type a command or search..."
-        class={"bg-card px-4 py-2 mb-2"}
+        class={"bg-card px-4 py-2 mb-2 w-full"}
     />
     {#if connectionsForFilter.length > 0}
-        <div class="flex flex-wrap gap-2 px-4 py-2">
+        <div class="flex flex-wrap gap-2 py-2">
             {#each connectionsForFilter as connection}
                 {@const selected = selectedConnectionIds.includes(
                     connection.id,
