@@ -94,9 +94,9 @@ impl FolderService {
         user_id: &str,
         redis: &RedisConnection,
     ) -> Result<Vec<ReadQueueWithCounts>> {
-        self.folder_for_user(folder_id, user_id).await?;
+        let folder = self.folder_for_user(folder_id, user_id).await?;
 
-        let queues_of_folders = self.repository.get_queues_for_folder(folder_id).await?;
+        let queues_of_folders = self.repository.get_queues_for_folder(&folder.id).await?;
 
         if queues_of_folders.is_empty() {
             return Ok(vec![]);

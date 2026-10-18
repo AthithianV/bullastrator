@@ -36,11 +36,11 @@
 
     const initialData = defaults(
         {
-            name: "",
-            host: "",
-            port: "",
-            username: "",
-            password: "",
+            name: null,
+            host: null,
+            port: null,
+            username: null,
+            password: null,
             db: 0,
             isDefault: false,
             bullmqPrefix: "bull",

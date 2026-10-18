@@ -19,10 +19,7 @@
     import QueueToolbar from "./QueueToolbar.svelte";
 
     const { tabParams, tabId }: { tabParams: QueueTabParams; tabId: string } =
-        $props<{
-            tabParams: QueueTabParams;
-            tabId: string;
-        }>();
+        $props();
 
     const initialTabId = untrack(() => tabId);
     const initialTabParams = untrack(() => tabParams);
@@ -84,8 +81,6 @@
             </Scroll.ScrollArea>
         </Resizable.Pane>
 
-
-
         {#if queueState.active.jobViewSize > 0}
             <Resizable.Handle
                 class={cn(
@@ -95,12 +90,12 @@
                 onmousedown={() => (isHandlerActive = true)}
                 onmouseup={() => (isHandlerActive = false)}
             />
-        <Resizable.Pane
-            defaultSize={queueState.active.jobViewSize}
-            class="min-w-0"
-        >
-            <JobView />
-        </Resizable.Pane>
+            <Resizable.Pane
+                defaultSize={queueState.active.jobViewSize}
+                class="min-w-0"
+            >
+                <JobView />
+            </Resizable.Pane>
         {/if}
     </Resizable.PaneGroup>
 </div>

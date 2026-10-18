@@ -6,6 +6,8 @@
     import { queueStore } from "queue/store/queueStore.svelte";
     import { globalStore } from "shared/stores/global.svelte";
     import { useCreateTab } from "tabs/hooks/tab.hooks";
+    import Badge from "components/ui/badge/badge.svelte";
+    import { Workflow } from "@lucide/svelte";
 
     const query = useGetAllQueues();
     const { mutateAsync: createTab } = useCreateTab();
@@ -18,34 +20,36 @@
     <Command.List>
         <Command.Empty>No results found.</Command.Empty>
         {#each connectionsWithQueues as connection}
-            <Command.Group heading={connection.name}>
-                {#each connection.queues as queue}
-                    <Command.Item
-                        value={`${connection.id}-${connection.name}-${queue.queueName}`}
-                        onSelect={async () => {
-                            queueStore.setActiveNode(queue.id);
-                            const result = await createTab({
-                                id: queue.id,
-                                title: queue.queueName,
-                                connectionId: connection.id,
-                                params: QueueState.getDefaultParams(
-                                    connection.id,
-                                    queue.queueName,
-                                ),
-                            });
-                            globalStore.toggleSearchCommand(false);
-                        }}
-                    >
-                        <span>{queue.queueName}</span>
-
-                        <span
-                            class="ml-2 text-xs text-muted-foreground opacity-50"
+            {#if connection.queues.length > 0}
+                <Command.Group heading={connection.name}>
+                    {#each connection.queues as queue}
+                        <Command.Item
+                            value={`${connection.id}-${connection.name}-${queue.queueName}`}
+                            onSelect={async () => {
+                                queueStore.setActiveNode(queue.id);
+                                await createTab({
+                                    id: queue.id,
+                                    title: queue.queueName,
+                                    connectionId: connection.id,
+                                    params: QueueState.getDefaultParams(
+                                        connection.id,
+                                        queue.queueName,
+                                    ),
+                                });
+                                globalStore.toggleSearchCommand(false);
+                            }}
+                            class="aria-selected:bg-card! aria-selected:font-bold"
                         >
-                            ({connection.name})
-                        </span>
-                    </Command.Item>
-                {/each}
-            </Command.Group>
+                            <Workflow />
+                            <span>{queue.queueName}</span>
+
+                            <Badge class="ml-2 text-xs opacity-50 rounded-sm">
+                                {connection.name}
+                            </Badge>
+                        </Command.Item>
+                    {/each}
+                </Command.Group>
+            {/if}
         {/each}
     </Command.List>
 </Command.Dialog>

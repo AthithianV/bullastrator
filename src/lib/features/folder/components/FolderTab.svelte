@@ -28,7 +28,7 @@
     import { useUpdateTab } from "tabs/hooks/tab.hooks";
     import type { FolderTabParams } from "../interface/folder.types";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
-    import { tabStore } from "$lib/features/tabs/store/tabStore.svelte";
+    import FolderToolbar from "./FolderToolbar.svelte";
 
     const {
         tabParams,
@@ -43,6 +43,9 @@
     setFolderState(initialTabId, initialTabParams);
 
     const folderState = useFolderState();
+    const isAllQueuesFolder = $derived(
+        folderState.tabId === folderState.connectionId,
+    );
     let searchKeyword = $state("");
 
     const queuesQuery = useGetAllQueuesByConnection(folderState.connectionId);
@@ -64,7 +67,7 @@
     const { mutateAsync: toggleQueue } = useToggleQueueInFolder();
 
     const handleTitleChange = async (newTitle: string) => {
-        if (folderState.tabId) {
+        if (folderState.tabId && !isAllQueuesFolder) {
             await updateFolder({ id: folderState.tabId, title: newTitle });
             await updateTab({
                 id: folderState.tabId,
@@ -88,10 +91,12 @@
     const flipDurationMs = 300;
 
     function handleDndConsider(e: CustomEvent) {
+        if (isAllQueuesFolder) return;
         folderQueueQuery.data = e.detail.items;
     }
 
     function handleDndFinalize(e: CustomEvent) {
+        if (isAllQueuesFolder) return;
         folderQueueQuery.data = e.detail.items;
 
         reorderFolderQueues({
@@ -99,43 +104,6 @@
             orderedQueueIds: e.detail.items.map((i: any) => i.id),
         });
     }
-
-    $effect(() => {
-        if (queueEditPanel < 5 && folderQueueQuery.data?.length === 0) {
-            queueEditPanel = 30;
-        }
-
-        if (queueEditPanel > 0 && folderNameInput) {
-            const timer = setTimeout(() => {
-                folderNameInput?.focus();
-                folderNameInput?.select();
-            }, 50);
-
-            return () => clearTimeout(timer);
-        }
-    });
-
-    let refreshCountdown = $state(5);
-
-    $effect(() => {
-        if (!folderState.tabId) return;
-
-        refreshCountdown = 5;
-
-        const timer = setInterval(async () => {
-            refreshCountdown -= 1;
-            if (
-                refreshCountdown === 0 &&
-                folderState.tabId === tabStore.activeTab &&
-                folderState.shouldRefresh
-            ) {
-                await folderQueueQuery.refetch();
-                refreshCountdown = 5;
-            }
-        }, 1000);
-
-        return () => clearInterval(timer);
-    });
 </script>
 
 <div
@@ -145,72 +113,25 @@
 
     <Resizable.PaneGroup direction="horizontal" class="min-w-0">
         <Resizable.Pane class="relative min-w-0 p-5" defaultSize={70}>
+            <FolderToolbar
+                {tabId}
+                {tabParams}
+                position="top-right"
+                onEdit={() => {
+                    queueEditPanel = 30;
+                }}
+            />
             <InfiniteScanLoader loading={folderQueueQuery.isFetching} />
             <Scroll.ScrollArea class="h-full @container">
                 <div class="flex flex-col gap-4">
-                    <div
-                        class="flex items-center justify-between bg-background sticky top-0 py-2 border-b"
-                    >
-                        <div class="flex gap-2 justify-end items-end w-full">
-                            {#if folderState.shouldRefresh}
-                                <Button
-                                    class="text-sm pb-2 text-sky-400"
-                                    onclick={() => {
-                                        folderState.shouldRefresh = false;
-                                        refreshCountdown = 5;
-                                    }}
-                                    variant="link"
-                                >
-                                    {#if !folderQueueQuery.isFetching}
-                                        Refreshs in {refreshCountdown}s
-                                    {:else}
-                                        Refreshs in 0s
-                                    {/if}
-                                </Button>
-                            {:else}
-                                <Button
-                                    class="text-sm text-muted-foreground pb-2 hover:text-sky-400"
-                                    onclick={() => {
-                                        folderState.shouldRefresh = true;
-                                        refreshCountdown = 5;
-                                    }}
-                                    variant="link"
-                                >
-                                    Turn on auto-refresh
-                                </Button>
-                            {/if}
-
-                            {#if queueEditPanel < 5}
-                                <Button
-                                    variant="ghost"
-                                    onclick={() => {
-                                        if (queueEditPanel === 0)
-                                            queueEditPanel = 30;
-                                    }}
-                                    class="border shadow hover:bg-card!"
-                                >
-                                    <Pencil />
-                                </Button>
-                            {/if}
-
-                            <Button
-                                variant="ghost"
-                                onclick={() => {
-                                    folderQueueQuery.refetch();
-                                }}
-                                class="border shadow hover:bg-card!"
-                            >
-                                <RefreshCcw />
-                            </Button>
-                        </div>
-                    </div>
-
                     <div class="flex flex-col gap-2">
                         {#if !folderQueueQuery.data || folderQueueQuery.data?.length === 0}
                             <p
                                 class="text-sm text-muted-foreground/50 italic mx-auto"
                             >
-                                No queues added yet.
+                                {isAllQueuesFolder
+                                    ? "No queues found."
+                                    : "No queues added yet."}
                             </p>
                         {/if}
                         <ul
@@ -238,7 +159,7 @@
             </Scroll.ScrollArea>
         </Resizable.Pane>
 
-        {#if queueEditPanel > 0}
+        {#if queueEditPanel > 0 && !isAllQueuesFolder}
             <Resizable.Handle />
 
             <Resizable.Pane class="min-w-0" defaultSize={queueEditPanel}>

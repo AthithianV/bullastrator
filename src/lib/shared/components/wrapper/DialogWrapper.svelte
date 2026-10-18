@@ -33,7 +33,7 @@
     <Dialog.Trigger
         class={cn(
             "p-1 py-2 rounded-sm",
-            "cursor-pointer hover:bg-slate-800 hover:text-primary",
+            "cursor-pointer hover:bg-card hover:text-primary",
             triggerClass,
         )}
     >

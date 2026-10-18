@@ -68,7 +68,12 @@ impl JobService {
 
             Ok(jobs)
         } else {
-            let mut conn = self.connection_pool.pool.get().await?;
+            let mut conn = self
+                .connection_pool
+                .pool
+                .get()
+                .await
+                .context("Connection failed")?;
             let status_suffix = status.redis_key_suffix();
             let (range_cmd, count_cmd) = match status {
                 JobStatus::Wait | JobStatus::Active | JobStatus::Paused => ("LRANGE", "LLEN"),

@@ -65,11 +65,13 @@ impl FolderRepository {
             LEFT JOIN folder_queues fq
                 ON fq.folder_id = f.id
             LEFT JOIN queues q
-                ON q.id = fq.queue_id
+                ON q.connection_id = f.connection_id
+                AND (f.id = f.connection_id OR q.id = fq.queue_id)
             WHERE f.connection_id = ?
             ORDER BY
                 f.created_at,
-                fq.sort_order
+                CASE WHEN f.id = f.connection_id THEN q.queue_name END,
+                CASE WHEN f.id <> f.connection_id THEN fq.sort_order END
             "#,
         )
         .bind(connection_id)
@@ -188,16 +190,15 @@ impl FolderRepository {
                     q.id,
                     q.connection_id,
                     q.queue_name
-                FROM
-                    queues q
-                JOIN
-                    folder_queues fq
-                ON
-                    fq.queue_id = q.id
-                WHERE
-                    fq.folder_id = ?
+                FROM folders f
+                JOIN queues q ON q.connection_id = f.connection_id
+                LEFT JOIN folder_queues fq
+                    ON fq.folder_id = f.id AND fq.queue_id = q.id
+                WHERE f.id = ?
+                  AND (f.id = f.connection_id OR fq.queue_id IS NOT NULL)
                 ORDER BY
-                    fq.sort_order
+                    CASE WHEN f.id = f.connection_id THEN q.queue_name END,
+                    CASE WHEN f.id <> f.connection_id THEN fq.sort_order END
             "#,
         )
         .bind(folder_id)

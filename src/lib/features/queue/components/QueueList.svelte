@@ -2,22 +2,13 @@
     import * as Accordion from "ui/accordion";
     import Button from "ui/button/button.svelte";
 
-    import {
-        ChevronRight,
-        Folder,
-        FolderOpen,
-        Plus,
-        RefreshCcw,
-        Workflow,
-    } from "@lucide/svelte";
+    import { Folder, FolderOpen, Plus, RefreshCcw } from "@lucide/svelte";
     import { cn } from "shared/utils";
 
     import SidebarWrapper from "components/wrapper/SidebarWrapper.svelte";
     import { queueStore } from "../store/queueStore.svelte";
 
     import EmptyConnectionSideBar from "connection/components/EmptyConnectionSideBar.svelte";
-    import { connectionStore } from "connection/store/connection.store.svelte";
-    import { QueueState } from "queue/store/queueContext.svelte";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
     import { useCreateTab } from "tabs/hooks/tab.hooks";
     import FolderList from "../../folder/components/FolderList.svelte";
@@ -30,20 +21,6 @@
     const { mutateAsync: syncQuery } = useSyncAllQueues();
     const { mutateAsync: createTab } = useCreateTab();
     const { mutateAsync: createFolder } = useCreateFolder();
-
-    async function handleClickOnQueue(
-        queueId: string,
-        queueName: string,
-        connectionId: string,
-    ) {
-        await createTab({
-            id: queueId,
-            title: queueName,
-            connectionId: connectionId,
-            params: QueueState.getDefaultParams(connectionId, queueName),
-        });
-        queueStore.setActiveNode(queueId);
-    }
 
     async function createNewFolder(e: MouseEvent, connectionId: string) {
         e.stopPropagation();
@@ -119,7 +96,7 @@
                                     "px-2 py-2",
                                     "hover:no-underline",
                                     "cursor-pointer rounded-[2px]",
-                                    "group ",
+                                    "group",
                                 )}
                                 onclick={() =>
                                     queueStore.setActiveNode(conn.id)}
@@ -193,98 +170,7 @@
                             />
                         </div>
                         <Accordion.Content class={cn("pl-0")}>
-                            <Accordion.Root class="w-full" type="single">
-                                <Accordion.Item
-                                    value={conn.id.toString() + "all"}
-                                    class="border-b-0 last:border-b-0"
-                                >
-                                    <div
-                                        role="button"
-                                        tabindex="0"
-                                        class={cn(
-                                            "sticky top-0 z-10 ps-6 flex items-center gap-2 w-full group",
-                                            queueStore.makeActive(
-                                                conn.id + "all",
-                                            ),
-                                        )}
-                                        onmousedown={(e) => {
-                                            e.preventDefault();
-                                            queueStore.setActiveNode(
-                                                conn.id + "all",
-                                            );
-                                        }}
-                                    >
-                                        <Accordion.Trigger
-                                            class={cn(
-                                                "flex items-center justify-center py-1 p-1 rounded dark:hover:bg-slate-700 bg-transparent!",
-                                                "[&[data-state=open]>svg]:rotate-90 transition-transform",
-                                            )}
-                                        >
-                                            <ChevronRight
-                                                class="w-4 h-4 block"
-                                            />
-                                        </Accordion.Trigger>
-
-                                        <div
-                                            role="button"
-                                            tabindex="0"
-                                            class="flex-1 flex justify-between items-center cursor-pointer py-1.5"
-                                        >
-                                            <div
-                                                class="flex gap-2 items-center"
-                                            >
-                                                <Folder class="w-4 h-4" />
-                                                <span
-                                                    class="font-semibold truncate"
-                                                    >All</span
-                                                >
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <Accordion.Content class="pl-0">
-                                        <ul class="flex flex-col gap-0">
-                                            {#if conn.queues && conn.queues.length > 0}
-                                                {#each conn.queues as queue (queue.queueName)}
-                                                    <li>
-                                                        <Button
-                                                            class={cn(
-                                                                "flex gap-2 items-center",
-                                                                "has-[>svg]:ps-12 py-2 h-fit bg-transparent text-foreground w-full text-start justify-start",
-                                                                "cursor-pointer  rounded-[2px]",
-                                                                queueStore.makeActive(
-                                                                    queue.id,
-                                                                ),
-                                                            )}
-                                                            onclick={() =>
-                                                                handleClickOnQueue(
-                                                                    queue.id,
-                                                                    queue.queueName,
-                                                                    conn.id,
-                                                                )}
-                                                        >
-                                                            <Workflow
-                                                                class={cn(
-                                                                    "w-4 h-4",
-                                                                )}
-                                                            />
-                                                            <span
-                                                                >{queue.queueName}</span
-                                                            >
-                                                        </Button>
-                                                    </li>
-                                                {/each}
-                                            {:else}
-                                                <div
-                                                    class="text-xs text-center font-semibold text-muted-forground p-2"
-                                                >
-                                                    No queues found
-                                                </div>
-                                            {/if}
-                                        </ul>
-                                    </Accordion.Content>
-                                </Accordion.Item>
-                                <FolderList connectionId={conn.id} />
-                            </Accordion.Root>
+                            <FolderList connectionId={conn.id} />
                         </Accordion.Content>
                     </Accordion.Item>
                 {/each}

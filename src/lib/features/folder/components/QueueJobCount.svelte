@@ -58,9 +58,8 @@
 </script>
 
 <Card
-    class="flex flex-col gap-2 p-4 w-full h-full flex-1 rounded-md border-2 border-card shadow-sm transition-colors {counts.isPaused
-        ? 'bg-background'
-        : 'bg-card'}"
+    class="flex flex-col gap-2 p-4 w-full h-full flex-1 rounded-md border-2 border-card shadow-sm transition-colors bg-card {counts.isPaused &&
+        'opacity-70'}"
 >
     <CardHeader class="h-fit ps-0"
         ><Button

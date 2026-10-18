@@ -51,54 +51,61 @@
             />
 
             <Command.List class="flex-1 overflow-y-auto max-h-full">
-                <Command.Empty>No results found.</Command.Empty>
-                {#each connectionsWithQueues as connection}
-                    <Command.Group heading={connection.name}>
-                        {#each connection.queues as queue}
-                            <Command.Item
-                                value={`${connection.id}-${connection.name}-${queue.queueName}`}
-                                class={cn(
-                                    "hover:bg-card! text-base hover:text-current! py-2",
-                                )}
-                                onSelect={async () => {
-                                    queueStore.setActiveNode(queue.id);
-                                    await createTab({
-                                        id: queue.id,
-                                        title: queue.queueName,
-                                        connectionId: connection.id,
-                                        params: QueueState.getDefaultParams(
-                                            connection.id,
-                                            queue.queueName,
-                                        ),
-                                    });
-                                    globalStore.toggleSearchCommand(false);
-                                }}
-                            >
-                                <Avatar.Root class="h-10 w-10 rounded-lg">
-                                    <Avatar.Fallback
-                                        class="rounded-lg text-white font-bold text-xs"
-                                        style={avatarStyle(connection.color)}
-                                    >
-                                        {connection.name
-                                            ?.substring(0, 2)
-                                            .toUpperCase()}
-                                    </Avatar.Fallback>
-                                </Avatar.Root>
+                {#if !keyword || !connectionsWithQueues}
+                    <Command.Empty>No match found.</Command.Empty>
+                {:else}
+                    {#each connectionsWithQueues as connection}
+                        <Command.Group heading={connection.name}>
+                            {#each connection.queues as queue}
+                                <Command.Item
+                                    value={`${connection.id}-${connection.name}-${queue.queueName}`}
+                                    class={cn(
+                                        "hover:bg-card! hover:font-bold text-base py-2",
+                                    )}
+                                    onSelect={async () => {
+                                        queueStore.setActiveNode(queue.id);
+                                        await createTab({
+                                            id: queue.id,
+                                            title: queue.queueName,
+                                            connectionId: connection.id,
+                                            params: QueueState.getDefaultParams(
+                                                connection.id,
+                                                queue.queueName,
+                                            ),
+                                        });
+                                        globalStore.toggleSearchCommand(false);
+                                    }}
+                                >
+                                    <Avatar.Root class="h-10 w-10 rounded-lg">
+                                        <Avatar.Fallback
+                                            class="rounded-lg text-white font-bold text-xs"
+                                            style={avatarStyle(
+                                                connection.color,
+                                            )}
+                                        >
+                                            {connection.name
+                                                ?.substring(0, 2)
+                                                .toUpperCase()}
+                                        </Avatar.Fallback>
+                                    </Avatar.Root>
 
-                                <div class="flex flex-col gap-2">
-                                    <span>{queue.queueName}</span>
+                                    <div class="flex flex-col gap-2">
+                                        <span>{queue.queueName}</span>
 
-                                    <Badge
-                                        style={avatarStyle(connection.color)}
-                                        class="text-xs opacity-80 text-white"
-                                    >
-                                        {connection.name}
-                                    </Badge>
-                                </div>
-                            </Command.Item>
-                        {/each}
-                    </Command.Group>
-                {/each}
+                                        <Badge
+                                            style={avatarStyle(
+                                                connection.color,
+                                            )}
+                                            class="text-xs opacity-80 text-white"
+                                        >
+                                            {connection.name}
+                                        </Badge>
+                                    </div>
+                                </Command.Item>
+                            {/each}
+                        </Command.Group>
+                    {/each}
+                {/if}
             </Command.List>
         </Command.Root>
     {/snippet}
