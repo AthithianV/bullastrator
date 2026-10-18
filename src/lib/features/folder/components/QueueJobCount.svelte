@@ -76,8 +76,13 @@
                 "w-fit max-w-full h-fit!",
                 "hover:underline hover:text-primary hover:bg-transparent!",
                 counts.isPaused ? "text-muted-foreground" : "",
-            )}>{queue.queueName}</Button
-        ></CardHeader
+            )}
+        >
+            {#if counts.isPaused}
+                <Play fill={"currentColor"} class="h-3 w-3" />
+            {/if}
+            {queue.queueName}
+        </Button></CardHeader
     >
     <div class="h-5 w-full flex rounded-md overflow-hidden shadow-sm">
         {#if total > 0}
@@ -133,10 +138,6 @@
                 {total.toLocaleString()}
                 {total === 1 ? "Job" : "Jobs"}
             </span>
-            <span
-                >{counts.activeWorkers}
-                {counts.activeWorkers === 1 ? "Worker" : "Workers"}</span
-            >
         </div>
         <span
             class={cn(

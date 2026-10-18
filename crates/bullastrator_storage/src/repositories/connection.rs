@@ -76,16 +76,14 @@ impl ConnectionRepository {
         // Every connection gets a built-in folder representing all queues.
         // It intentionally has no folder_queues rows; its ID matches the
         // connection so the folder service can resolve it dynamically.
-        sqlx::query(
-            "INSERT INTO folders (id, connection_id, user_id, title) VALUES (?, ?, ?, ?)",
-        )
-        .bind(&id)
-        .bind(&id)
-        .bind(user_id)
-        .bind("All Queues")
-        .execute(&mut *tx)
-        .await
-        .context("Failed to create default all-queues folder")?;
+        sqlx::query("INSERT INTO folders (id, connection_id, user_id, title) VALUES (?, ?, ?, ?)")
+            .bind(&id)
+            .bind(&id)
+            .bind(user_id)
+            .bind("All Queues")
+            .execute(&mut *tx)
+            .await
+            .context("Failed to create default all-queues folder")?;
 
         tx.commit().await.context("Failed to commit connection")?;
         self.get_by_id(&id)
@@ -115,11 +113,7 @@ impl ConnectionRepository {
         .await?)
     }
 
-    pub async fn get_by_name(
-        &self,
-        workspace_id: &str,
-        name: &str,
-    ) -> Result<Option<Connection>> {
+    pub async fn get_by_name(&self, workspace_id: &str, name: &str) -> Result<Option<Connection>> {
         Ok(sqlx::query_as::<_, Connection>(
             r#"
             SELECT

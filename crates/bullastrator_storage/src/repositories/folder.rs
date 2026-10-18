@@ -49,6 +49,8 @@ impl FolderRepository {
     }
 
     pub async fn get_all(&self, connection_id: &str) -> Result<Vec<FolderWithQueues>> {
+        self.ensure_default_folders(connection_id).await?;
+
         let rows = sqlx::query_as::<_, FolderAndQueues>(
             r#"
             SELECT
@@ -162,6 +164,30 @@ impl FolderRepository {
         }
         tx.commit().await?;
         Ok(!existing)
+    }
+
+    pub async fn ensure_default_folders(&self, connection_id: &str) -> Result<()> {
+        sqlx::query(
+            r#"
+            INSERT OR IGNORE INTO folders (id, connection_id, user_id, title)
+            SELECT c.id, c.id, w.user_id, 'All Queues'
+            FROM connections c
+            LEFT JOIN workspaces w
+            ON w.id = c.workspace_id
+            WHERE c.id = ?
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM folders f
+                    WHERE f.id = c.id
+                )
+            "#,
+        )
+        .bind(connection_id)
+        .bind(connection_id)
+        .execute(&self.pool)
+        .await?;
+
+        Ok(())
     }
 
     pub async fn reorder_queues(

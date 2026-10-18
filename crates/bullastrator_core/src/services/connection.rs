@@ -70,7 +70,9 @@ impl ConnectionService {
             );
         }
 
-        self.repository.create(&workspace_id, user_id, request).await
+        self.repository
+            .create(&workspace_id, user_id, request)
+            .await
     }
 
     pub async fn list(&self, user_id: &str) -> Result<Vec<Connection>> {

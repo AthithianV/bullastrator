@@ -23,8 +23,7 @@ for i = 1, #ARGV do
         redis.call("ZCARD", prefix .. ":delayed"),
         redis.call("LLEN", prefix .. ":paused"),
         redis.call("ZCARD", prefix .. ":prioritized"),
-        redis.call("HEXISTS", metaKey, "paused"),
-        redis.call("SCARD", prefix .. ":workers")
+        redis.call("HEXISTS", metaKey, "paused")
     })
 end
 
