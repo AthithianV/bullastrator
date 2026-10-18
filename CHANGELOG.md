@@ -6,7 +6,11 @@ CHANGELOG.md
 - Search Queue inside Folder View
 - Improve UI for Search Command
 
-## [0.1.0] - 2026-09-16
+### [0.2.1] - 17-10-2026
+- Show Workers in Folder View.
+- Changes Card color for Queues inside Folder View.
+
+## [0.2.0] - 2026-09-16
 
 ### Added
 
