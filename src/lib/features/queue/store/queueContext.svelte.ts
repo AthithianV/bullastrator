@@ -1,5 +1,5 @@
 import { getContext, setContext } from "svelte";
-import type { JobDetails, JobDetailsTab, JobStatus, QueueJobCounts } from "job/interface/job.types";
+import type { Job, JobDetails, JobDetailsTab, JobStatus, QueueJobCounts } from "job/interface/job.types";
 import type { JobFilterType } from "job/interface/jobPayload.types";
 
 const QUEUE_KEY = Symbol("QUEUE_STATE");
@@ -7,6 +7,7 @@ const QUEUE_KEY = Symbol("QUEUE_STATE");
 class StatusState {
   status: JobStatus;
   selectedJob = $state<string | null>(null);
+  selectedJobSummary = $state<Job | null>(null);
   selectedJobDetails = $state<JobDetails | null>(null);
   selectedJobIds = $state<string[]>([]);
   currentPage = $state(0);
@@ -19,6 +20,7 @@ class StatusState {
 
   reset() {
     this.selectedJob = null;
+    this.selectedJobSummary = null;
     this.selectedJobIds = [];
   }
 }

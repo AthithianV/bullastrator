@@ -31,6 +31,17 @@ export function useQueueShortcuts(options: QueueShortcutOptions) {
     const handleShortcut = (event: KeyboardEvent) => {
         if (tabStore.activeTab !== options.tabId()) return;
 
+        // Let dialogs and their form controls handle undo/redo and other
+        // browser shortcuts without triggering queue actions underneath.
+        if (
+            event.target instanceof Element &&
+            event.target.closest(
+                '[data-slot="dialog-content"], input, textarea, [contenteditable="true"], .cm-editor',
+            )
+        ) {
+            return;
+        }
+
         const modifier = event.metaKey || event.ctrlKey;
         const key = event.key.toLowerCase();
 
@@ -65,7 +76,7 @@ export function useQueueShortcuts(options: QueueShortcutOptions) {
             event.preventDefault();
             if (event.shiftKey) click("filter");
             else focusSearch();
-        } else if (modifier && key === "r") {
+        } else if (modifier && event.shiftKey && key === "r") {
             event.preventDefault();
             options.onRefresh();
         } else if (event.ctrlKey && !event.metaKey && key === "u") {

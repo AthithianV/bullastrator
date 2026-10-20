@@ -35,7 +35,10 @@
     });
 
     $effect(() => {
-        if (queueState.currentStatus) queueState.active.selectedJob = null;
+        if (queueState.currentStatus) {
+            queueState.active.selectedJob = null;
+            queueState.active.selectedJobSummary = null;
+        }
         queueState.active.selectedJobIds = [];
     });
 
@@ -98,9 +101,11 @@
                     .slice(start, end + 1)
                     .map((j: Job) => String(j.id));
                 queueState.active.selectedJob = job.id;
+                queueState.active.selectedJobSummary = job;
                 focusIndex = newIndex;
             } else {
                 queueState.active.selectedJob = job.id;
+                queueState.active.selectedJobSummary = job;
                 queueState.active.selectedJobIds = [String(job.id)];
                 focusIndex = newIndex;
                 anchorIndex = newIndex;
@@ -118,6 +123,7 @@
                 .slice(start, end + 1)
                 .map((j: Job) => String(j.id));
             queueState.active.selectedJob = job.id;
+            queueState.active.selectedJobSummary = job;
             focusIndex = index;
         } else if (e.ctrlKey || e.metaKey) {
             const id = String(job.id);
@@ -133,10 +139,12 @@
                 ];
             }
             queueState.active.selectedJob = job.id;
+            queueState.active.selectedJobSummary = job;
             focusIndex = index;
             anchorIndex = index;
         } else {
             queueState.active.selectedJob = job.id;
+            queueState.active.selectedJobSummary = job;
             queueState.active.selectedJobIds = [String(job.id)];
             focusIndex = index;
             anchorIndex = index;
