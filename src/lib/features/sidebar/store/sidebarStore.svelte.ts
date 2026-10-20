@@ -1,7 +1,7 @@
 import type { SidebarMode } from "../interfaces/sidebar.types";
 
 class SidebarStore {
-  mode: SidebarMode = $state("QUEUE");
+  mode: SidebarMode = $state("EXPLORER");
 
   setMode(mode: SidebarMode) {
     this.mode = mode;

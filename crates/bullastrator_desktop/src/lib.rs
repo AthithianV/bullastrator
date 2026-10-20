@@ -164,6 +164,7 @@ pub fn run() {
             delete_folder,
             toggle_queue_in_folder,
             reorder_folder_queues,
+            reorder_folders,
             get_queues_for_folder,
             // Settings Commands
             set_app_zoom,

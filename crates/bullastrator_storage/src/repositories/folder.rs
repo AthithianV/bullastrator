@@ -36,11 +36,19 @@ impl FolderRepository {
         }
 
         let id = Uuid::new_v4().to_string();
-        sqlx::query("INSERT INTO folders (id, connection_id, user_id, title) VALUES (?, ?, ?, ?)")
+        sqlx::query(
+            r#"
+            INSERT INTO folders (id, connection_id, user_id, title, sort_order)
+            SELECT ?, ?, ?, ?, COALESCE(MAX(sort_order) + 1, 0)
+            FROM folders
+            WHERE connection_id = ?
+            "#,
+        )
             .bind(&id)
             .bind(&data.connection_id)
             .bind(data.user_id)
             .bind(title)
+            .bind(&data.connection_id)
             .execute(&self.pool)
             .await?;
         self.get_by_id(&id)
@@ -70,21 +78,29 @@ impl FolderRepository {
                 AND (f.id = f.connection_id OR q.id = fq.queue_id)
             WHERE f.connection_id = ?
             ORDER BY
-                f.created_at,
-                CASE WHEN f.id = f.connection_id THEN q.queue_name END,
-                CASE WHEN f.id <> f.connection_id THEN fq.sort_order END
+                f.sort_order,
+                CASE
+                    WHEN f.id = f.connection_id THEN q.sort_order
+                    ELSE fq.sort_order
+                END,
+                q.queue_name COLLATE NOCASE,
+                q.id
             "#,
         )
         .bind(connection_id)
         .fetch_all(&self.pool)
         .await?;
 
-        let mut folders: HashMap<String, FolderWithQueues> = HashMap::new();
+        let mut folder_indices = HashMap::new();
+        let mut folders = Vec::new();
 
         for row in rows {
-            let folder = folders
-                .entry(row.folder_id.clone())
-                .or_insert_with(|| FolderWithQueues {
+            let folder_index = if let Some(index) = folder_indices.get(&row.folder_id) {
+                *index
+            } else {
+                let index = folders.len();
+                folder_indices.insert(row.folder_id.clone(), index);
+                folders.push(FolderWithQueues {
                     folder: Folder {
                         id: row.folder_id.clone(),
                         connection_id: row.folder_connection_id.clone(),
@@ -93,11 +109,13 @@ impl FolderRepository {
                     },
                     queues: Vec::new(),
                 });
+                index
+            };
 
             if let (Some(id), Some(connection_id), Some(queue_name)) =
                 (row.queue_id, row.queue_connection_id, row.queue_name)
             {
-                folder.queues.push(Queue {
+                folders[folder_index].queues.push(Queue {
                     id,
                     connection_id,
                     queue_name,
@@ -105,7 +123,7 @@ impl FolderRepository {
             }
         }
 
-        Ok(folders.into_values().collect())
+        Ok(folders)
     }
 
     pub async fn get_by_id(&self, id: &str) -> Result<Option<Folder>> {
@@ -165,7 +183,20 @@ impl FolderRepository {
                 .execute(&mut *tx)
                 .await?;
         } else {
-            sqlx::query("INSERT INTO folder_queues (id, folder_id, queue_id, sort_order) VALUES (?, ?, ?, 0)").bind(Uuid::new_v4().to_string()).bind(folder_id).bind(queue_id).execute(&mut *tx).await?;
+            sqlx::query(
+                r#"
+                INSERT INTO folder_queues (id, folder_id, queue_id, sort_order)
+                SELECT ?, ?, ?, COALESCE(MAX(sort_order) + 1, 0)
+                FROM folder_queues
+                WHERE folder_id = ?
+                "#,
+            )
+            .bind(Uuid::new_v4().to_string())
+            .bind(folder_id)
+            .bind(queue_id)
+            .bind(folder_id)
+            .execute(&mut *tx)
+            .await?;
         }
         tx.commit().await?;
         Ok(!existing)
@@ -214,6 +245,25 @@ impl FolderRepository {
         tx.commit().await.context("Failed to commit queue reorder")
     }
 
+    pub async fn reorder_folders(
+        &self,
+        connection_id: &str,
+        ordered_folder_ids: &[String],
+    ) -> Result<()> {
+        let mut tx = self.pool.begin().await?;
+        for (index, folder_id) in ordered_folder_ids.iter().enumerate() {
+            sqlx::query(
+                "UPDATE folders SET sort_order = ? WHERE id = ? AND connection_id = ? AND id <> connection_id",
+            )
+            .bind(index as i32 + 1)
+            .bind(folder_id)
+            .bind(connection_id)
+            .execute(&mut *tx)
+            .await?;
+        }
+        tx.commit().await.context("Failed to commit folder reorder")
+    }
+
     pub async fn get_queues_for_folder(&self, folder_id: &str) -> Result<Vec<Queue>> {
         Ok(sqlx::query_as::<_, Queue>(
             r#"
@@ -228,8 +278,12 @@ impl FolderRepository {
                 WHERE f.id = ?
                   AND (f.id = f.connection_id OR fq.queue_id IS NOT NULL)
                 ORDER BY
-                    CASE WHEN f.id = f.connection_id THEN q.queue_name END,
-                    CASE WHEN f.id <> f.connection_id THEN fq.sort_order END
+                    CASE
+                        WHEN f.id = f.connection_id THEN q.sort_order
+                        ELSE fq.sort_order
+                    END,
+                    q.queue_name COLLATE NOCASE,
+                    q.id
             "#,
         )
         .bind(folder_id)

@@ -69,14 +69,16 @@
 <Dialog.Root bind:open={isFormOpen}>
     <Tooltip>
         <TooltipTrigger>
-            <Dialog.Trigger
-                data-queue-shortcut="new-job"
-                class={cn(
-                    "py-2 px-3! cursor-pointer rounded-sm",
-                    "shadow",
-                    " hover:bg-card! hover:text-primary",
-                )}><Plus class="h-4 w-4" /></Dialog.Trigger
-            >
+            {#snippet child({ props })}
+                <Dialog.Trigger
+                    {...props}
+                    data-queue-shortcut="new-job"
+                    class={cn(
+                        "py-2 px-3! cursor-pointer rounded-sm",
+                        "shadow",
+                        " hover:bg-card! hover:text-primary",
+                    )}><Plus class="h-4 w-4" /></Dialog.Trigger>
+            {/snippet}
         </TooltipTrigger>
         <TooltipContent>
             New job

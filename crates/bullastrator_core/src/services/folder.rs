@@ -1,6 +1,9 @@
 use anyhow::{Context, Result, bail};
 use bullastrator_storage::{
-    models::{CreateFolder, Folder, FolderWithQueues, UpdateFolder, WorkspaceRole},
+    models::{
+        CreateFolder, CreateTab, Folder, FolderWithQueues, UpdateFolder, UpdateTab,
+        WorkspaceRole,
+    },
     repositories::FolderRepository,
 };
 
@@ -9,19 +12,25 @@ use crate::{
     services::{RedisConnection, job::JobService},
 };
 
-use super::connection::ConnectionService;
+use super::{connection::ConnectionService, tab::TabService};
 
 #[derive(Clone)]
 pub struct FolderService {
     repository: FolderRepository,
     connections: ConnectionService,
+    tabs: TabService,
 }
 
 impl FolderService {
-    pub fn new(repository: FolderRepository, connections: ConnectionService) -> Self {
+    pub fn new(
+        repository: FolderRepository,
+        connections: ConnectionService,
+        tabs: TabService,
+    ) -> Self {
         Self {
             repository,
             connections,
+            tabs,
         }
     }
 
@@ -42,7 +51,28 @@ impl FolderService {
             .authorize(&request.connection_id, user_id, WorkspaceRole::EDITOR)
             .await?;
         request.user_id = Some(user_id.to_owned());
-        self.repository.create(request).await
+        let folder = self.repository.create(request).await?;
+        let params = serde_json::json!({
+            "connectionId": folder.connection_id.clone(),
+            "folderName": folder.title.clone(),
+            "type": "FOLDER",
+            "folderId": folder.id.clone(),
+        });
+
+        self.tabs
+            .create(
+                user_id,
+                CreateTab {
+                    id: folder.id.clone(),
+                    connection_id: Some(folder.connection_id.clone()),
+                    user_id: None,
+                    title: folder.title.clone(),
+                    params: serde_json::to_string(&params)?,
+                },
+            )
+            .await?;
+
+        Ok(folder)
     }
 
     pub async fn list(&self, connection_id: &str, user_id: &str) -> Result<Vec<FolderWithQueues>> {
@@ -75,9 +105,23 @@ impl FolderService {
         if request.title.trim().is_empty() {
             bail!("Folder title cannot be empty");
         }
-        self.repository
-            .update(folder_id, request.title.trim())
-            .await
+        let title = request.title.trim().to_owned();
+        let updated_folder = self.repository.update(folder_id, &title).await?;
+
+        if self.tabs.get(folder_id, user_id).await?.is_some() {
+            self.tabs
+                .update(
+                    folder_id,
+                    user_id,
+                    UpdateTab {
+                        title: Some(title),
+                        ..Default::default()
+                    },
+                )
+                .await?;
+        }
+
+        Ok(updated_folder)
     }
 
     pub async fn delete(&self, folder_id: &str, user_id: &str) -> Result<u64> {
@@ -163,5 +207,19 @@ impl FolderService {
             .authorize(&folder.connection_id, user_id, WorkspaceRole::EDITOR)
             .await?;
         self.repository.reorder_queues(folder_id, &queue_ids).await
+    }
+
+    pub async fn reorder_folders(
+        &self,
+        connection_id: &str,
+        folder_ids: Vec<String>,
+        user_id: &str,
+    ) -> Result<()> {
+        self.connections
+            .authorize(connection_id, user_id, WorkspaceRole::EDITOR)
+            .await?;
+        self.repository
+            .reorder_folders(connection_id, &folder_ids)
+            .await
     }
 }

@@ -1,9 +1,5 @@
 export type SidebarMode =
-  | "QUEUE"
+  | "EXPLORER"
   | "SEARCH"
-  | "WORKER"
-  | "METRICS"
-  | "CONNECTION"
-  | "FOLDERS"
   | "HISTORY"
   | "NOTIFICATION";

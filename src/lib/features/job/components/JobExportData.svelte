@@ -26,14 +26,16 @@
 <Dialog.Root onOpenChange={handleOpenChange}>
     <Tooltip>
         <TooltipTrigger>
-            <Dialog.Trigger
-                data-queue-shortcut="export"
-                class={cn(
-                    "py-2 px-3! cursor-pointer rounded-sm border",
-                    "shadow",
-                    " hover:bg-card hover:text-primary",
-                )}><Share class="h-4 w-4" /></Dialog.Trigger
-            >
+            {#snippet child({ props })}
+                <Dialog.Trigger
+                    {...props}
+                    data-queue-shortcut="export"
+                    class={cn(
+                        "py-2 px-3! cursor-pointer rounded-sm border",
+                        "shadow",
+                        " hover:bg-card hover:text-primary",
+                    )}><Share class="h-4 w-4" /></Dialog.Trigger>
+            {/snippet}
         </TooltipTrigger>
         <TooltipContent>
             Export
