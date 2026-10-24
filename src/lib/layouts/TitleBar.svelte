@@ -68,7 +68,7 @@
     >
         <Button
             variant="ghost"
-            class="bg-background/40 hover:bg-background! h-8 gap-2 px-3 w-[15%] flex justify-between"
+            class="bg-background/40 hover:bg-background! h-8 gap-2 px-3 w-[25%] flex justify-between"
             onclick={() => globalStore.toggleSearchCommand(true)}
         >
             <div

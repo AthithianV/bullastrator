@@ -82,6 +82,20 @@ pub async fn reorder_folder_queues(
 }
 
 #[command]
+pub async fn reorder_folders(
+    state: State<'_, AppState>,
+    connection_id: String,
+    ordered_folder_ids: Vec<String>,
+) -> Result<(), String> {
+    let user_id = user_id(&state).await?;
+    state
+        .folders
+        .reorder_folders(&connection_id, ordered_folder_ids, &user_id)
+        .await
+        .map_err(|error| error.to_string())
+}
+
+#[command]
 pub async fn get_queues_for_folder(
     state: State<'_, AppState>,
     folder_id: String,

@@ -1,52 +1,22 @@
 <script lang="ts">
     import * as Accordion from "ui/accordion";
-    import Button from "ui/button/button.svelte";
 
-    import { Folder, FolderOpen, Plus, RefreshCcw } from "@lucide/svelte";
+    import { Folder, FolderOpen, Plus } from "@lucide/svelte";
     import { cn } from "shared/utils";
 
     import SidebarWrapper from "components/wrapper/SidebarWrapper.svelte";
-    import { queueStore } from "../store/queueStore.svelte";
 
     import EmptyConnectionSideBar from "connection/components/EmptyConnectionSideBar.svelte";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
-    import { useCreateTab } from "tabs/hooks/tab.hooks";
     import FolderList from "../../folder/components/FolderList.svelte";
-    import { useCreateFolder } from "../../folder/hooks/folder.hooks.svelte";
-    import { useGetAllQueues, useSyncAllQueues } from "../hooks/queue.hooks";
-    import DialogWrapper from "$lib/shared/components/wrapper/DialogWrapper.svelte";
     import ConnectionForm from "$lib/features/connection/components/ConnectionForm.svelte";
+    import { useGetAllQueues } from "queue/hooks/queue.hooks";
+    import { queueStore } from "queue/store/queueStore.svelte";
+    import ConnectionCommands from "connection/components/ConnectionCommands.svelte";
+    import DialogWrapper from "components/wrapper/DialogWrapper.svelte";
+    import CreateEditFolder from "folder/components/CreateEditFolder.svelte";
 
     const query = useGetAllQueues();
-    const { mutateAsync: syncQuery } = useSyncAllQueues();
-    const { mutateAsync: createTab } = useCreateTab();
-    const { mutateAsync: createFolder } = useCreateFolder();
-
-    async function createNewFolder(e: MouseEvent, connectionId: string) {
-        e.stopPropagation();
-        const newFolder = await createFolder({
-            title: "Untitled",
-            connectionId,
-        });
-        if (newFolder) {
-            await createTab({
-                id: newFolder.id,
-                title: newFolder.title,
-                connectionId: connectionId,
-                params: {
-                    connectionId: connectionId,
-                    folderName: newFolder.title,
-                    type: "FOLDER",
-                    folderId: newFolder.id,
-                },
-            });
-        }
-    }
-
-    async function refetch(e: MouseEvent, connectionId: string) {
-        e.stopPropagation();
-        await syncQuery(connectionId);
-    }
 </script>
 
 <SidebarWrapper>
@@ -86,7 +56,7 @@
                     >
                         <div
                             class={cn(
-                                "sticky top-10 z-10 bg-background",
+                                "sticky top-9 z-10 bg-background",
                                 queueStore.makeActive(conn.id),
                             )}
                         >
@@ -121,46 +91,7 @@
                                         <span class="font-semibold truncate"
                                             >{conn.name}</span
                                         >
-                                        <div class="flex gap-2 ms-2">
-                                            <Button
-                                                variant="ghost"
-                                                onclick={(e: MouseEvent) =>
-                                                    createNewFolder(e, conn.id)}
-                                                disabled={queueStore.isSyncing &&
-                                                    queueStore.connectionOnSync ===
-                                                        conn.id}
-                                                size={"sm"}
-                                                class={cn(
-                                                    "h-[70%]! p-0.5 w-2 cursor-pointer",
-                                                    "hidden group-hover:flex",
-                                                    "dark:hover:bg-slate-700! hover:bg-slate-200!",
-                                                )}
-                                            >
-                                                <Plus
-                                                    size={5}
-                                                    class={cn("w-4 h-4")}
-                                                />
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                onclick={(e) =>
-                                                    refetch(e, conn.id)}
-                                                disabled={queueStore.isSyncing &&
-                                                    queueStore.connectionOnSync ===
-                                                        conn.id}
-                                                size={"sm"}
-                                                class={cn(
-                                                    "h-[70%]! p-0.5 w-2 cursor-pointer",
-                                                    "hidden group-hover:flex",
-                                                    "dark:hover:bg-slate-700! hover:bg-slate-200!",
-                                                )}
-                                            >
-                                                <RefreshCcw
-                                                    size={8}
-                                                    class={cn("w-4 h-4")}
-                                                />
-                                            </Button>
-                                        </div>
+                                        <ConnectionCommands connection={conn} />
                                     </div>
                                 </div>
                             </Accordion.Trigger>
@@ -169,6 +100,7 @@
                                     queueStore.connectionOnSync === conn.id}
                             />
                         </div>
+                        <CreateEditFolder connectionId={conn.id} />
                         <Accordion.Content class={cn("pl-0")}>
                             <FolderList connectionId={conn.id} />
                         </Accordion.Content>

@@ -14,6 +14,12 @@ pub(crate) struct ReorderFolderQueuesRequest {
     pub ordered_queue_ids: Vec<String>,
 }
 
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct ReorderFoldersRequest {
+    pub ordered_folder_ids: Vec<String>,
+}
+
 pub(crate) async fn create(
     State(state): State<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
@@ -95,6 +101,19 @@ pub(crate) async fn reorder(
     state
         .folders
         .reorder(&folder_id, request.ordered_queue_ids, &user.id)
+        .await?;
+    Ok(Json(()))
+}
+
+pub(crate) async fn reorder_folders(
+    State(state): State<AppState>,
+    Extension(user): Extension<AuthenticatedUser>,
+    Path(connection_id): Path<String>,
+    Json(request): Json<ReorderFoldersRequest>,
+) -> ApiResult<Json<()>> {
+    state
+        .folders
+        .reorder_folders(&connection_id, request.ordered_folder_ids, &user.id)
         .await?;
     Ok(Json(()))
 }

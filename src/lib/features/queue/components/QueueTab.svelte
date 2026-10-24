@@ -92,7 +92,7 @@
             />
             <Resizable.Pane
                 defaultSize={queueState.active.jobViewSize}
-                class="min-w-0"
+                class="min-w-0 p-2 border-s-2 border-card"
             >
                 <JobView />
             </Resizable.Pane>

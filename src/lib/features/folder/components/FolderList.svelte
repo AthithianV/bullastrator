@@ -2,21 +2,50 @@
     import Button from "ui/button/button.svelte";
     import * as Accordion from "ui/accordion";
 
-    import { ChevronRight, Folder, Trash2, Workflow } from "@lucide/svelte";
+    import { Workflow } from "@lucide/svelte";
     import { cn } from "shared/utils";
+    import { dndzone } from "svelte-dnd-action";
 
     import {
-        useDeleteFolder,
         useGetAllFolders,
+        useReorderFolders,
     } from "../../folder/hooks/folder.hooks.svelte";
     import { queueStore } from "queue/store/queueStore.svelte";
     import { useCreateTab } from "tabs/hooks/tab.hooks";
     import { QueueState } from "queue/store/queueContext.svelte";
+    import FolderCommands from "./FolderCommands.svelte";
+    import CreateEditFolder from "./CreateEditFolder.svelte";
+    import { explorerStore } from "$lib/features/explorer/store/explorer.svelte";
 
     const { connectionId } = $props();
     const folderQuery = useGetAllFolders(() => connectionId);
     const { mutateAsync: createTab } = useCreateTab();
-    const { mutateAsync: deleteFolder } = useDeleteFolder();
+    const { mutateAsync: reorderFolders } = useReorderFolders();
+
+    const folders = $derived(folderQuery.data ?? []);
+    const defaultFolder = $derived(
+        folders.find((folder) => folder.id === connectionId),
+    );
+    const reorderableFolders = $derived(
+        folders.filter((folder) => folder.id !== connectionId),
+    );
+
+    function handleDndConsider(event: CustomEvent) {
+        const reorderedFolders = event.detail.items;
+        folderQuery.data = defaultFolder
+            ? [defaultFolder, ...reorderedFolders]
+            : reorderedFolders;
+    }
+
+    function handleDndFinalize(event: CustomEvent) {
+        handleDndConsider(event);
+        void reorderFolders({
+            connectionId,
+            orderedFolderIds: event.detail.items.map(
+                (folder: { id: string }) => folder.id,
+            ),
+        });
+    }
 
     async function handleClickOnQueue(
         queueId: string,
@@ -31,84 +60,22 @@
         });
         queueStore.setActiveNode(queueId);
     }
-
-    async function openFolder(
-        e: MouseEvent | Event,
-        folderId: string,
-        title: string,
-    ) {
-        e.stopPropagation();
-        await createTab({
-            id: folderId,
-            title: title,
-            connectionId: connectionId,
-            params: {
-                connectionId: connectionId,
-                folderName: title,
-                type: "FOLDER",
-                folderId: folderId,
-            },
-        });
-    }
 </script>
 
-<Accordion.Root class="w-full" type="multiple">
-    {#each folderQuery.data ?? [] as folder (folder.id)}
-        {@const isAllQueuesFolder = folder.id === connectionId}
+{#snippet folderItem(folder: (typeof folders)[number])}
         <Accordion.Item
             value={folder.id.toString()}
             class="border-b-0 last:border-b-0"
         >
-            <div
-                role="button"
-                tabindex="0"
-                class={cn(
-                    "ps-6 flex items-center gap-2 w-full group transition-colors",
-                    queueStore.makeActive(`${folder.id}-${folder.title}`),
-                )}
-                onmousedown={(e) => {
-                    e.preventDefault();
-                    queueStore.setActiveNode(`${folder.id}-${folder.title}`);
-                    openFolder(e, folder.id, folder.title);
-                }}
-            >
-                <Accordion.Trigger
-                    class={cn(
-                        "flex items-center justify-center py-1 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700",
-                        "[&[data-state=open]>svg]:rotate-90 transition-transform",
-                    )}
-                >
-                    <ChevronRight class="w-4 h-4 block" />
-                </Accordion.Trigger>
-
-                <div
-                    class="flex-1 flex justify-between items-center cursor-pointer py-1.5"
-                >
-                    <div class="flex gap-2 items-center">
-                        <Folder class="w-4 h-4" />
-                        <span class="font-semibold truncate"
-                            >{folder.title}</span
-                        >
-                    </div>
-
-                    {#if !isAllQueuesFolder}
-                        <div
-                            class="px-2 opacity-0 group-hover:opacity-100 gap-2"
-                        >
-                            <Button
-                                variant="ghost"
-                                class="h-6 w-6 p-1 text-red-500 hover:text-red-600 hover:p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700"
-                                onclick={(e) => {
-                                    e.stopPropagation(); // Prevents openFolder from firing
-                                    deleteFolder(folder.id);
-                                }}
-                            >
-                                <Trash2 class="w-4 h-4" />
-                            </Button>
-                        </div>
-                    {/if}
-                </div>
-            </div>
+            {#if explorerStore.renameFolderId === folder.id}
+                <CreateEditFolder
+                    connectionId={folder.connectionId}
+                    folderId={folder.id}
+                    folderName={folder.title}
+                />
+            {:else}
+                <FolderCommands {folder} />
+            {/if}
             <Accordion.Content class="pl-0">
                 <ul class="flex flex-col gap-0">
                     {#if folder.queues && folder.queues.length > 0}
@@ -145,5 +112,22 @@
                 </ul>
             </Accordion.Content>
         </Accordion.Item>
-    {/each}
+{/snippet}
+
+<Accordion.Root class="w-full" type="multiple">
+    {#if defaultFolder}
+        {@render folderItem(defaultFolder)}
+    {/if}
+    <div
+        use:dndzone={{
+            items: reorderableFolders,
+            dropTargetStyle: { outline: "none" },
+        }}
+        onconsider={handleDndConsider}
+        onfinalize={handleDndFinalize}
+    >
+        {#each reorderableFolders as folder (folder.id)}
+            {@render folderItem(folder)}
+        {/each}
+    </div>
 </Accordion.Root>

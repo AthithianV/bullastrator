@@ -1,0 +1,4 @@
+interface:
+  display_name: Bullastrator PR Review
+  short_description: Review Bullastrator pull requests and post inline findings
+  default_prompt: Review the current Bullastrator pull request against its base branch and post concrete inline GitHub comments for actionable defects.

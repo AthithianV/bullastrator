@@ -1,6 +1,7 @@
 import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { queueStore } from "queue/store/queueStore.svelte";
+import { QUEUE_QUERY_KEY } from "queue/hooks/queue.hooks";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import type {
   ConnectionHealth,
@@ -140,15 +141,11 @@ export const useDeleteConnection = () => {
         throw new Error("USER_CANCELLED");
       }
 
-      return invokeWrapper("delete_connection", { id });
+      return invokeWrapper("delete_connection", { id }, {shouldToast: true});
     },
-    onSuccess: (_result, deletedId) => {
-      queryClient.setQueryData<ReadConnection[]>(CONNECTION_QUERY_KEY, (oldData) => {
-        return oldData ? oldData.filter((conn) => conn.id !== deletedId) : [];
-      });
-      queryClient.removeQueries({
-        queryKey: [...CONNECTION_QUERY_KEY, deletedId],
-      });
+    onSuccess: (_result) => {
+      queryClient.invalidateQueries({ queryKey: CONNECTION_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: QUEUE_QUERY_KEY });
     },
   }));
 };

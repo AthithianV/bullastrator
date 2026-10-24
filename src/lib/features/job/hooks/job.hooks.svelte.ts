@@ -32,7 +32,10 @@ export const JOB_QUERY_KEY = ["jobs"];
 export const useGetJobById = () => {
   const queueState = useQueueState();
 
-  const getDebouncedJobId = useDebounce(() => queueState.active.selectedJob, 300);
+  const getDebouncedJobId = useDebounce(
+    () => queueState.active.selectedJob,
+    500,
+  );
 
   return createQuery(() => {
     const debouncedId = getDebouncedJobId();
@@ -114,9 +117,13 @@ export const useGetJobData = () => {
 
 export const useGetJobLog = () => {
   const queueState = useQueueState();
+  const getDebouncedJobId = useDebounce(
+    () => queueState.active.selectedJob,
+    500,
+  );
 
   return createQuery(() => {
-    const jobId = queueState.active.selectedJob;
+    const jobId = getDebouncedJobId();
 
     const payload = {
       queueName: queueState.queueName,

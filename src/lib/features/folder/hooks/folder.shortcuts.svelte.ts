@@ -88,6 +88,7 @@ export function useFolderShortcuts(options: FolderShortcutOptions) {
                     }
                     return;
                 case "r":
+                    if (!event.shiftKey) return;
                     event.preventDefault();
                     options.onRefresh();
                     return;

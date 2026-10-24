@@ -9,5 +9,6 @@ pub fn routes() -> Router<AppState> {
         .route("/folders/{folder_id}", get(controller::folder::get).patch(controller::folder::update).delete(controller::folder::delete))
         .route("/folders/{folder_id}/queues", get(controller::folder::queues))
         .route("/folders/{folder_id}/queues/reorder", post(controller::folder::reorder))
+        .route("/folders/connection/{connection_id}/reorder", post(controller::folder::reorder_folders))
         .route("/folders/{folder_id}/queues/{queue_id}/toggle", post(controller::folder::toggle_queue))
 }

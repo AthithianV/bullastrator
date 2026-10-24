@@ -35,7 +35,10 @@
     });
 
     $effect(() => {
-        if (queueState.currentStatus) queueState.active.selectedJob = null;
+        if (queueState.currentStatus) {
+            queueState.active.selectedJob = null;
+            queueState.active.selectedJobSummary = null;
+        }
         queueState.active.selectedJobIds = [];
     });
 
@@ -98,9 +101,11 @@
                     .slice(start, end + 1)
                     .map((j: Job) => String(j.id));
                 queueState.active.selectedJob = job.id;
+                queueState.active.selectedJobSummary = job;
                 focusIndex = newIndex;
             } else {
                 queueState.active.selectedJob = job.id;
+                queueState.active.selectedJobSummary = job;
                 queueState.active.selectedJobIds = [String(job.id)];
                 focusIndex = newIndex;
                 anchorIndex = newIndex;
@@ -118,6 +123,7 @@
                 .slice(start, end + 1)
                 .map((j: Job) => String(j.id));
             queueState.active.selectedJob = job.id;
+            queueState.active.selectedJobSummary = job;
             focusIndex = index;
         } else if (e.ctrlKey || e.metaKey) {
             const id = String(job.id);
@@ -133,10 +139,12 @@
                 ];
             }
             queueState.active.selectedJob = job.id;
+            queueState.active.selectedJobSummary = job;
             focusIndex = index;
             anchorIndex = index;
         } else {
             queueState.active.selectedJob = job.id;
+            queueState.active.selectedJobSummary = job;
             queueState.active.selectedJobIds = [String(job.id)];
             focusIndex = index;
             anchorIndex = index;
@@ -368,10 +376,13 @@
                                                 {job.id}
                                             </TooltipTrigger>
                                             <TooltipContent
-                                                class="px-3 text-base"
+                                                class="px-3 text-xs flex justify-between items-center gap-2"
                                             >
                                                 {job.id}
-                                                <CopyButton value={job.id} />
+                                                <CopyButton
+                                                    value={job.id}
+                                                    buttonClass={"h-5 w-5 p-1"}
+                                                />
                                             </TooltipContent>
                                         </Tooltip>
                                     </div>
@@ -383,10 +394,14 @@
                                                 {job.name}
                                             </TooltipTrigger>
                                             <TooltipContent
-                                                class="px-3 text-base"
+                                                class="px-3 text-xs flex justify-between items-center gap-2"
                                             >
                                                 {job.name}
-                                                <CopyButton value={job.name} />
+                                                <CopyButton
+                                                    value={job.name}
+                                                    size={8}
+                                                    buttonClass={"h-5 w-5 p-1"}
+                                                />
                                             </TooltipContent>
                                         </Tooltip>
                                     </div>
@@ -397,9 +412,7 @@
                                             <TooltipTrigger>
                                                 {timeAgo(job.timestamp)}
                                             </TooltipTrigger>
-                                            <TooltipContent
-                                                class="p-2 text-base"
-                                            >
+                                            <TooltipContent class="p-2 text-xs">
                                                 {formatDate(
                                                     job.timestamp,
                                                     "DD MMM YYYY, HH:mm:ss",

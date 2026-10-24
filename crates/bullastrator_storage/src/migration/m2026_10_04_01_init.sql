@@ -36,14 +36,11 @@
 
 PRAGMA foreign_keys = ON;
 
-BEGIN TRANSACTION;
-
-
 -- ============================================================
 -- USERS
 -- ============================================================
 
-CREATE TABLE "users" (
+CREATE TABLE IF NOT EXISTS "users" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL UNIQUE,
@@ -65,7 +62,7 @@ CREATE TABLE "users" (
 -- SESSIONS
 -- ============================================================
 
-CREATE TABLE "sessions" (
+CREATE TABLE IF NOT EXISTS "sessions" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "user_id" TEXT NOT NULL,
     "token_hash" TEXT NOT NULL UNIQUE,
@@ -78,10 +75,10 @@ CREATE TABLE "sessions" (
         ON DELETE CASCADE
 );
 
-CREATE INDEX "idx_sessions_user_id"
+CREATE INDEX IF NOT EXISTS "idx_sessions_user_id"
     ON "sessions" ("user_id");
 
-CREATE INDEX "idx_session_token_hash"
+CREATE INDEX IF NOT EXISTS "idx_session_token_hash"
     ON "sessions" ("token_hash");
 
 
@@ -89,7 +86,7 @@ CREATE INDEX "idx_session_token_hash"
 -- WORKSPACES
 -- ============================================================
 
-CREATE TABLE "workspaces" (
+CREATE TABLE IF NOT EXISTS "workspaces" (
     "id" TEXT NOT NULL PRIMARY KEY,
 
     "user_id" TEXT NOT NULL,
@@ -122,7 +119,7 @@ CREATE TABLE "workspaces" (
 -- users.active_workspace_id should NOT be used for authorization.
 -- ============================================================
 
-CREATE TABLE "workspace_members" (
+CREATE TABLE IF NOT EXISTS "workspace_members" (
     "workspace_id" TEXT NOT NULL,
     "user_id" TEXT NOT NULL,
 
@@ -142,10 +139,10 @@ CREATE TABLE "workspace_members" (
         ON DELETE CASCADE
 );
 
-CREATE INDEX "idx_workspace_members_user_id"
+CREATE INDEX IF NOT EXISTS "idx_workspace_members_user_id"
     ON "workspace_members" ("user_id");
 
-CREATE INDEX "idx_workspace_members_workspace_id"
+CREATE INDEX IF NOT EXISTS "idx_workspace_members_workspace_id"
     ON "workspace_members" ("workspace_id");
 
 
@@ -153,7 +150,7 @@ CREATE INDEX "idx_workspace_members_workspace_id"
 -- CONNECTIONS
 -- ============================================================
 
-CREATE TABLE "connections" (
+CREATE TABLE IF NOT EXISTS "connections" (
     "id" TEXT NOT NULL PRIMARY KEY,
 
     "workspace_id" TEXT NOT NULL,
@@ -184,7 +181,7 @@ CREATE TABLE "connections" (
     UNIQUE ("workspace_id", "name")
 );
 
-CREATE INDEX "idx_connections_workspace_id"
+CREATE INDEX IF NOT EXISTS "idx_connections_workspace_id"
     ON "connections" ("workspace_id");
 
 
@@ -192,7 +189,7 @@ CREATE INDEX "idx_connections_workspace_id"
 -- TABS
 -- ============================================================
 
-CREATE TABLE "tabs" (
+CREATE TABLE IF NOT EXISTS "tabs" (
     "id" TEXT NOT NULL PRIMARY KEY,
 
     "workspace_id" TEXT NOT NULL,
@@ -229,13 +226,13 @@ CREATE TABLE "tabs" (
         ON DELETE CASCADE
 );
 
-CREATE INDEX "idx_tabs_workspace_id"
+CREATE INDEX IF NOT EXISTS "idx_tabs_workspace_id"
     ON "tabs" ("workspace_id");
 
-CREATE INDEX "idx_tabs_connection_id"
+CREATE INDEX IF NOT EXISTS "idx_tabs_connection_id"
     ON "tabs" ("connection_id");
 
-CREATE INDEX "idx_tabs_user_id"
+CREATE INDEX IF NOT EXISTS "idx_tabs_user_id"
     ON "tabs" ("user_id");
 
 
@@ -243,7 +240,7 @@ CREATE INDEX "idx_tabs_user_id"
 -- FOLDERS
 -- ============================================================
 
-CREATE TABLE "folders" (
+CREATE TABLE IF NOT EXISTS "folders" (
     "id" TEXT NOT NULL PRIMARY KEY,
 
     "connection_id" TEXT NOT NULL,
@@ -265,10 +262,10 @@ CREATE TABLE "folders" (
     UNIQUE ("connection_id", "title")
 );
 
-CREATE INDEX "idx_folders_connection_id"
+CREATE INDEX IF NOT EXISTS "idx_folders_connection_id"
     ON "folders" ("connection_id");
 
-CREATE INDEX "idx_folders_user_id"
+CREATE INDEX IF NOT EXISTS "idx_folders_user_id"
     ON "folders" ("user_id");
 
 
@@ -276,7 +273,7 @@ CREATE INDEX "idx_folders_user_id"
 -- QUEUES
 -- ============================================================
 
-CREATE TABLE "queues" (
+CREATE TABLE IF NOT EXISTS "queues" (
     "id" TEXT NOT NULL PRIMARY KEY,
 
     "connection_id" TEXT NOT NULL,
@@ -292,7 +289,7 @@ CREATE TABLE "queues" (
     UNIQUE ("connection_id", "queue_name")
 );
 
-CREATE INDEX "idx_queues_connection_id"
+CREATE INDEX IF NOT EXISTS "idx_queues_connection_id"
     ON "queues" ("connection_id");
 
 
@@ -309,10 +306,10 @@ CREATE INDEX "idx_queues_connection_id"
 -- Same for queues.
 -- ============================================================
 
-CREATE UNIQUE INDEX "idx_folders_connection_id_id"
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_folders_connection_id_id"
     ON "folders" ("connection_id", "id");
 
-CREATE UNIQUE INDEX "idx_queues_connection_id_id"
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_queues_connection_id_id"
     ON "queues" ("connection_id", "id");
 
 
@@ -320,7 +317,7 @@ CREATE UNIQUE INDEX "idx_queues_connection_id_id"
 -- FOLDER QUEUES
 -- ============================================================
 
-CREATE TABLE "folder_queues" (
+CREATE TABLE IF NOT EXISTS "folder_queues" (
     "id" TEXT NOT NULL PRIMARY KEY,
 
     "folder_id" TEXT NOT NULL,
@@ -341,10 +338,10 @@ CREATE TABLE "folder_queues" (
     UNIQUE ("folder_id", "queue_id")
 );
 
-CREATE INDEX "idx_folder_queues_folder_id"
+CREATE INDEX IF NOT EXISTS "idx_folder_queues_folder_id"
     ON "folder_queues" ("folder_id");
 
-CREATE INDEX "idx_folder_queues_queue_id"
+CREATE INDEX IF NOT EXISTS "idx_folder_queues_queue_id"
     ON "folder_queues" ("queue_id");
 
 
@@ -352,7 +349,7 @@ CREATE INDEX "idx_folder_queues_queue_id"
 -- SETTINGS
 -- ============================================================
 
-CREATE TABLE "settings" (
+CREATE TABLE IF NOT EXISTS "settings" (
     "key" TEXT NOT NULL PRIMARY KEY,
 
     "user_id" TEXT,
@@ -364,7 +361,7 @@ CREATE TABLE "settings" (
         ON DELETE CASCADE
 );
 
-CREATE INDEX "idx_settings_user_id"
+CREATE INDEX IF NOT EXISTS "idx_settings_user_id"
     ON "settings" ("user_id");
 
 
@@ -387,7 +384,7 @@ CREATE INDEX "idx_settings_user_id"
 --   edit
 -- ============================================================
 
-CREATE TABLE "user_access_connections" (
+CREATE TABLE IF NOT EXISTS "user_access_connections" (
     "id" TEXT NOT NULL PRIMARY KEY,
 
     "user_id" TEXT NOT NULL,
@@ -431,24 +428,24 @@ CREATE TABLE "user_access_connections" (
         ON DELETE CASCADE
 );
 
-CREATE INDEX "idx_user_access_connections_user_id"
+CREATE INDEX IF NOT EXISTS "idx_user_access_connections_user_id"
     ON "user_access_connections" ("user_id");
 
-CREATE INDEX "idx_user_access_connections_connection_id"
+CREATE INDEX IF NOT EXISTS "idx_user_access_connections_connection_id"
     ON "user_access_connections" ("connection_id");
 
-CREATE INDEX "idx_user_access_connections_folder_id"
+CREATE INDEX IF NOT EXISTS "idx_user_access_connections_folder_id"
     ON "user_access_connections" ("folder_id");
 
-CREATE INDEX "idx_user_access_connections_queue_id"
+CREATE INDEX IF NOT EXISTS "idx_user_access_connections_queue_id"
     ON "user_access_connections" ("queue_id");
 
-CREATE UNIQUE INDEX "idx_user_access_folder"
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_user_access_folder"
     ON "user_access_connections"
         ("user_id", "connection_id", "folder_id")
     WHERE "folder_id" IS NOT NULL;
 
-CREATE UNIQUE INDEX "idx_user_access_queue"
+CREATE UNIQUE INDEX IF NOT EXISTS "idx_user_access_queue"
     ON "user_access_connections"
         ("user_id", "connection_id", "queue_id")
     WHERE "queue_id" IS NOT NULL;
@@ -458,7 +455,7 @@ CREATE UNIQUE INDEX "idx_user_access_queue"
 -- QUEUE ACTIONS / AUDIT LOG
 -- ============================================================
 
-CREATE TABLE "queue_actions" (
+CREATE TABLE IF NOT EXISTS "queue_actions" (
     "id" TEXT NOT NULL PRIMARY KEY,
 
     "workspace_id" TEXT NOT NULL,
@@ -487,17 +484,15 @@ CREATE TABLE "queue_actions" (
         ON DELETE CASCADE
 );
 
-CREATE INDEX "idx_queue_actions_workspace_id"
+CREATE INDEX IF NOT EXISTS "idx_queue_actions_workspace_id"
     ON "queue_actions" ("workspace_id");
 
-CREATE INDEX "idx_queue_actions_connection_id"
+CREATE INDEX IF NOT EXISTS "idx_queue_actions_connection_id"
     ON "queue_actions" ("connection_id");
 
-CREATE INDEX "idx_queue_actions_user_id"
+CREATE INDEX IF NOT EXISTS "idx_queue_actions_user_id"
     ON "queue_actions" ("user_id");
 
-CREATE INDEX "idx_queue_actions_created_at"
+CREATE INDEX IF NOT EXISTS "idx_queue_actions_created_at"
     ON "queue_actions" ("created_at");
 
-
-COMMIT;

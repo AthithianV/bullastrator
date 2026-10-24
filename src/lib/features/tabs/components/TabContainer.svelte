@@ -110,7 +110,7 @@
                 tabStore.setActiveTab(val);
                 setActiveTabMutateAsync(val);
             }}
-            class="h-full flex flex-col gap-0 min-w-0 p-1"
+            class="h-full flex flex-col gap-0 min-w-0"
         >
             <Scroll.ScrollArea
                 class="w-full whitespace-nowrap"

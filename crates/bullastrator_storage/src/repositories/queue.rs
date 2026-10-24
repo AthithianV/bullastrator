@@ -75,7 +75,7 @@ impl QueueRepository {
                 display_name,
             FROM queues
             WHERE connection_id = ?
-            ORDER BY queue_name
+            ORDER BY sort_order, queue_name COLLATE NOCASE, id
             "#,
         )
         .bind(connection_id)
