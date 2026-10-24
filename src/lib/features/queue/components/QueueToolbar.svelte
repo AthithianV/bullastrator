@@ -50,9 +50,7 @@
     const pauseQueueQuery = usePauseQueue();
 
     let allJobInSelectedState = $derived(
-        queueState.jobCounts?.[
-            queueState.currentStatus as keyof typeof queueState.jobCounts
-        ] ?? 0,
+        queueState.jobCounts?.[queueState.currentStatus] ?? 0,
     );
 
     let hasSelection = $derived(queueState.active.selectedJobIds.length > 0);
@@ -128,7 +126,7 @@
                     isDropdownDisabled={!hasJobsInState}
                     onclick={() => promoteJobs(false)}
                     title="Promote selected jobs"
-                    shortcut={globalStore.shortcut("P")}
+                    shortcut={globalStore.shortcut("T")}
                 >
                     {#snippet menuContent()}
                         <DropdownMenu.Item
@@ -138,7 +136,7 @@
                             <ArrowBigUpDash class="mr-2 h-4" />
                             <span>Promote Selected</span>
                             <kbd class="ml-auto font-mono text-xs opacity-70"
-                                >{globalStore.shortcut("P")}</kbd
+                                >{globalStore.shortcut("T")}</kbd
                             >
                         </DropdownMenu.Item>
                         <DropdownMenu.Separator />
@@ -149,7 +147,7 @@
                             <Asterisk class="mr-2 h-4" />
                             <span>Promote All</span>
                             <kbd class="ml-auto font-mono text-xs opacity-70"
-                                >{globalStore.shortcut("P", true)}</kbd
+                                >{globalStore.shortcut("T", true, true)}</kbd
                             >
                         </DropdownMenu.Item>
                     {/snippet}

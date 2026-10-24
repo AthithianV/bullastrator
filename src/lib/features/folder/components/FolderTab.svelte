@@ -14,7 +14,6 @@
     import { Input } from "shared/components/ui/input";
     import { useGetAllQueuesByConnection } from "queue/hooks/queue.hooks";
     import Checkbox from "shared/components/ui/checkbox/checkbox.svelte";
-    import { cn } from "shared/utils";
     import {
         useGetFolderById,
         useGetQueuesOfFolder,
@@ -23,9 +22,7 @@
         useUpdateFolder,
     } from "../hooks/folder.hooks.svelte";
     import QueueJobCount from "./QueueJobCount.svelte";
-    import { Button } from "shared/components/ui/button";
-    import { Pencil, RefreshCcw, Search, X } from "@lucide/svelte";
-    import { useUpdateTab } from "tabs/hooks/tab.hooks";
+    import { Search } from "@lucide/svelte";
     import type { FolderTabParams } from "../interface/folder.types";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
     import FolderToolbar from "./FolderToolbar.svelte";
@@ -147,7 +144,7 @@
                 {tabId}
                 {tabParams}
                 onEdit={() => {
-                    queueEditPanel = queueEditPanel === 0 ? 30 : 0;
+                    queueEditPanel = queueEditPanel === 0 ? 40 : 0;
                 }}
                 {onSearch}
             />

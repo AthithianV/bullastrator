@@ -14,7 +14,6 @@ import { sidebarStore } from "sidebar/store/sidebarStore.svelte";
 import type { Component } from "svelte";
 import type { SidebarMode } from "../interfaces/sidebar.types";
 import Explorer from "../../explorer/components/Explorer.svelte";
-import SearchView from "../../search/components/SearchView.svelte";
 
 export const SIDEBAR_MODES: {
   id: SidebarMode;
@@ -32,17 +31,6 @@ export const SIDEBAR_MODES: {
     handleClick: () => {
       globalStore.toggleSidebar(true);
       sidebarStore.setMode("EXPLORER");
-    },
-    shouldShow: true,
-  },
-  {
-    id: "SEARCH",
-    icon: Search,
-    label: "Search",
-    component: SearchView,
-    handleClick: () => {
-      globalStore.toggleSidebar(true);
-      sidebarStore.setMode("SEARCH");
     },
     shouldShow: true,
   },
