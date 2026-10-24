@@ -1,6 +1,6 @@
 CHANGELOG.md
 
-### [0.2.3] - 20-10-2026
+### [0.2.3] - 24-10-2026
 - Added a skeleton loading state for Job View, keeping the selected job header visible while details load.
 - Added job summary data from the job list for faster Job View header rendering.
 - Debounced job detail and log requests to reduce API calls while navigating jobs with the keyboard.
