@@ -60,7 +60,7 @@
     role="button"
     tabindex="0"
     class={cn(
-        "ps-6 flex items-center gap-1 w-full group transition-colors",
+        "ps-6 flex items-center gap-1 w-full group transition-colors folder-group",
         queueStore.makeActive(`${folder.id}-${folder.title}`),
     )}
     onclick={(e) => {
@@ -97,7 +97,7 @@
                 onOpenChange={handleDropdownChange}
             >
                 <DropdownMenu.Trigger
-                    class="flex items-center justify-center rounded-sm hover:bg-slate-200 dark:hover:bg-slate-700 h-5 w-5 p-1"
+                    class="flex items-center justify-center rounded-sm hover:bg-slate-200 dark:hover:bg-slate-700 h-5 w-5 p-1 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
                     onpointerdown={(e) => e.stopPropagation()}
                     onmousedown={(e) => e.stopPropagation()}
                     onclick={(e) => e.stopPropagation()}

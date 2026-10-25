@@ -94,7 +94,7 @@
                                         >
                                         <ConnectionCommands
                                             connection={conn}
-                                            className={"hidden group-hover:visible"}
+                                            className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
                                         />
                                     </div>
                                 </div>
