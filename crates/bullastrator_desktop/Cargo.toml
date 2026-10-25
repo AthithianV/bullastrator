@@ -1,6 +1,6 @@
 [package]
 name = "bullastrator-desktop"
-version = "0.2.2"
+version = "0.2.3"
 description = "Bullastrator Desktop - Desktop Version of Bullastrator Web."
 authors = ["Athithian"]
 edition = "2021"
