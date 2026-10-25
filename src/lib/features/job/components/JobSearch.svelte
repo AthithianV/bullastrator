@@ -269,14 +269,16 @@
     <Popover.Root bind:open>
         <Popover.Trigger>
             {#snippet child({ props })}
-                <Tooltip>
-                    <TooltipTrigger>
-                        <Button
-                            data-queue-shortcut="filter"
-                            variant="ghost"
-                            {...props}
-                            class="gap-2 border py-1 hover:bg-card!"
-                        >
+                    <Tooltip>
+                        <TooltipTrigger>
+                            {#snippet child({ props: tooltipProps })}
+                                <Button
+                                    data-queue-shortcut="filter"
+                                    variant="ghost"
+                                    {...tooltipProps}
+                                    {...props}
+                                    class="gap-2 border py-1 hover:bg-card!"
+                                >
                             <Funnel class="h-4 w-4" />
                             {#if queueState.searchFilters.length > 0}
                                 <Badge
@@ -296,8 +298,9 @@
                                     </span>
                                 </Badge>
                             {/if}
-                        </Button>
-                    </TooltipTrigger>
+                                </Button>
+                            {/snippet}
+                        </TooltipTrigger>
                     <TooltipContent>
                         Advanced Search
                         <kbd

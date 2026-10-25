@@ -7,10 +7,10 @@ import type {
   ReadFolderModel,
   ReadFolderWithQueuesModel,
 } from "../interface/folder.types";
-import { TAB_QUERY_KEY } from "tabs/hooks/tab.hooks";
+import { TAB_QUERY_KEY, useSetActiveTab } from "tabs/hooks/tab.hooks";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { tabStore } from "$lib/features/tabs/store/tabStore.svelte";
-import { CONNECTION_QUERY_KEY } from "connection/hooks/connection.hooks";
+import type { ReadTabModel } from "tabs/interface/tab.types";
 
 // Unique keys for caching
 export const FOLDER_QUERY_KEY = ["folder"];
@@ -112,13 +112,18 @@ export const useCreateFolder = () => {
         { data },
         {
           successMessage: "Folder created successfully",
-          shouldToast: true,
         },
       ),
     onSuccess: (newFolder) => {
       queryClient.invalidateQueries({
         queryKey: [...FOLDER_QUERY_KEY, "list", newFolder.connectionId],
       });
+      queryClient.invalidateQueries({ queryKey: TAB_QUERY_KEY });
+      queryClient.invalidateQueries({
+        queryKey: [...TAB_QUERY_KEY, "ACTIVE_TAB"],
+      });
+      tabStore.setActiveTab(newFolder.id);
+      queryClient.setQueryData([...TAB_QUERY_KEY, "ACTIVE_TAB"], newFolder.id);
     },
   }));
 };
@@ -134,6 +139,17 @@ export const useUpdateFolder = () => {
       invokeWrapper<ReadFolderModel>("update_folder", { id, title }),
     onSuccess: (updatedFolder) => {
       queryClient.invalidateQueries({ queryKey: FOLDER_QUERY_KEY });
+      queryClient.setQueryData<ReadTabModel[]>(TAB_QUERY_KEY, (tabs) =>
+        tabs?.map((tab) =>
+          tab.id === updatedFolder.id
+            ? { ...tab, title: updatedFolder.title }
+            : tab,
+        ),
+      );
+      queryClient.setQueryData<ReadTabModel | null>(
+        [...TAB_QUERY_KEY, updatedFolder.id],
+        (tab) => (tab ? { ...tab, title: updatedFolder.title } : tab),
+      );
     },
   }));
 };
@@ -143,6 +159,7 @@ export const useUpdateFolder = () => {
  */
 export const useDeleteFolder = () => {
   const queryClient = useQueryClient();
+  const { mutateAsync: setActiveTab } = useSetActiveTab();
 
   return createMutation(() => ({
     mutationFn: async (id: string) => {
@@ -158,11 +175,17 @@ export const useDeleteFolder = () => {
         { id },
         {
           successMessage: "Folder deleted",
-          shouldToast: true,
         },
       );
     },
-    onSuccess: () => {
+    onSuccess: (_result, deletedFolderId) => {
+      const tabs = queryClient.getQueryData<ReadTabModel[]>(TAB_QUERY_KEY) ?? [];
+      const { remaining, nextId } = tabStore.selectAfterRemoval(
+        [deletedFolderId],
+        tabs,
+      );
+      queryClient.setQueryData(TAB_QUERY_KEY, remaining);
+      queryClient.setQueryData([...TAB_QUERY_KEY, "ACTIVE_TAB"], nextId);
       queryClient.invalidateQueries({ queryKey: FOLDER_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: TAB_QUERY_KEY });
       queryClient.invalidateQueries({
@@ -170,6 +193,9 @@ export const useDeleteFolder = () => {
         exact: true, // Be specific
         refetchType: "all",
       });
+      if (nextId) {
+        void setActiveTab(nextId);
+      }
     },
   }));
 };
@@ -204,5 +230,28 @@ export const useReorderFolderQueues = () => {
         folderId,
         orderedQueueIds,
       }),
+  }));
+};
+
+/**
+ * 🚀 Hook to reorder folders within a connection.
+ */
+export const useReorderFolders = () => {
+  const queryClient = useQueryClient();
+
+  return createMutation(() => ({
+    mutationFn: ({ connectionId, orderedFolderIds }: {
+      connectionId: string;
+      orderedFolderIds: string[];
+    }) =>
+      invokeWrapper<void>("reorder_folders", {
+        connectionId,
+        orderedFolderIds,
+      }),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [...FOLDER_QUERY_KEY, "list", variables.connectionId],
+      });
+    },
   }));
 };

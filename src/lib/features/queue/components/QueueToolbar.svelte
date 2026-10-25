@@ -50,9 +50,7 @@
     const pauseQueueQuery = usePauseQueue();
 
     let allJobInSelectedState = $derived(
-        queueState.jobCounts?.[
-            queueState.currentStatus as keyof typeof queueState.jobCounts
-        ] ?? 0,
+        queueState.jobCounts?.[queueState.currentStatus] ?? 0,
     );
 
     let hasSelection = $derived(queueState.active.selectedJobIds.length > 0);
@@ -128,7 +126,7 @@
                     isDropdownDisabled={!hasJobsInState}
                     onclick={() => promoteJobs(false)}
                     title="Promote selected jobs"
-                    shortcut={globalStore.shortcut("P")}
+                    shortcut={globalStore.shortcut("T")}
                 >
                     {#snippet menuContent()}
                         <DropdownMenu.Item
@@ -138,7 +136,7 @@
                             <ArrowBigUpDash class="mr-2 h-4" />
                             <span>Promote Selected</span>
                             <kbd class="ml-auto font-mono text-xs opacity-70"
-                                >{globalStore.shortcut("P")}</kbd
+                                >{globalStore.shortcut("T")}</kbd
                             >
                         </DropdownMenu.Item>
                         <DropdownMenu.Separator />
@@ -149,7 +147,7 @@
                             <Asterisk class="mr-2 h-4" />
                             <span>Promote All</span>
                             <kbd class="ml-auto font-mono text-xs opacity-70"
-                                >{globalStore.shortcut("P", true)}</kbd
+                                >{globalStore.shortcut("T", true, true)}</kbd
                             >
                         </DropdownMenu.Item>
                     {/snippet}
@@ -225,7 +223,7 @@
                     isDropdownDisabled={!hasJobsInState}
                     onclick={() => deleteJobs(false)}
                     title="Delete selected jobs"
-                    shortcut={globalStore.shortcut("Delete")}
+                    shortcut={"Del"}
                     class="text-red-500 hover:text-red-600"
                 >
                     {#snippet menuContent()}
@@ -238,16 +236,17 @@
                                 >Delete Selected ({queueState.active
                                     .selectedJobIds.length})</span
                             >
-                            <kbd class="text-xs opacity-70"
-                                >{globalStore.shortcut("Delete")}</kbd
-                            >
+                            <kbd class="text-xs opacity-70">{"Del"}</kbd>
                         </DropdownMenu.Item>
                         <DropdownMenu.Separator />
-                        <DropdownMenu.Item onclick={() => deleteJobs(true)}>
+                        <DropdownMenu.Item
+                            onclick={() => deleteJobs(true)}
+                            class="flex justify-between"
+                        >
                             <Shredder class="text-red-500 h-4 w-4" />
                             <span>Delete All ({allJobInSelectedState})</span>
                             <kbd class="ml-auto font-mono text-xs opacity-70"
-                                >{globalStore.shortcut("Delete", true)}</kbd
+                                >{"Shift + Del"}</kbd
                             >
                         </DropdownMenu.Item>
                     {/snippet}
@@ -279,7 +278,7 @@
                         <kbd
                             class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]"
                         >
-                            {globalStore.shortcut("R")}
+                            {globalStore.shortcut("R", true)}
                         </kbd>
                     </TooltipContent>
                 </Tooltip>

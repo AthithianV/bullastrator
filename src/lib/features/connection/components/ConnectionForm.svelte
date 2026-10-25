@@ -330,7 +330,8 @@
                         >Test Connection</Button
                     >
                     <Button disabled={$submitting} type="submit"
-                        >{isEditing ? "Update" : "Save"}<SubmitShortcut /></Button
+                        >{isEditing ? "Update" : "Save"}<SubmitShortcut
+                        /></Button
                     >
                 </div>
             </Field.Group>

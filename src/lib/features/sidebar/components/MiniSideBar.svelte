@@ -20,11 +20,7 @@
                     onclick={() => handleClick()}
                     variant="ghost"
                 >
-                    <svelte:component
-                        this={Icon}
-                        style="width:1rem;height:1rem;"
-                        stroke-width={2.5}
-                    />
+                    <Icon size={16} strokeWidth={2.5} />
                 </Button>
             {/if}
         {/each}

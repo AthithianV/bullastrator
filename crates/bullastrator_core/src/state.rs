@@ -58,12 +58,18 @@ impl AppState {
 
         tracing::info!("application state initialized");
 
+        let tabs = TabService::new(TabRepository::new(pool.clone()), workspaces.clone());
+
         Ok(Self {
             users: UserService::new(UserRepository::new(pool.clone())),
             connections: connections.clone(),
             workspaces: workspaces.clone(),
-            tabs: TabService::new(TabRepository::new(pool.clone()), workspaces),
-            folders: FolderService::new(FolderRepository::new(pool.clone()), connections),
+            tabs: tabs.clone(),
+            folders: FolderService::new(
+                FolderRepository::new(pool.clone()),
+                connections,
+                tabs,
+            ),
             db: pool,
             redis_connections,
             queue_services,

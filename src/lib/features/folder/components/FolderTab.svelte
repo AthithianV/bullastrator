@@ -14,18 +14,15 @@
     import { Input } from "shared/components/ui/input";
     import { useGetAllQueuesByConnection } from "queue/hooks/queue.hooks";
     import Checkbox from "shared/components/ui/checkbox/checkbox.svelte";
-    import { cn } from "shared/utils";
     import {
         useGetFolderById,
         useGetQueuesOfFolder,
         useReorderFolderQueues,
         useToggleQueueInFolder,
-        useUpdateFolder,
     } from "../hooks/folder.hooks.svelte";
     import QueueJobCount from "./QueueJobCount.svelte";
-    import { Button } from "shared/components/ui/button";
-    import { Pencil, RefreshCcw, Search, X } from "@lucide/svelte";
-    import { useUpdateTab } from "tabs/hooks/tab.hooks";
+    import { Search, X } from "@lucide/svelte";
+    import Button from "shared/components/ui/button/button.svelte";
     import type { FolderTabParams } from "../interface/folder.types";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
     import FolderToolbar from "./FolderToolbar.svelte";
@@ -47,7 +44,8 @@
     const isAllQueuesFolder = $derived(
         folderState.tabId === folderState.connectionId,
     );
-    let searchKeyword = $state("");
+    let folderSearchKeyword = $state("");
+    let sidebarSearchKeyword = $state("");
     let showSearch = $state(false);
     let searchInput = $state<HTMLInputElement | null>(null);
     let folderContainer = $state<HTMLDivElement | null>(null);
@@ -56,28 +54,20 @@
     const folderQueueQuery = useGetQueuesOfFolder();
     const folderQuery = useGetFolderById();
 
-    const { mutateAsync: updateFolder } = useUpdateFolder();
-    const { mutateAsync: updateTab } = useUpdateTab();
     const { mutateAsync: reorderFolderQueues } = useReorderFolderQueues();
-
-    let folderNameInput = $state<HTMLInputElement | null>(null);
 
     let queueIdSet = $derived(
         new Set((folderQueueQuery.data ?? []).map((q) => q.id)),
     );
     let queueEditPanel = $state(0);
 
-    const { mutateAsync: toggleQueue } = useToggleQueueInFolder();
-
-    const handleTitleChange = async (newTitle: string) => {
-        if (folderState.tabId && !isAllQueuesFolder) {
-            await updateFolder({ id: folderState.tabId, title: newTitle });
-            await updateTab({
-                id: folderState.tabId,
-                data: { title: newTitle },
-            });
+    $effect(() => {
+        if (!isAllQueuesFolder && folderQueueQuery.data?.length === 0) {
+            queueEditPanel = 30;
         }
-    };
+    });
+
+    const { mutateAsync: toggleQueue } = useToggleQueueInFolder();
 
     $effect(() => {
         if (folderQuery.data) {
@@ -85,28 +75,47 @@
         }
     });
 
+    $effect(() => {
+        if (showSearch) {
+            searchInput?.focus();
+        }
+    });
+
+    const onSearch = () => {
+        showSearch = !showSearch;
+        if (!showSearch) {
+            folderSearchKeyword = "";
+        }
+    };
+
     const { handleQueueCardKeydown } = useFolderShortcuts({
         tabId: () => tabId,
         isAllQueuesFolder: () => isAllQueuesFolder,
         folderContainer: () => folderContainer,
         searchInput: () => searchInput,
-        onSearch: () => {
-            showSearch = !showSearch;
-        },
+        onSearch,
         onEdit: () => {
             queueEditPanel = queueEditPanel === 0 ? 30 : 0;
         },
         onRefresh: () => void folderQueueQuery.refetch(),
+        onEscape: () => {
+            showSearch = false;
+            queueEditPanel = 0;
+        },
     });
 
     const filteredQueues = $derived(
         (queuesQuery.data ?? []).filter((q) =>
-            q.queueName.toLowerCase().includes(searchKeyword.toLowerCase()),
+            q.queueName
+                .toLowerCase()
+                .includes(sidebarSearchKeyword.toLowerCase()),
         ),
     );
     const visibleFolderQueues = $derived(
         (folderQueueQuery.data ?? []).filter((q) =>
-            q.queueName.toLowerCase().includes(searchKeyword.toLowerCase()),
+            q.queueName
+                .toLowerCase()
+                .includes(folderSearchKeyword.toLowerCase()),
         ),
     );
     const flipDurationMs = 300;
@@ -139,11 +148,9 @@
                 {tabId}
                 {tabParams}
                 onEdit={() => {
-                    queueEditPanel = queueEditPanel === 0 ? 30 : 0;
+                    queueEditPanel = queueEditPanel === 0 ? 40 : 0;
                 }}
-                onSearch={() => {
-                    showSearch = !showSearch;
-                }}
+                {onSearch}
             />
             {#if showSearch}
                 <div
@@ -152,11 +159,23 @@
                     <Search class="h-4 w-4 shrink-0" />
                     <Input
                         bind:ref={searchInput}
-                        bind:value={searchKeyword}
+                        bind:value={folderSearchKeyword}
                         class="border-none shadow-none dark:bg-transparent"
                         placeholder="Search queues..."
                         type="text"
                     />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="h-7 w-7 shrink-0"
+                        aria-label="Close folder search"
+                        onclick={() => {
+                            showSearch = false;
+                            folderSearchKeyword = "";
+                        }}
+                    >
+                        <X class="h-4 w-4" />
+                    </Button>
                 </div>
             {/if}
             <InfiniteScanLoader loading={folderQueueQuery.isFetching} />
@@ -178,6 +197,8 @@
                             use:dndzone={{
                                 items: folderQueueQuery.data ?? [],
                                 flipDurationMs,
+                                dragDisabled: isAllQueuesFolder,
+                                dropFromOthersDisabled: isAllQueuesFolder,
                                 dropTargetStyle: { outline: "none" },
                             }}
                             onconsider={handleDndConsider}
@@ -210,44 +231,21 @@
                 class="min-w-0 p-2 ps-0 py-4"
                 defaultSize={queueEditPanel}
             >
-                <Scroll.ScrollArea class="h-full bg-card rounded-sm">
-                    <div class="px-4 flex flex-col gap-2">
-                        <div class="sticky top-0 z-100 bg-card">
-                            <div class="py-2 flex items-center justify-between">
-                                <Input
-                                    bind:ref={folderNameInput}
-                                    bind:value={folderState.folderName}
-                                    class={cn(
-                                        "bg-transparent dark:bg-transparent",
-                                        "border-none shadow-none px-0 text-2xl! h-10!",
-                                        "font-semibold focus-visible:ring-0 rounded-none text-wrap",
-                                    )}
-                                    placeholder="Folder Name"
-                                    oninput={(e) =>
-                                        handleTitleChange(
-                                            e.currentTarget.value,
-                                        )}
-                                />
-                                <Button
-                                    variant="ghost"
-                                    onclick={() => {
-                                        queueEditPanel = 0;
-                                    }}
-                                    class="hover:text-red-500"
+                <Scroll.ScrollArea class="h-full bg-card rounded-sm p-4">
+                    <div class="flex flex-col gap-2">
+                        <div class="sticky top-0 z-100">
+                            <div class=" flex items-center justify-between">
+                                <div
+                                    class="flex items-center bg-background border px-2 rounded-[5px] max-lg:hidden w-full"
                                 >
-                                    <X class="w-5 h-5" />
-                                </Button>
-                            </div>
-                            <div
-                                class="flex items-center bg-background border px-2 rounded-[5px] max-lg:hidden"
-                            >
-                                <Search class="h-4 w-4" />
-                                <Input
-                                    bind:value={searchKeyword}
-                                    class="dark:bg-transparent border-none shadow-none w-80 py-0"
-                                    placeholder="Search..."
-                                    type="text"
-                                />
+                                    <Search class="h-4 w-4" />
+                                    <Input
+                                        bind:value={sidebarSearchKeyword}
+                                        class="dark:bg-transparent border-none shadow-none w-full! py-0"
+                                        placeholder="Search..."
+                                        type="text"
+                                    />
+                                </div>
                             </div>
                         </div>
 
@@ -255,7 +253,7 @@
                             {#each filteredQueues as queue}
                                 {@const isChecked = queueIdSet.has(queue.id)}
                                 <label
-                                    class="flex items-center gap-2 p-2 rounded-md hover:bg-background cursor-pointer transition-colors"
+                                    class="flex items-center gap-2 p-2 px-4 rounded-md hover:bg-background cursor-pointer transition-colors"
                                 >
                                     <Checkbox
                                         checked={isChecked}

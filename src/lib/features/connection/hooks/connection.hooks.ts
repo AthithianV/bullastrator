@@ -1,6 +1,7 @@
 import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { queueStore } from "queue/store/queueStore.svelte";
+import { QUEUE_QUERY_KEY } from "queue/hooks/queue.hooks";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import type {
   ConnectionHealth,
@@ -8,6 +9,9 @@ import type {
   ReadConnection,
   UpdateConnection,
 } from "../interface/connection.types";
+import { TAB_QUERY_KEY, useSetActiveTab } from "tabs/hooks/tab.hooks";
+import { tabStore } from "tabs/store/tabStore.svelte";
+import type { ReadTabModel } from "tabs/interface/tab.types";
 
 // Define the unique key for the connections list
 export const CONNECTION_QUERY_KEY = ["connections"];
@@ -128,6 +132,7 @@ export const useUpdateConnection = () => {
  */
 export const useDeleteConnection = () => {
   const queryClient = useQueryClient();
+  const { mutateAsync: setActiveTab } = useSetActiveTab();
 
   return createMutation(() => ({
     mutationFn: async (id: string) => {
@@ -140,15 +145,26 @@ export const useDeleteConnection = () => {
         throw new Error("USER_CANCELLED");
       }
 
-      return invokeWrapper("delete_connection", { id });
+      return invokeWrapper("delete_connection", { id }, {shouldToast: true});
     },
-    onSuccess: (_result, deletedId) => {
-      queryClient.setQueryData<ReadConnection[]>(CONNECTION_QUERY_KEY, (oldData) => {
-        return oldData ? oldData.filter((conn) => conn.id !== deletedId) : [];
-      });
-      queryClient.removeQueries({
-        queryKey: [...CONNECTION_QUERY_KEY, deletedId],
-      });
+    onSuccess: async (_result, deletedConnectionId) => {
+      const tabs = queryClient.getQueryData<ReadTabModel[]>(TAB_QUERY_KEY) ?? [];
+      const deletedTabIds = tabs
+        .filter((tab) => tab.connectionId === deletedConnectionId)
+        .map((tab) => tab.id);
+      const { remaining, nextId } = tabStore.selectAfterRemoval(
+        deletedTabIds,
+        tabs,
+      );
+
+      queryClient.setQueryData(TAB_QUERY_KEY, remaining);
+      queryClient.setQueryData([...TAB_QUERY_KEY, "ACTIVE_TAB"], nextId);
+      queryClient.invalidateQueries({ queryKey: CONNECTION_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: QUEUE_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: TAB_QUERY_KEY });
+      if (nextId) {
+        await setActiveTab(nextId);
+      }
     },
   }));
 };

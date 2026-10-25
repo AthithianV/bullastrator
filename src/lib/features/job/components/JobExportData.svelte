@@ -26,24 +26,29 @@
 <Dialog.Root onOpenChange={handleOpenChange}>
     <Tooltip>
         <TooltipTrigger>
-            <Dialog.Trigger
-                data-queue-shortcut="export"
-                class={cn(
-                    "py-2 px-3! cursor-pointer rounded-sm border",
-                    "shadow",
-                    " hover:bg-card hover:text-primary",
-                )}><Share class="h-4 w-4" /></Dialog.Trigger
-            >
+            {#snippet child({ props })}
+                <Dialog.Trigger
+                    {...props}
+                    data-queue-shortcut="export"
+                    class={cn(
+                        "py-2 px-3! cursor-pointer rounded-sm border",
+                        "shadow",
+                        " hover:bg-card hover:text-primary",
+                    )}><Share class="h-4 w-4" /></Dialog.Trigger
+                >
+            {/snippet}
         </TooltipTrigger>
         <TooltipContent>
             Export
-            <kbd class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]">
+            <kbd
+                class="ml-2 rounded border border-border/50 px-1.5 py-0.5 font-mono text-[10px]"
+            >
                 {globalStore.shortcut("E")}
             </kbd>
         </TooltipContent>
     </Tooltip>
     <Dialog.Content
-        class="bg-card! w-[50vw] max-w-[50vw] sm:max-w-[50vw] border-none p-0 gap-1"
+        class="bg-card! w-[50vw] max-w-[50vw] sm:max-w-[50vw] border-none p-3 gap-1"
     >
         <h3 class="p-3 font-semibold text-lg">
             Job Data - ({queueState.queueName})
@@ -53,7 +58,7 @@
             <InfiniteScanLoader loading={jobDataQuery.isLoading} />
 
             <DataEditor
-                class="h-[60vh] px-0"
+                class="h-[60vh] px-0 rounded-sm"
                 value={JSON.stringify(jobDataQuery.data ?? {}, null, 2)}
                 readOnly={true}
             />
