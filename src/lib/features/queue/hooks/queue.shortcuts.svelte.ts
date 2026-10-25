@@ -57,7 +57,10 @@ export function useQueueShortcuts(options: QueueShortcutOptions) {
       } else if (options.hasSelection()) {
         options.onRetrySelected();
       }
-    } else if (!modifier && event.key === "Delete") {
+    } else if (
+      !modifier &&
+      (event.key === "Delete" || event.key === "Backspace")
+    ) {
       event.preventDefault();
       if (event.shiftKey) {
         if (options.hasJobsInState()) options.onDeleteAll();

@@ -477,7 +477,7 @@ export const useRetryJob = () => {
         retryJobStatus: retryJobStatus === "completed" ? "completed" : "failed",
       };
 
-      let count = isAll ? queueState.jobCounts.failed : queueState.active.selectedJobIds.length;
+      let count = isAll ? queueState.jobCounts[queueState.currentStatus] : queueState.active.selectedJobIds.length;
 
       let confirmationMesssage = "Are you sure want to retry ";
       confirmationMesssage += isAll ? "all" : "selected";
