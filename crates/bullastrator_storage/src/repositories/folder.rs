@@ -44,13 +44,13 @@ impl FolderRepository {
             WHERE connection_id = ?
             "#,
         )
-            .bind(&id)
-            .bind(&data.connection_id)
-            .bind(data.user_id)
-            .bind(title)
-            .bind(&data.connection_id)
-            .execute(&self.pool)
-            .await?;
+        .bind(&id)
+        .bind(&data.connection_id)
+        .bind(data.user_id)
+        .bind(title)
+        .bind(&data.connection_id)
+        .execute(&self.pool)
+        .await?;
         self.get_by_id(&id)
             .await?
             .context("Created folder was not found")

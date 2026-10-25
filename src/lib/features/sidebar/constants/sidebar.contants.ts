@@ -7,7 +7,6 @@ import {
   History,
   Power,
   Search,
-  type IconProps,
 } from "@lucide/svelte";
 import { globalStore } from "shared/stores/global.svelte";
 import { sidebarStore } from "sidebar/store/sidebarStore.svelte";
@@ -17,7 +16,7 @@ import Explorer from "../../explorer/components/Explorer.svelte";
 
 export const SIDEBAR_MODES: {
   id: SidebarMode;
-  icon: Component<IconProps, {}, "">;
+  icon: Component;
   label: string;
   component?: Component;
   handleClick: () => void;

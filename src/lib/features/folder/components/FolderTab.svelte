@@ -5,7 +5,7 @@
 
     import { dndzone } from "svelte-dnd-action";
     import { flip } from "svelte/animate";
-    import { onMount, untrack } from "svelte";
+    import { untrack } from "svelte";
 
     import {
         setFolderState,
@@ -19,10 +19,10 @@
         useGetQueuesOfFolder,
         useReorderFolderQueues,
         useToggleQueueInFolder,
-        useUpdateFolder,
     } from "../hooks/folder.hooks.svelte";
     import QueueJobCount from "./QueueJobCount.svelte";
-    import { Search } from "@lucide/svelte";
+    import { Search, X } from "@lucide/svelte";
+    import Button from "shared/components/ui/button/button.svelte";
     import type { FolderTabParams } from "../interface/folder.types";
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
     import FolderToolbar from "./FolderToolbar.svelte";
@@ -61,8 +61,8 @@
     );
     let queueEditPanel = $state(0);
 
-    onMount(() => {
-        if (folderQueueQuery.data?.length === 0) {
+    $effect(() => {
+        if (!isAllQueuesFolder && folderQueueQuery.data?.length === 0) {
             queueEditPanel = 30;
         }
     });
@@ -98,6 +98,10 @@
             queueEditPanel = queueEditPanel === 0 ? 30 : 0;
         },
         onRefresh: () => void folderQueueQuery.refetch(),
+        onEscape: () => {
+            showSearch = false;
+            queueEditPanel = 0;
+        },
     });
 
     const filteredQueues = $derived(
@@ -160,6 +164,18 @@
                         placeholder="Search queues..."
                         type="text"
                     />
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        class="h-7 w-7 shrink-0"
+                        aria-label="Close folder search"
+                        onclick={() => {
+                            showSearch = false;
+                            folderSearchKeyword = "";
+                        }}
+                    >
+                        <X class="h-4 w-4" />
+                    </Button>
                 </div>
             {/if}
             <InfiniteScanLoader loading={folderQueueQuery.isFetching} />

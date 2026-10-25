@@ -9,6 +9,7 @@ type FolderShortcutOptions = {
     onSearch: () => void;
     onEdit: () => void;
     onRefresh: () => void;
+    onEscape: () => void;
 };
 
 export function useFolderShortcuts(options: FolderShortcutOptions) {
@@ -71,6 +72,12 @@ export function useFolderShortcuts(options: FolderShortcutOptions) {
 
     const handleShortcut = (event: KeyboardEvent) => {
         if (tabStore.activeTab !== options.tabId()) return;
+
+        if (event.key === "Escape") {
+            event.preventDefault();
+            options.onEscape();
+            return;
+        }
 
         if (event.metaKey || event.ctrlKey) {
             switch (event.key.toLowerCase()) {

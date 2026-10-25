@@ -130,6 +130,7 @@ export const useDeleteTab = () => {
       queryClient.setQueryData<ReadTabModel[]>(TAB_QUERY_KEY, (oldData) => {
         return oldData ? oldData.filter((tab) => tab.id !== deletedId) : [];
       });
+      queryClient.setQueryData([...TAB_QUERY_KEY, "ACTIVE_TAB"], tabStore.activeTab);
     },
     onError: (err: Error) => {
       toast.error(`Failed to delete tab: ${err.message}`);

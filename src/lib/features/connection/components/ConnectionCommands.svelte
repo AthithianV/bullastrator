@@ -1,5 +1,7 @@
 <script lang="ts">
     import { Ellipsis, Pencil, Plus, RefreshCcw, Trash2 } from "@lucide/svelte";
+    import ConnectionForm from "./ConnectionForm.svelte";
+    import DialogWrapper from "shared/components/wrapper/DialogWrapper.svelte";
     import * as DropdownMenu from "ui/dropdown-menu";
     import { useSyncAllQueues } from "queue/hooks/queue.hooks";
     import { useDeleteConnection } from "connection/hooks/connection.hooks";
@@ -11,6 +13,7 @@
 
     const { connection }: { connection: ConnectionWithQueue } = $props();
     const dropdownId = $derived(`connection-${connection.id}`);
+    let updateDialogOpen = $state(false);
 
     function handleDropdownChange(open: boolean) {
         if (open) {
@@ -51,7 +54,13 @@
                 <Plus class="h-4 w-4" />
                 Add New Folder
             </DropdownMenu.Item>
-            <DropdownMenu.Item onclick={(e) => {}}>
+            <DropdownMenu.Item
+                onclick={(e) => {
+                    e.stopPropagation();
+                    explorerStore.openDropdownId = null;
+                    updateDialogOpen = true;
+                }}
+            >
                 <Pencil class="h-4 w-4" />
                 Update Connection
             </DropdownMenu.Item>
@@ -68,4 +77,16 @@
             </DropdownMenu.Item>
         </DropdownMenu.Content>
     </DropdownMenu.Root>
+
+    <DialogWrapper
+        bind:open={updateDialogOpen}
+        showTrigger={false}
+        title="Update Connection"
+        description="Update the Redis connection details."
+    >
+        <ConnectionForm
+            connectionId={connection.id}
+            onComplete={() => (updateDialogOpen = false)}
+        />
+    </DialogWrapper>
 </div>

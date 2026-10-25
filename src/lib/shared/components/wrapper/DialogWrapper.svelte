@@ -6,10 +6,12 @@
     interface Props {
         title: string;
         description: string;
-        trigger: Snippet;
+        trigger?: Snippet;
         children: Snippet<[closeDialog: () => void]>;
         triggerClass?: string;
         contentClass?: string;
+        showTrigger?: boolean;
+        open?: boolean;
     }
 
     let {
@@ -19,10 +21,9 @@
         children,
         triggerClass,
         contentClass,
+        showTrigger = true,
+        open = $bindable(false),
     }: Props = $props();
-
-    // Internal state to control the dialog visibility
-    let open = $state(false);
 
     function handleClose() {
         open = false;
@@ -30,15 +31,17 @@
 </script>
 
 <Dialog.Root bind:open>
-    <Dialog.Trigger
-        class={cn(
-            "p-1 py-2 rounded-sm",
-            "cursor-pointer hover:bg-card hover:text-primary",
-            triggerClass,
-        )}
-    >
-        {@render trigger()}
-    </Dialog.Trigger>
+    {#if showTrigger && trigger}
+        <Dialog.Trigger
+            class={cn(
+                "p-1 py-2 rounded-sm",
+                "cursor-pointer hover:bg-card hover:text-primary",
+                triggerClass,
+            )}
+        >
+            {@render trigger()}
+        </Dialog.Trigger>
+    {/if}
 
     <Dialog.Content
         class={cn(

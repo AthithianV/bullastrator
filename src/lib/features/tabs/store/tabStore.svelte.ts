@@ -7,6 +7,22 @@ class TabStore {
     this.activeTab = tab;
   }
 
+  selectAfterRemoval(deletedIds: string[], allTabs: ReadTabModel[]) {
+    const deleted = new Set(deletedIds);
+    const remaining = allTabs.filter((tab) => !deleted.has(tab.id));
+
+    if (!this.activeTab || !deleted.has(this.activeTab)) {
+      return { remaining, nextId: this.activeTab };
+    }
+
+    const firstDeletedIndex = allTabs.findIndex((tab) => deleted.has(tab.id));
+    const nextIndex = Math.min(firstDeletedIndex, remaining.length - 1);
+    const nextId = remaining[nextIndex]?.id ?? null;
+    this.activeTab = nextId;
+
+    return { remaining, nextId };
+  }
+
   moveToNextTabOnClose(closedTabId: string, allTabs: ReadTabModel[]) {
     if (allTabs.length === 0) return null;
 
