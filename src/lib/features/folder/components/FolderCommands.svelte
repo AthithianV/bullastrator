@@ -63,7 +63,12 @@
         "ps-6 flex items-center gap-1 w-full group transition-colors",
         queueStore.makeActive(`${folder.id}-${folder.title}`),
     )}
-    onmousedown={(e) => {
+    onclick={(e) => {
+        queueStore.setActiveNode(`${folder.id}-${folder.title}`);
+        openFolder(e, folder.id, folder.title);
+    }}
+    onkeydown={(e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
         e.preventDefault();
         queueStore.setActiveNode(`${folder.id}-${folder.title}`);
         openFolder(e, folder.id, folder.title);
@@ -74,6 +79,7 @@
             "flex items-center justify-center py-1 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700",
             "[&[data-state=open]>svg]:rotate-90 transition-transform",
         )}
+        onclick={(e) => e.stopPropagation()}
     >
         <ChevronRight class="w-4 h-4 block" />
     </Accordion.Trigger>

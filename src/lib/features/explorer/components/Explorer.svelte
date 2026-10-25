@@ -68,8 +68,9 @@
                                     "cursor-pointer rounded-[2px]",
                                     "group",
                                 )}
-                                onclick={() =>
-                                    queueStore.setActiveNode(conn.id)}
+                                onclick={() => {
+                                    queueStore.setActiveNode(conn.id);
+                                }}
                             >
                                 <div class="flex-1 flex items-center gap-2">
                                     <span
@@ -91,7 +92,10 @@
                                         <span class="font-semibold truncate"
                                             >{conn.name}</span
                                         >
-                                        <ConnectionCommands connection={conn} />
+                                        <ConnectionCommands
+                                            connection={conn}
+                                            className={"hidden group-hover:visible"}
+                                        />
                                     </div>
                                 </div>
                             </Accordion.Trigger>

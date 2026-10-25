@@ -7,11 +7,15 @@
     import { useDeleteConnection } from "connection/hooks/connection.hooks";
     import type { ConnectionWithQueue } from "queue/interface/queue.types";
     import { explorerStore } from "$lib/features/explorer/store/explorer.svelte";
+    import { cn } from "tailwind-variants";
 
     const { mutateAsync: syncQuery } = useSyncAllQueues();
     const { mutateAsync: deleteConnection } = useDeleteConnection();
 
-    const { connection }: { connection: ConnectionWithQueue } = $props();
+    const {
+        connection,
+        className,
+    }: { connection: ConnectionWithQueue; className: string } = $props();
     const dropdownId = $derived(`connection-${connection.id}`);
     let updateDialogOpen = $state(false);
 
@@ -33,7 +37,7 @@
     }
 </script>
 
-<div class="flex gap-2 ms-2">
+<div class={cn("flex gap-2 ms-2", className)}>
     <DropdownMenu.Root
         open={explorerStore.openDropdownId === dropdownId}
         onOpenChange={handleDropdownChange}
