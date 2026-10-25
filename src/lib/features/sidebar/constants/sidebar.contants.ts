@@ -1,12 +1,7 @@
 import {
   Bell,
   Box,
-  ChartArea,
-  FolderClosed,
-  HardHat,
   History,
-  Power,
-  Search,
 } from "@lucide/svelte";
 import { globalStore } from "shared/stores/global.svelte";
 import { sidebarStore } from "sidebar/store/sidebarStore.svelte";

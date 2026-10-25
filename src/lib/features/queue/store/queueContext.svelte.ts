@@ -66,7 +66,6 @@ export class QueueState {
     paused: 0,
     prioritized: 0,
     isPaused: false,
-    activeWorkers: 0,
     total: 0,
   });
 
