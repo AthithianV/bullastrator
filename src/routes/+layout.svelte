@@ -21,7 +21,7 @@
 </script>
 
 <QueryClientProvider client={queryClient}>
-    <Toaster richColors />
+    <Toaster />
     <ConfirmActionDialog />
     <TooltipProvider>
         <main class="w-full fixed top-0 bg-card select-none min-w-0">
