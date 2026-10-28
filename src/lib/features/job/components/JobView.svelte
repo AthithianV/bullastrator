@@ -145,7 +145,7 @@
             </div>
         </div>
 
-        {#if selectedJobQuery.isLoading || !queueState.active.selectedJobDetails}
+        {#if selectedJobQuery.isLoading}
             <div class="flex flex-1 flex-col min-h-0">
                 <div class="flex items-center gap-1 border-b px-3 py-2">
                     {#each Array(5) as _}
@@ -157,6 +157,21 @@
                         class="h-2/3 min-h-64 w-full rounded-sm bg-card"
                     />
                 </div>
+            </div>
+        {:else if !queueState.active.selectedJobDetails}
+            <div class="p-4">
+                <Alert.Root
+                    variant="default"
+                    class="rounded-sm w-full overflow-auto space-y-2"
+                >
+                    <Alert.Title
+                        class="flex justify-start items-center gap-2 text-yellow-500"
+                        ><TriangleAlertIcon class="h-4 w-4" /> Job Not found</Alert.Title
+                    >
+                    <Alert.Description class="relative select text-yellow-200">
+                        Job must be moved to a different state.
+                    </Alert.Description>
+                </Alert.Root>
             </div>
         {:else}
             <Tabs.Root
