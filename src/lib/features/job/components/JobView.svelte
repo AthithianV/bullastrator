@@ -55,7 +55,7 @@
     });
 </script>
 
-{#if selectedJobQuery.isLoading && !headerJob}
+{#if selectedJobQuery.isFetching && !headerJob}
     <div class="h-full w-full flex justify-center items-center">
         <Spinner class="text-primary h-15 w-15" />
     </div>
@@ -145,7 +145,7 @@
             </div>
         </div>
 
-        {#if selectedJobQuery.isLoading}
+        {#if selectedJobQuery.isFetching || !queueState.active.selectedJobDetails}
             <div class="flex flex-1 flex-col min-h-0">
                 <div class="flex items-center gap-1 border-b px-3 py-2">
                     {#each Array(5) as _}

@@ -261,6 +261,8 @@ export const usePromoteJobs = () => {
       toast.success("Jobs promoted successfully");
       queueState.active.selectedJobIds = [];
       queueState.active.selectedJob = null;
+      queueState.active.jobViewSize = 0;
+
       await refetchJobs();
     },
     onError: (err: any) => {
@@ -318,6 +320,7 @@ export const useDeleteJobs = () => {
       toast.success("Jobs deleted successfully");
       queueState.active.selectedJobIds = [];
       queueState.active.selectedJob = null;
+      queueState.active.jobViewSize = 0;
       await refetchJobs();
     },
     onError: (err: any) => {
@@ -513,6 +516,7 @@ export const useRetryJob = () => {
       toast.success("Job(s) retried successfully");
       queueState.active.selectedJobIds = [];
       queueState.active.selectedJob = null;
+      queueState.active.jobViewSize = 0;
       await refetchJobs();
     },
     onError: (err: any) => {
