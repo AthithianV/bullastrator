@@ -6,6 +6,7 @@
     import { globalStore } from "shared/stores/global.svelte";
     import { Search } from "@lucide/svelte";
     import { Button } from "shared/components/ui/button";
+    import UserManagementPanel from "$lib/features/user/components/UserManagementPanel.svelte";
 </script>
 
 <div class="w-full h-(--titlebar-height) flex justify-between items-center">
@@ -29,5 +30,6 @@
     </div>
     <div class="flex items-center h-full gap-1 px-2">
         <ThemeToggler />
+        <UserManagementPanel />
     </div>
 </div>
