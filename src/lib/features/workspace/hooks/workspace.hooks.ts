@@ -24,7 +24,6 @@ export const useGetWorkspaces = () => {
 /**
  * 🎣 Hook to fetch the DEFAULT workspace.
  */
-// Command: file://./../../../../../src-tauri/src/commands/workspace_command.rs
 export const useGetActiveWorkspace = () => {
   return createQuery(() => ({
     queryKey: [...WORKSPACE_QUERY_KEY, "active_workspace"],

@@ -71,8 +71,7 @@ impl WorkspaceRepository {
             SELECT EXISTS (
                 SELECT 1
                 FROM workspaces
-                WHERE user_id = ?
-                  AND LOWER(name) = LOWER(?)
+                WHERE LOWER(name) = LOWER(?)
             )
             "#,
         )
@@ -87,7 +86,7 @@ impl WorkspaceRepository {
     }
 
     pub async fn create(&self, user_id: &str, data: CreateWorkspace) -> Result<Workspace> {
-        self.check_if_workspace_already_exists(&data.name).await;
+        let _ = self.check_if_workspace_already_exists(&data.name).await?;
 
         let id = Uuid::new_v4().to_string();
 
@@ -272,7 +271,7 @@ impl WorkspaceRepository {
         data: UpdateWorkspace,
     ) -> Result<Workspace> {
         if let Some(name) = data.name.as_deref() {
-            self.check_if_workspace_already_exists(name).await;
+            let _ = self.check_if_workspace_already_exists(name).await?;
         }
 
         let result = sqlx::query(

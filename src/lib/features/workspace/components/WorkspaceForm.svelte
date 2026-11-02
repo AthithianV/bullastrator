@@ -34,17 +34,6 @@
         dataType: "json",
         async onUpdate({ form: f }) {
             if (f.valid) {
-                if (
-                    (workspaces.data ?? []).some(
-                        (workspace) =>
-                            workspace.id !== data?.id &&
-                            workspace.name.trim().toLowerCase() ===
-                                f.data.name.trim().toLowerCase(),
-                    )
-                ) {
-                    return;
-                }
-
                 try {
                     if (data?.id) {
                         await updateWorkspace({
@@ -59,11 +48,8 @@
                         await setActiveWorkspace(workspace.id);
                     }
                     onComplete?.();
-                } catch (err) {
-                    console.error("Workspace Form Error:", err);
-                    toast.error(
-                        err instanceof Error ? err.message : String(err),
-                    );
+                } catch (e) {
+                    console.error(e);
                 }
             }
         },
@@ -99,23 +85,10 @@
                         placeholder="e.g. Personal Projects"
                         aria-invalid={nameError ? "true" : undefined}
                     />
-                    {#if nameError}<Field.Error>{nameError}</Field.Error
-                        >{/if}
+                    {#if nameError}<Field.Error>{nameError}</Field.Error>{/if}
                 </Field.Field>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <!-- <Field.Field data-invalid={$errors.icon ? "" : undefined}>
-                        <Field.Label for="icon">Icon / Emoji</Field.Label>
-                        <Input
-                            id="icon"
-                            bind:value={$form.icon}
-                            placeholder="🚀"
-                        />
-                        {#if $errors.icon}<Field.Error
-                                >{$errors.icon}</Field.Error
-                            >{/if}
-                    </Field.Field> -->
-
                     <Field.Field data-invalid={$errors.color ? "" : undefined}>
                         <Field.Label for="color">Theme Color</Field.Label>
                         <ColorPicker bind:data={$form.color} />
