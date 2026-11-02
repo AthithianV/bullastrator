@@ -1,5 +1,9 @@
 CHANGELOG.md
 
+### [0.2.31] - 02-11-2026
+- Fixed Job View loading behavior during job refetches and added a message when a job is no longer found.
+- Closed Job View after promoting, deleting, or retrying a job.
+
 ### [0.2.3] - 24-10-2026
 - Added a skeleton loading state for Job View, keeping the selected job header visible while details load.
 - Added job summary data from the job list for faster Job View header rendering.
