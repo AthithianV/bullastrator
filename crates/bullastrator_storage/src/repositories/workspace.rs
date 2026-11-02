@@ -65,7 +65,7 @@ impl WorkspaceRepository {
         Ok(())
     }
 
-    pub async fn create(&self, user_id: &str, data: CreateWorkspace) -> Result<Workspace> {
+    pub async fn check_if_workspace_already_exists(&self, name: &str) -> Result<()> {
         let exists: bool = sqlx::query_scalar(
             r#"
             SELECT EXISTS (
@@ -76,14 +76,18 @@ impl WorkspaceRepository {
             )
             "#,
         )
-        .bind(user_id)
-        .bind(&data.name)
+        .bind(name)
         .fetch_one(&self.pool)
         .await?;
 
         if exists {
             anyhow::bail!("A workspace with this name already exists");
         }
+        Ok(())
+    }
+
+    pub async fn create(&self, user_id: &str, data: CreateWorkspace) -> Result<Workspace> {
+        self.check_if_workspace_already_exists(&data.name).await;
 
         let id = Uuid::new_v4().to_string();
 
@@ -267,6 +271,10 @@ impl WorkspaceRepository {
         user_id: &str,
         data: UpdateWorkspace,
     ) -> Result<Workspace> {
+        if let Some(name) = data.name.as_deref() {
+            self.check_if_workspace_already_exists(name).await;
+        }
+
         let result = sqlx::query(
             r#"
                 UPDATE

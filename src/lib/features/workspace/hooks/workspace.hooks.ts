@@ -66,8 +66,8 @@ export const useCreateWorkspace = () => {
       queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
       toast.success("Workspace created successfully");
     },
-    onError: (err: string) => {
-      toast.error(err);
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : String(err));
     },
   }));
 };
@@ -88,8 +88,8 @@ export const useUpdateWorkspace = () => {
       queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
       toast.success("Workspace updated");
     },
-    onError: (err: string) => {
-      toast.error(err);
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : String(err));
     },
   }));
 };
