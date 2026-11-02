@@ -32,6 +32,7 @@
         validators: zod4(workspaceSchema),
         SPA: true,
         dataType: "json",
+        resetForm: false,
         async onUpdate({ form: f }) {
             if (f.valid) {
                 try {
@@ -64,6 +65,13 @@
                         $form.name.trim().toLowerCase(),
             ),
     );
+
+    const noUpdate = $derived(
+        ($form.name ?? "").trim().length > 0 &&
+            data &&
+            data.name === $form.name,
+    );
+
     const nameError = $derived(
         duplicateWorkspaceName
             ? "A workspace with this name already exists"
@@ -103,7 +111,10 @@
                 <div class="flex justify-end gap-3 pt-6">
                     <Button
                         type="submit"
-                        disabled={$submitting}
+                        disabled={$submitting ||
+                            duplicateWorkspaceName ||
+                            noUpdate ||
+                            $form.name.length === 0}
                         class="min-w-25"
                     >
                         {#if $submitting}
