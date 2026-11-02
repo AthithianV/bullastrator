@@ -2,7 +2,6 @@
     import { Loader } from "@lucide/svelte";
     import { defaults, superForm } from "sveltekit-superforms";
     import { zod4 } from "sveltekit-superforms/adapters";
-    import { toast } from "svelte-sonner";
     import { Button } from "ui/button/index.js";
     import * as Field from "ui/field/index.js";
     import { Input } from "ui/input/index.js";

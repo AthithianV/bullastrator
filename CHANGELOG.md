@@ -1,5 +1,10 @@
 CHANGELOG.md
 
+### [0.2.4] - 03-11-2026
+- Added workspace management with case-insensitive duplicate-name validation across the user's workspaces.
+- Prevented submitting empty, duplicate, or unchanged workspace names, and preserved form values when workspace operations fail.
+- Opened job details with a single click and fixed the first opened job remaining in a loading state.
+
 ### [0.2.31] - 02-11-2026
 - Fixed Job View loading behavior during job refetches and added a message when a job is no longer found.
 - Closed Job View after promoting, deleting, or retrying a job.
