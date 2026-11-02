@@ -24,7 +24,6 @@ export const useGetWorkspaces = () => {
 /**
  * 🎣 Hook to fetch the DEFAULT workspace.
  */
-// Command: file://./../../../../../src-tauri/src/commands/workspace_command.rs
 export const useGetActiveWorkspace = () => {
   return createQuery(() => ({
     queryKey: [...WORKSPACE_QUERY_KEY, "active_workspace"],
@@ -66,8 +65,8 @@ export const useCreateWorkspace = () => {
       queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
       toast.success("Workspace created successfully");
     },
-    onError: (err: string) => {
-      toast.error(err);
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : String(err));
     },
   }));
 };
@@ -88,8 +87,8 @@ export const useUpdateWorkspace = () => {
       queryClient.invalidateQueries({ queryKey: WORKSPACE_QUERY_KEY });
       toast.success("Workspace updated");
     },
-    onError: (err: string) => {
-      toast.error(err);
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : String(err));
     },
   }));
 };

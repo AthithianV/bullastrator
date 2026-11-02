@@ -209,9 +209,8 @@
                                             job.id &&
                                             "border-2 border-accent-foreground/50 rounded-sm",
                                     )}
-                                    onclick={(e) =>
-                                        handleJobClick(job, index, e)}
-                                    ondblclick={() => {
+                                    onclick={(e) => {
+                                        handleJobClick(job, index, e);
                                         queueState.active.jobViewSize = 50;
                                     }}
                                     role="button"

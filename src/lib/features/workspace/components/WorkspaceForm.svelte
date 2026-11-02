@@ -7,31 +7,31 @@
     import { Input } from "ui/input/index.js";
     import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
     import { submitOnModEnter } from "shared/helpers/formShortcuts";
+    import ColorPicker from "shared/components/form/ColorPicker.svelte";
     import {
         useCreateWorkspace,
+        useGetWorkspaces,
         useSetActiveWorkspace,
         useUpdateWorkspace,
     } from "workspace/hooks/workspace.hooks";
     import { workspaceSchema } from "../schema/workspace.schema";
 
     // Props using Svelte 5 runes
-    let { data = null, onComplete } = $props<{
-        data?: any;
-        onComplete?: () => void;
-    }>();
+    let { data = null, onComplete } = $props();
 
     const { mutateAsync: createWorkspace } = useCreateWorkspace();
+    const workspaces = useGetWorkspaces();
     const { mutateAsync: setActiveWorkspace } = useSetActiveWorkspace();
     const { mutateAsync: updateWorkspace } = useUpdateWorkspace();
 
     // Initialize form with defaults or existing data
     const initialData = defaults((() => data)(), zod4(workspaceSchema));
-
     const { form, errors, enhance, submitting } = superForm(initialData, {
         id: "add-or-update-workspace",
         validators: zod4(workspaceSchema),
         SPA: true,
         dataType: "json",
+        resetForm: false,
         async onUpdate({ form: f }) {
             if (f.valid) {
                 try {
@@ -43,20 +43,39 @@
                     } else {
                         const workspace = await createWorkspace({
                             ...f.data,
-                            plan: "FREE",
-                            role: "OWNER",
                             lastAccessedAt: new Date(),
-                            maxConnections: 10,
                         });
                         await setActiveWorkspace(workspace.id);
                     }
                     onComplete?.();
-                } catch (err) {
-                    console.error("Workspace Form Error:", err);
+                } catch (e) {
+                    console.error(e);
                 }
             }
         },
     });
+
+    const duplicateWorkspaceName = $derived(
+        ($form.name ?? "").trim().length > 0 &&
+            (workspaces.data ?? []).some(
+                (workspace) =>
+                    workspace.id !== data?.id &&
+                    workspace.name.trim().toLowerCase() ===
+                        $form.name.trim().toLowerCase(),
+            ),
+    );
+
+    const noUpdate = $derived(
+        ($form.name ?? "").trim().length > 0 &&
+            data &&
+            data.name === $form.name,
+    );
+
+    const nameError = $derived(
+        duplicateWorkspaceName
+            ? "A workspace with this name already exists"
+            : $errors.name,
+    );
 </script>
 
 <div class="max-h-[80vh] overflow-auto border rounded-lg p-6 shadow-sm">
@@ -64,47 +83,22 @@
     <form use:enhance class="space-y-6" onkeydown={submitOnModEnter}>
         <Field.Set>
             <Field.Group>
-                <Field.Field data-invalid={$errors.name ? "" : undefined}>
+                <Field.Field data-invalid={nameError ? "" : undefined}>
                     <Field.Label for="name">Workspace Name</Field.Label>
                     <Input
                         id="name"
                         bind:value={$form.name}
+                        maxlength={20}
                         placeholder="e.g. Personal Projects"
-                        aria-invalid={$errors.name ? "true" : undefined}
+                        aria-invalid={nameError ? "true" : undefined}
                     />
-                    {#if $errors.name}<Field.Error>{$errors.name}</Field.Error
-                        >{/if}
+                    {#if nameError}<Field.Error>{nameError}</Field.Error>{/if}
                 </Field.Field>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <!-- <Field.Field data-invalid={$errors.icon ? "" : undefined}>
-                        <Field.Label for="icon">Icon / Emoji</Field.Label>
-                        <Input
-                            id="icon"
-                            bind:value={$form.icon}
-                            placeholder="🚀"
-                        />
-                        {#if $errors.icon}<Field.Error
-                                >{$errors.icon}</Field.Error
-                            >{/if}
-                    </Field.Field> -->
-
                     <Field.Field data-invalid={$errors.color ? "" : undefined}>
                         <Field.Label for="color">Theme Color</Field.Label>
-                        <div
-                            class="flex gap-2 border justify-center items-center p-2 rounded-lg"
-                        >
-                            <Input
-                                id="color"
-                                type="color"
-                                bind:value={$form.color}
-                                aria-label="Choose workspace color"
-                                class="h-7 w-7 cursor-pointer appearance-none rounded-full bg-transparent p-0.5 shadow-sm transition hover:scale-105 [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:p-0"
-                            />
-                            <div>
-                                {$form.color}
-                            </div>
-                        </div>
+                        <ColorPicker bind:data={$form.color} />
                         {#if $errors.color}<Field.Error
                                 >{$errors.color}</Field.Error
                             >{/if}
@@ -116,7 +110,10 @@
                 <div class="flex justify-end gap-3 pt-6">
                     <Button
                         type="submit"
-                        disabled={$submitting}
+                        disabled={$submitting ||
+                            duplicateWorkspaceName ||
+                            noUpdate ||
+                            $form.name.length === 0}
                         class="min-w-25"
                     >
                         {#if $submitting}

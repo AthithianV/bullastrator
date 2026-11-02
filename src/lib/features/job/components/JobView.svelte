@@ -29,9 +29,13 @@
     const queueState = useQueueState();
     const selectedJobQuery = useGetJobById();
     const selectedJobLog = useGetJobLog();
+    const jobDetails = $derived(
+        selectedJobQuery.data?.id === queueState.active.selectedJob
+            ? selectedJobQuery.data
+            : null,
+    );
     const headerJob = $derived(
-        queueState.active.selectedJobDetails ??
-            queueState.active.selectedJobSummary,
+        jobDetails ?? queueState.active.selectedJobSummary,
     );
 
     $effect(() => {
@@ -85,7 +89,7 @@
             <div>
                 <div class="flex items-center gap-3 mb-1">
                     <h1 class="text-xl font-bold flex items-center gap-2">
-                        {#if queueState.active.selectedJobDetails?.failedReason}
+                        {#if jobDetails?.failedReason}
                             <Tooltip>
                                 <TooltipTrigger class="text-red-500">
                                     <CircleAlert class="h-5 w-5" />
@@ -104,7 +108,7 @@
                                         <span
                                             class="font-semibold overflow-x-auto"
                                         >
-                                            {#each extractLink(queueState.active.selectedJobDetails.failedReason) as part}
+                                            {#each extractLink(jobDetails.failedReason) as part}
                                                 {#if isLink(part)}
                                                     <a
                                                         href={part}
@@ -145,7 +149,7 @@
             </div>
         </div>
 
-        {#if selectedJobQuery.isFetching || !queueState.active.selectedJobDetails}
+        {#if selectedJobQuery.isFetching || !jobDetails}
             <div class="flex flex-1 flex-col min-h-0">
                 <div class="flex items-center gap-1 border-b px-3 py-2">
                     {#each Array(5) as _}
@@ -158,7 +162,7 @@
                     />
                 </div>
             </div>
-        {:else if !queueState.active.selectedJobDetails}
+        {:else if !jobDetails}
             <div class="p-4">
                 <Alert.Root
                     variant="default"
@@ -214,7 +218,7 @@
                         <Tabs.Content value="data" class="mt-0 p-2 min-w-0">
                             <JobData
                                 jobData={JSON.stringify(
-                                    queueState.active.selectedJobDetails.data,
+                                    jobDetails.data,
                                     null,
                                     2,
                                 )}
@@ -224,11 +228,7 @@
                         <Tabs.Content value="options" class="mt-0 h-full">
                             <DataEditor
                                 class="h-[60vh] px-0"
-                                value={JSON.stringify(
-                                    queueState.active.selectedJobDetails.opts,
-                                    null,
-                                    2,
-                                )}
+                                value={JSON.stringify(jobDetails.opts, null, 2)}
                                 readOnly={true}
                             />
                         </Tabs.Content>
@@ -260,17 +260,13 @@
                         </Tabs.Content>
 
                         <Tabs.Content value="timeline" class="mt-0 h-full">
-                            <JobTimeline
-                                job={queueState.active.selectedJobDetails}
-                            />
+                            <JobTimeline job={jobDetails} />
                         </Tabs.Content>
 
                         <Tabs.Content value="error" class="mt-0 h-full">
                             <JobError
-                                stackTrace={queueState.active.selectedJobDetails
-                                    ?.stacktrace ?? []}
-                                failedReason={queueState.active
-                                    .selectedJobDetails?.failedReason}
+                                stackTrace={jobDetails.stacktrace ?? []}
+                                failedReason={jobDetails.failedReason}
                             />
                         </Tabs.Content>
                     </div>
