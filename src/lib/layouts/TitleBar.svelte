@@ -63,24 +63,6 @@
         <WorkspaceSelector />
     </div>
     <QueueSearch />
-    <div
-        class="flex-1 px-3 flex gap-2 text-sm items-center justify-center font-semibold"
-    >
-        <Button
-            variant="ghost"
-            class="bg-background/40 hover:bg-background! h-8 gap-2 px-3 w-[25%] flex justify-between"
-            onclick={() => globalStore.toggleSearchCommand(true)}
-        >
-            <div
-                class="flex justify-start items-center gap-2 text-muted-foreground"
-            >
-                <Search class="h-4 w-4" />
-                <span>Search</span>
-            </div>
-
-            <kbd class="text-xs opacity-60">{globalStore.shortcut("P")}</kbd>
-        </Button>
-    </div>
     <div class="flex items-center h-full gap-1 px-2">
         <ThemeToggler />
         {#if !isMacos}

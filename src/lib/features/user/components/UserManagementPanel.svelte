@@ -1,9 +1,10 @@
 <script lang="ts">
     import { UserRound, Users } from "@lucide/svelte";
-    import * as Sheet from "shared/components/ui/sheet";
     import * as Tabs from "shared/components/ui/tabs";
     import * as Avatar from "shared/components/ui/avatar";
     import Separator from "shared/components/ui/separator/separator.svelte";
+    import Button from "components/ui/button/button.svelte";
+    import DialogWrapper from "components/wrapper/DialogWrapper.svelte";
 
     type AccessTab = "workspaces" | "connections" | "folders" | "queues";
 
@@ -22,34 +23,31 @@
     ];
 </script>
 
-<Sheet.Root bind:open>
-    <button
-        type="button"
-        class="rounded-full p-1.5 transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
-        aria-label="Open user management"
-        title="User management"
-        onclick={() => (open = true)}
-    >
-        <Avatar.Root class="size-8 border border-border">
-            <Avatar.Fallback class="bg-primary/15 text-primary">
-                <UserRound class="size-4" />
-            </Avatar.Fallback>
-        </Avatar.Root>
-    </button>
+<DialogWrapper
+    title="User management"
+    description="Review each user's workspace and resource access."
+    contentClass="sm:max-w-[95vw] md:max-w-[90vw] lg:max-w-[80vw] min-h-[80vh]"
+>
+    {#snippet trigger()}
+        <Button
+            variant="ghost"
+            type="button"
+            class="rounded-full p-1.5"
+            aria-label="Open user management"
+            title="User management"
+            onclick={() => (open = true)}
+        >
+            <Avatar.Root class="size-8">
+                <Avatar.Fallback class="bg-background text-primary">
+                    <UserRound class="size-4" />
+                </Avatar.Fallback>
+            </Avatar.Root>
+        </Button>
+    {/snippet}
 
-    <Sheet.Content side="right" class="w-full bg-card p-1 sm:max-w-[60vw]">
-        <Sheet.Header class="px-3 py-2">
-            <Sheet.Title class="flex items-center gap-2">
-                <Users class="size-5 text-primary" />
-                User management
-            </Sheet.Title>
-            <Sheet.Description>
-                Review each user's workspace and resource access.
-            </Sheet.Description>
-        </Sheet.Header>
-
-        <div class="flex min-h-0 flex-1 gap-1">
-            <aside class="w-56 shrink-0 rounded-lg bg-background">
+    {#snippet children()}
+        <div class="flex flex-1 gap-1 h-[90%]">
+            <aside class="w-[35%] shrink-0 rounded-lg bg-background">
                 <div
                     class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                 >
@@ -110,7 +108,7 @@
                     <Separator />
                 {:else}
                     <div
-                        class="flex h-full min-h-80 flex-col items-center justify-center px-8 text-center text-muted-foreground"
+                        class="flex flex-col items-center justify-center px-8 text-center text-muted-foreground"
                     >
                         <Users class="mb-3 size-10 opacity-40" />
                         <p class="font-medium">Select a user to view access</p>
@@ -149,5 +147,5 @@
                 </Tabs.Root>
             </main>
         </div>
-    </Sheet.Content>
-</Sheet.Root>
+    {/snippet}
+</DialogWrapper>
