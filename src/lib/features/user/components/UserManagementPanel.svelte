@@ -14,6 +14,7 @@
         useGetUserRoles,
     } from "../hooks/user.roles.hooks";
     import type { RoleEntityOption } from "../interface";
+    import { cn } from "shared/utils";
 
     type AccessTab = "WORKSPACE" | "CONNECTION" | "FOLDER" | "QUEUE";
     const tabs: Array<{ value: AccessTab; label: string }> = [
@@ -108,31 +109,42 @@
                 defaultSize={25}
                 minSize={20}
                 maxSize={50}
-                class="min-w-0 overflow-y-auto rounded-lg bg-background"
+                class="min-w-0 overflow-y-auto rounded-lg bg-background px-2"
                 ><div
-                    class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                    class="py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                 >
                     Users
                 </div>
-                {#each users as user (user.id)}<button
+                {#each users as user (user.id)}
+                    <Button
                         type="button"
-                        class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-accent"
-                        class:bg-accent={selectedUserId === user.id}
+                        class={cn(
+                            "justify-start w-full items-center gap-3 p-2! h-fit! text-left bg-transparent hover:bg-transparent shadow-none",
+                            selectedUserId === user.id &&
+                                "bg-card hover:bg-card!",
+                        )}
+                        variant="ghost"
                         onclick={() => (selectedUserId = user.id)}
-                        ><Avatar.Root class="size-8"
-                            ><Avatar.Fallback
+                    >
+                        <Avatar.Root class="size-8 bg-primary">
+                            <Avatar.Fallback class="bg-primary text-black"
                                 >{user.name.slice(0, 1)}</Avatar.Fallback
-                            ></Avatar.Root
-                        ><span class="min-w-0"
-                            ><span class="block truncate text-sm font-medium"
+                            >
+                        </Avatar.Root>
+                        <span class="min-w-0">
+                            <span
+                                class="block truncate text-sm font-medium dark:text-white text-gray-900"
                                 >{user.name}</span
-                            ><span
+                            >
+                            <span
                                 class="block truncate text-xs text-muted-foreground"
-                                >{user.email}</span
-                            ></span
-                        ></button
-                    >{/each}</Resizable.Pane
-            >
+                            >
+                                {user.email}
+                            </span></span
+                        >
+                    </Button>
+                {/each}
+            </Resizable.Pane>
             <Resizable.Handle class="bg-card" />
             <Resizable.Pane
                 defaultSize={65}
@@ -172,9 +184,12 @@
                                         role="combobox"
                                         aria-haspopup="listbox"
                                         aria-controls={`role-options-${tab.value.toLowerCase()}`}
-                                        aria-expanded={input.length > 0 && matchingOptions.length > 0}
+                                        aria-expanded={input.length > 0 &&
+                                            matchingOptions.length > 0}
                                     >
-                                        <div class="flex min-h-20 items-start gap-2">
+                                        <div
+                                            class="flex min-h-20 items-start gap-2"
+                                        >
                                             <input
                                                 class="min-w-0 flex-1 self-stretch bg-transparent px-1 py-1 text-sm outline-none placeholder:text-muted-foreground"
                                                 placeholder={`Type to add ${tab.label.slice(0, -1).toLowerCase()}...`}
@@ -195,7 +210,8 @@
                                                     class="block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent"
                                                     role="option"
                                                     aria-selected="false"
-                                                    onclick={() => assignRole(option)}
+                                                    onclick={() =>
+                                                        assignRole(option)}
                                                     disabled={createRole.isPending}
                                                     >{option.name}</button
                                                 >{/each}
@@ -222,7 +238,9 @@
                                         </p>{/each}
                                 </div></Tabs.Content
                             >{/each}</Tabs.Root
-                    >{:else}<div
+                    >
+                {:else}
+                    <div
                         class="flex flex-1 flex-col items-center justify-center px-8 text-center text-muted-foreground"
                     >
                         <Users class="mb-3 size-10 opacity-40" />
