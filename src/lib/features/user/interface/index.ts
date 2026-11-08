@@ -14,6 +14,7 @@ export interface User {
   name: string;
   email: string;
   image: string | null;
+  role: "USER" | "GLOBAL_ADMIN";
 }
 
 export interface AuthResponse {

@@ -2,6 +2,10 @@ import type { WebCommand } from ".";
 
 // ../../../../crates/bullastrator_web/src/routes/user.rs
 export const USER_ROUTES: Record<string, WebCommand> = {
+  get_all_users: {
+    method: "GET",
+    path: () => "/users",
+  },
   check_session: {
     method: "GET",
     path: () => "/auth/session",

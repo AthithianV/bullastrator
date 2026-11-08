@@ -3,17 +3,33 @@
     import * as Tabs from "shared/components/ui/tabs";
     import * as Avatar from "shared/components/ui/avatar";
     import Separator from "shared/components/ui/separator/separator.svelte";
+    import * as Resizable from "shared/components/ui/resizable";
     import Button from "components/ui/button/button.svelte";
     import DialogWrapper from "components/wrapper/DialogWrapper.svelte";
+    import { useGetAllUsers } from "../hooks/user.hooks";
 
     type AccessTab = "workspaces" | "connections" | "folders" | "queues";
 
     let open = $state(false);
     let activeTab = $state<AccessTab>("workspaces");
 
-    // The user list will be populated by the user-management API.
-    const users: Array<{ id: string; name: string; email: string }> = [];
-    const selectedUser = $derived(users[0] ?? null);
+    const usersQuery = useGetAllUsers(() => open);
+    const users = $derived(usersQuery.data ?? []);
+    let selectedUserId = $state<string | null>(null);
+    const selectedUser = $derived(
+        users.find((user) => user.id === selectedUserId) ?? null,
+    );
+
+    $effect(() => {
+        if (users.length === 0) {
+            selectedUserId = null;
+        } else if (
+            !selectedUserId ||
+            !users.some((user) => user.id === selectedUserId)
+        ) {
+            selectedUserId = users[0].id;
+        }
+    });
 
     const tabs: Array<{ value: AccessTab; label: string }> = [
         { value: "workspaces", label: "Workspaces" },
@@ -24,9 +40,11 @@
 </script>
 
 <DialogWrapper
+    bind:open
     title="User management"
     description="Review each user's workspace and resource access."
-    contentClass="sm:max-w-[95vw] md:max-w-[90vw] lg:max-w-[80vw] min-h-[80vh]"
+    contentClass="sm:max-w-[95vw] md:max-w-[90vw] lg:max-w-[80vw] h-[90vh] p-4!"
+    bodyClass="flex flex-1 min-h-0 flex-col overflow-hidden"
 >
     {#snippet trigger()}
         <Button
@@ -46,14 +64,32 @@
     {/snippet}
 
     {#snippet children()}
-        <div class="flex flex-1 gap-1 h-[90%]">
-            <aside class="w-[35%] shrink-0 rounded-lg bg-background">
+        <Resizable.PaneGroup
+            direction="horizontal"
+            class="min-h-0 flex-1 gap-0.5 border-none"
+        >
+            <Resizable.Pane
+                defaultSize={35}
+                minSize={20}
+                maxSize={50}
+                class="min-w-0 overflow-y-auto rounded-lg bg-background"
+            >
                 <div
                     class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                 >
                     Users
                 </div>
-                {#if users.length === 0}
+                {#if usersQuery.isLoading}
+                    <div
+                        class="px-4 py-8 text-center text-sm text-muted-foreground"
+                    >
+                        Loading users...
+                    </div>
+                {:else if usersQuery.isError}
+                    <div class="px-4 py-8 text-center text-sm text-destructive">
+                        Unable to load users.
+                    </div>
+                {:else if users.length === 0}
                     <div
                         class="px-4 py-8 text-center text-sm text-muted-foreground"
                     >
@@ -65,6 +101,8 @@
                         <button
                             type="button"
                             class="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-accent"
+                            class:bg-accent={selectedUserId === user.id}
+                            onclick={() => (selectedUserId = user.id)}
                         >
                             <Avatar.Root class="size-8">
                                 <Avatar.Fallback
@@ -83,10 +121,14 @@
                         </button>
                     {/each}
                 {/if}
-            </aside>
+            </Resizable.Pane>
 
-            <main
-                class="min-w-0 flex-1 overflow-y-auto bg-background rounded-lg"
+            <Resizable.Handle class="bg-card" />
+
+            <Resizable.Pane
+                defaultSize={65}
+                minSize={50}
+                class="min-w-0 overflow-y-auto rounded-lg bg-background"
             >
                 {#if selectedUser}
                     <div class="flex items-center gap-3 px-6 py-5">
@@ -108,7 +150,7 @@
                     <Separator />
                 {:else}
                     <div
-                        class="flex flex-col items-center justify-center px-8 text-center text-muted-foreground"
+                        class="flex flex-1 flex-col items-center justify-center px-8 text-center text-muted-foreground"
                     >
                         <Users class="mb-3 size-10 opacity-40" />
                         <p class="font-medium">Select a user to view access</p>
@@ -145,7 +187,7 @@
                         </Tabs.Content>
                     {/each}
                 </Tabs.Root>
-            </main>
-        </div>
+            </Resizable.Pane>
+        </Resizable.PaneGroup>
     {/snippet}
 </DialogWrapper>

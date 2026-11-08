@@ -52,3 +52,9 @@ pub(crate) async fn session(
 ) -> Json<AuthenticatedUser> {
     Json(user)
 }
+
+pub(crate) async fn list_users(
+    State(state): State<AppState>,
+) -> ApiResult<Json<Vec<bullastrator_storage::models::User>>> {
+    Ok(Json(state.users.list_all_users().await?))
+}

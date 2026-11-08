@@ -116,6 +116,14 @@ impl UserService {
     pub async fn get_user_id(&self, token: &str) -> Result<Option<String>> {
         self.repository.get_user_id(&hash_token(token)).await
     }
+
+    pub async fn list_all_users(&self) -> Result<Vec<User>> {
+        self.repository.list_all().await
+    }
+
+    pub async fn is_global_admin(&self, user_id: &str) -> Result<bool> {
+        self.repository.is_global_admin(user_id).await
+    }
 }
 
 fn normalize_email(email: &str) -> Result<String> {

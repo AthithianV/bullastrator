@@ -35,6 +35,25 @@ pub async fn auth_middleware(
     Ok(next.run(request).await)
 }
 
+pub async fn global_admin_middleware(
+    State(state): State<AppState>,
+    axum::Extension(user): axum::Extension<AuthenticatedUser>,
+    request: Request<Body>,
+    next: Next,
+) -> Result<Response, StatusCode> {
+    let is_global_admin = state
+        .users
+        .is_global_admin(&user.id)
+        .await
+        .map_err(|_| StatusCode::FORBIDDEN)?;
+
+    if !is_global_admin {
+        return Err(StatusCode::FORBIDDEN);
+    }
+
+    Ok(next.run(request).await)
+}
+
 pub async fn role_middleware(
     State(state): State<AppState>,
     axum::Extension(user): axum::Extension<AuthenticatedUser>,

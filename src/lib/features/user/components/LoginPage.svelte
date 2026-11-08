@@ -39,58 +39,68 @@
 </script>
 
 {#if !checkingSession}
-<AuthCard
-    title="Welcome back"
-    description="Log in to continue to Bullastrator."
->
-    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-    <form class="space-y-6 pt-10" onsubmit={submit} onkeydown={submitOnModEnter}>
-        <div class="space-y-2">
-            <Label class="text-muted-foreground" for="email">Email</Label>
-            <Input
-                class="py-6 px-2 focus:border-primary focus:text-primary font-semibold text-lg!"
-                id="email"
-                type="email"
-                bind:value={email}
-                required
-                autocomplete="email"
-            />
-        </div>
-        <div class="space-y-2">
-            <Label class="text-muted-foreground" for="password">Password</Label>
-            <div class="relative">
+    <AuthCard
+        title="Welcome back"
+        description="Log in to continue to Bullastrator."
+    >
+        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+        <form
+            class="space-y-6 pt-10"
+            onsubmit={submit}
+            onkeydown={submitOnModEnter}
+        >
+            <div class="space-y-2">
+                <Label class="text-muted-foreground" for="email">Email</Label>
                 <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    class="relative py-6 px-2 focus:border-primary focus:text-primary font-semibold text-lg!"
-                    bind:value={password}
+                    class="py-6 px-2 focus:border-primary text-xs font-semibold"
+                    id="email"
+                    type="email"
+                    bind:value={email}
                     required
-                    autocomplete="current-password"
+                    autocomplete="email"
                 />
-                <Button
-                    variant="ghost"
-                    class="hover:bg-transparent absolute right-0 top-1 text-muted-foreground"
-                    onclick={() => (showPassword = !showPassword)}
-                    ><Eye /></Button
-                >
             </div>
-        </div>
-        <div class="flex justify-center items-center pt-5">
-            <Button class="font-semibold" type="submit" disabled={submitting}>
-                {submitting ? "Logging in..." : "Log in"}
-                <SubmitShortcut />
-            </Button>
-        </div>
+            <div class="space-y-2">
+                <Label class="text-muted-foreground" for="password"
+                    >Password</Label
+                >
+                <div class="relative">
+                    <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        class="relative py-6 px-2 focus:border-primary text-xs font-semibold"
+                        bind:value={password}
+                        required
+                        autocomplete="current-password"
+                    />
+                    <Button
+                        variant="ghost"
+                        class="hover:bg-transparent absolute right-0 top-1 text-muted-foreground"
+                        onclick={() => (showPassword = !showPassword)}
+                        ><Eye /></Button
+                    >
+                </div>
+            </div>
+            <div class="flex justify-center items-center pt-5">
+                <Button
+                    class="font-semibold"
+                    type="submit"
+                    disabled={submitting}
+                >
+                    {submitting ? "Logging in..." : "Log in"}
+                    <SubmitShortcut />
+                </Button>
+            </div>
 
-        <p class="text-center text-sm text-muted-foreground">
-            Need an account?
-            <a
-                class="text-primary underline-offset-4 hover:underline"
-                href="/register">Register</a
-            >
-        </p>
-    </form>
-</AuthCard>
+            <p class="text-center text-sm text-muted-foreground">
+                Need an account?
+                <a
+                    class="text-primary underline-offset-4 hover:underline"
+                    href="/register">Register</a
+                >
+            </p>
+        </form>
+    </AuthCard>
 {:else}
     <div
         class="flex min-h-screen items-center justify-center text-sm text-muted-foreground"

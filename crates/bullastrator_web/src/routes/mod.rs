@@ -13,7 +13,10 @@ use axum::{
 };
 use bullastrator_core::state::AppState;
 
-use crate::{controller, middleware::auth_middleware};
+use crate::{
+    controller,
+    middleware::{auth_middleware, global_admin_middleware},
+};
 
 pub fn router(state: AppState) -> Router {
     let public_routes = Router::new()
@@ -30,6 +33,12 @@ pub fn router(state: AppState) -> Router {
     let protected_routes = Router::new()
         .merge(workspace::routes())
         .merge(resource_routes)
+        .merge(
+            user::protected_routes().layer(middleware::from_fn_with_state(
+                state.clone(),
+                global_admin_middleware,
+            )),
+        )
         .route("/auth/session", get(controller::user::session))
         .layer(middleware::from_fn_with_state(
             state.clone(),

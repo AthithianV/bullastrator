@@ -1,4 +1,4 @@
-import { createMutation, useQueryClient } from "@tanstack/svelte-query";
+import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import { toast } from "svelte-sonner";
 import type {
@@ -10,6 +10,15 @@ import type {
 } from "../interface";
 
 export const USER_QUERY_KEY = ["user"];
+export const USERS_QUERY_KEY = ["users"];
+
+export const useGetAllUsers = (enabled: () => boolean = () => true) => {
+  return createQuery(() => ({
+    queryKey: USERS_QUERY_KEY,
+    queryFn: () => invokeWrapper<User[]>("get_all_users"),
+    enabled: enabled(),
+  }));
+};
 
 /** Check whether the current HTTP-only session cookie is valid. */
 export const useCheckSession = () => {

@@ -8,6 +8,7 @@ pub struct User {
     pub id: String,
     pub name: String,
     pub email: String,
+    pub role: String,
     #[serde(skip_serializing)]
     pub password_hash: Option<String>,
     pub image: Option<String>,

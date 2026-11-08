@@ -10,6 +10,7 @@
         children: Snippet<[closeDialog: () => void]>;
         triggerClass?: string;
         contentClass?: string;
+        bodyClass?: string;
         showTrigger?: boolean;
         open?: boolean;
     }
@@ -21,6 +22,7 @@
         children,
         triggerClass,
         contentClass,
+        bodyClass,
         showTrigger = true,
         open = $bindable(false),
     }: Props = $props();
@@ -47,7 +49,7 @@
         class={cn(
             "max-h[80vh]",
             "sm:max-w-[80vw] md:max-w-[60vw] lg:max-w-[40vw]",
-            "overflow-auto bg-card",
+            "flex min-h-0 flex-col overflow-hidden bg-card",
             contentClass,
         )}
     >
@@ -56,7 +58,7 @@
             <Dialog.Description>{description}</Dialog.Description>
         </Dialog.Header>
 
-        <div class="bg-background border rounded-lg">
+        <div class={cn("min-h-0 rounded-lg", bodyClass)}>
             {@render children(handleClose)}
         </div>
     </Dialog.Content>

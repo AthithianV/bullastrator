@@ -17,4 +17,8 @@ pub const MIGRATIONS: &[Migration] = &[
         version: "m2026_10_20_02_add_sort_order",
         sql: include_str!("m2026_10_20_02_add_sort_order.sql"),
     },
+    Migration {
+        version: "m2026_11_08_01_add_user_roles",
+        sql: include_str!("m2026_11_08_01_add_user_roles.sql"),
+    },
 ];

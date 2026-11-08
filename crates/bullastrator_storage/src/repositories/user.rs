@@ -26,11 +26,17 @@ impl UserRepository {
                     id,
                     name,
                     email,
+                    role,
                     password_hash,
                     created_at,
                     updated_at
                 ) VALUES (
-                    ?,?,?,?,?,?
+                    ?,?,?,
+                    CASE
+                        WHEN EXISTS (SELECT 1 FROM users) THEN 'USER'
+                        ELSE 'GLOBAL_ADMIN'
+                    END,
+                    ?,?,?
                 )"#,
         )
         .bind(&id)
@@ -52,8 +58,15 @@ impl UserRepository {
 
         sqlx::query(
             r#"
-            INSERT INTO users (id, name, email, password_hash, created_at, updated_at)
-            VALUES (?, ?, ?, NULL, ?, ?)
+            INSERT INTO users (id, name, email, role, password_hash, created_at, updated_at)
+            VALUES (
+                ?, ?, ?,
+                CASE
+                    WHEN EXISTS (SELECT 1 FROM users) THEN 'USER'
+                    ELSE 'GLOBAL_ADMIN'
+                END,
+                NULL, ?, ?
+            )
             "#,
         )
         .bind(&id)
@@ -73,7 +86,7 @@ impl UserRepository {
         Ok(sqlx::query_as::<_, User>(
             r#"
                     SELECT
-                        id, name, email, password_hash, image, created_at, updated_at
+                        id, name, email, role, password_hash, image, created_at, updated_at
                     FROM
                         users
                     WHERE
@@ -82,6 +95,28 @@ impl UserRepository {
         )
         .bind(email)
         .fetch_optional(&self.pool)
+        .await?)
+    }
+
+    pub async fn list_all(&self) -> Result<Vec<User>> {
+        Ok(sqlx::query_as::<_, User>(
+            r#"
+                SELECT
+                    id, name, email, role, password_hash, image, created_at, updated_at
+                FROM users
+                ORDER BY name COLLATE NOCASE, email COLLATE NOCASE
+            "#,
+        )
+        .fetch_all(&self.pool)
+        .await?)
+    }
+
+    pub async fn is_global_admin(&self, user_id: &str) -> Result<bool> {
+        Ok(sqlx::query_scalar(
+            "SELECT EXISTS(SELECT 1 FROM users WHERE id = ? AND role = 'GLOBAL_ADMIN')",
+        )
+        .bind(user_id)
+        .fetch_one(&self.pool)
         .await?)
     }
 
