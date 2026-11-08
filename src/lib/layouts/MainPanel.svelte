@@ -10,6 +10,7 @@
         useGetActiveWorkspace,
         useGetWorkspaces,
     } from "$lib/features/workspace/hooks/workspace.hooks";
+    import EmptyWorkspace from "workspace/components/EmptyWorkspace.svelte";
 
     const workspaces = useGetWorkspaces();
     const activeWorkspace = useGetActiveWorkspace();
@@ -32,46 +33,27 @@
 </script>
 
 <div class="flex h-(--app-height) min-w-0">
-    <div class="w-full p-2 pt-0 min-w-0">
-        {#if workspaces.isLoading || activeWorkspace.isLoading}
-            <div
-                class="h-full w-full bg-background rounded-lg flex justify-center items-center"
+    <div class="p-2 pt-0 min-w-0 w-full">
+        <EmptyWorkspace>
+            <Resizable.PaneGroup
+                direction="horizontal"
+                class="gap-0.5 min-w-0 bg-card"
             >
-                <h1>Loading...</h1>
-            </div>
-        {:else if workspaces.isError}
-            <div
-                class="h-full w-full bg-background rounded-lg flex justify-center items-center"
-            >
-                <h1>Error Occurred</h1>
-                <p>{workspaces.error}</p>
-            </div>
-        {:else if workspaces.data && workspaces.data.length > 0 && activeWorkspace.data && !activeWorkspace.isError}
-            <Card
-                class="h-full rounded-none shadow-none py-0 min-w-0 border-none"
-            >
-                <Resizable.PaneGroup
-                    direction="horizontal"
-                    class="gap-0.5 min-w-0 bg-card"
-                >
-                    {#if globalStore.shouldShowSidebar}
-                        <Resizable.Pane
-                            defaultSize={20}
-                            maxSize={50}
-                            class="min-w-0 bg-background shadow rounded-lg p-1 border dark:border-black"
-                        >
-                            <AppSideBar />
-                        </Resizable.Pane>
-                        <Resizable.Handle class="bg-transparent" />
-                    {/if}
-
+                {#if globalStore.shouldShowSidebar}
                     <Resizable.Pane
-                        class="min-w-0 bg-background shadow rounded-lg"
+                        defaultSize={20}
+                        maxSize={50}
+                        class="min-w-0 bg-background shadow rounded-lg p-1 border dark:border-black"
                     >
-                        <TabContainer />
+                        <AppSideBar />
                     </Resizable.Pane>
-                </Resizable.PaneGroup>
-            </Card>
-        {/if}
+                    <Resizable.Handle class="bg-transparent" />
+                {/if}
+
+                <Resizable.Pane class="min-w-0 bg-background shadow rounded-lg">
+                    <TabContainer />
+                </Resizable.Pane>
+            </Resizable.PaneGroup>
+        </EmptyWorkspace>
     </div>
 </div>

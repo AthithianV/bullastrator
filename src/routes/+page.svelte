@@ -26,14 +26,12 @@
 </script>
 
 <ProtectedRoute>
-    <EmptyWorkspace>
-        <Zoom />
-        {#if !globalStore.isWeb}
-            <TitleBar />
-            <UpdateToaster />
-        {:else}
-            <WebTitlebar />
-        {/if}
-        <MainPanel />
-    </EmptyWorkspace>
+    <Zoom />
+    {#if !globalStore.isWeb}
+        <TitleBar />
+        <UpdateToaster />
+    {:else}
+        <WebTitlebar />
+    {/if}
+    <MainPanel />
 </ProtectedRoute>
