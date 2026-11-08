@@ -52,7 +52,7 @@
             <div class="space-y-2">
                 <Label class="text-muted-foreground" for="email">Email</Label>
                 <Input
-                    class="py-6 px-2 focus:border-primary text-xs font-semibold"
+                    class="py-6 px-2 focus:border-primary text-sm "
                     id="email"
                     type="email"
                     bind:value={email}
@@ -68,7 +68,7 @@
                     <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        class="relative py-6 px-2 focus:border-primary text-xs font-semibold"
+                        class="relative py-6 px-2 focus:border-primary text-sm "
                         bind:value={password}
                         required
                         autocomplete="current-password"

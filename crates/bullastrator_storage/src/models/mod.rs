@@ -7,6 +7,7 @@ pub mod session;
 pub mod settings;
 pub mod tab;
 pub mod user;
+pub mod user_role;
 pub mod user_access_connection;
 pub mod workspace;
 pub mod workspace_members;
@@ -20,6 +21,7 @@ pub use session::Session;
 pub use settings::Settings;
 pub use tab::{CreateTab, Tab, UpdateTab};
 pub use user::User;
+pub use user_role::{CreateUserRole, RoleEntityOption, UpdateUserRole, UserRole};
 pub use user_access_connection::UserAccessConnection;
 pub use workspace::{CreateWorkspace, UpdateWorkspace, Workspace, WorkspacePermissionError};
 pub use workspace_members::{

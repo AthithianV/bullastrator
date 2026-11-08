@@ -58,7 +58,7 @@
             <Dialog.Description>{description}</Dialog.Description>
         </Dialog.Header>
 
-        <div class={cn("min-h-0 rounded-lg", bodyClass)}>
+        <div class={cn("min-h-0 rounded-lg bg-background", bodyClass)}>
             {@render children(handleClose)}
         </div>
     </Dialog.Content>

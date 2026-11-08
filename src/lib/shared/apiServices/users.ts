@@ -6,6 +6,30 @@ export const USER_ROUTES: Record<string, WebCommand> = {
     method: "GET",
     path: () => "/users",
   },
+  get_user_roles: {
+    method: "GET",
+    path: () => "/roles",
+    query: (args) => ({ userId: args.userId }),
+  },
+  get_role_options: {
+    method: "GET",
+    path: () => "/roles/options",
+    query: (args) => ({ entityType: args.entityType }),
+  },
+  create_user_role: {
+    method: "POST",
+    path: () => "/roles",
+    body: (args) => args.data,
+  },
+  update_user_role: {
+    method: "PATCH",
+    path: (args) => `/roles/${encodeURIComponent(args.id)}`,
+    body: (args) => ({ role: args.role }),
+  },
+  delete_user_role: {
+    method: "DELETE",
+    path: (args) => `/roles/${encodeURIComponent(args.id)}`,
+  },
   check_session: {
     method: "GET",
     path: () => "/auth/session",
@@ -23,6 +47,5 @@ export const USER_ROUTES: Record<string, WebCommand> = {
   logout: {
     method: "POST",
     path: () => "/auth/logout",
-    body: (args) => ({ token: args.token }),
   },
 };

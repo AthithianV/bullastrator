@@ -26,5 +26,5 @@ pub struct AuthResponse {
 
 #[derive(Deserialize)]
 pub struct TokenRequest {
-    pub token: String,
+    pub token: Option<String>,
 }

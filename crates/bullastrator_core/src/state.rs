@@ -10,7 +10,7 @@ use crate::utils::redis_connection::create_redis_connection;
 use bullastrator_storage::models::CreateWorkspace;
 use bullastrator_storage::repositories::{
     ConnectionRepository, FolderRepository, QueueRepository, TabRepository, UserRepository,
-    WorkspaceRepository,
+    UserRoleRepository, WorkspaceRepository,
 };
 use sqlx::SqlitePool;
 use tokio::sync::RwLock;
@@ -19,6 +19,7 @@ use tokio::sync::RwLock;
 pub struct AppState {
     pub db: SqlitePool,
     pub users: UserService,
+    pub roles: UserRoleRepository,
     pub connections: crate::services::connection::ConnectionService,
     pub redis_connections: Arc<RwLock<HashMap<String, RedisConnection>>>,
     pub queue_services: Arc<RwLock<HashMap<String, QueueService>>>,
@@ -62,6 +63,7 @@ impl AppState {
 
         Ok(Self {
             users: UserService::new(UserRepository::new(pool.clone())),
+            roles: UserRoleRepository::new(pool.clone()),
             connections: connections.clone(),
             workspaces: workspaces.clone(),
             tabs: tabs.clone(),

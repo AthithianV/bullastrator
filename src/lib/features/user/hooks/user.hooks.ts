@@ -72,7 +72,7 @@ export const useLogout = () => {
   const queryClient = useQueryClient();
 
   return createMutation(() => ({
-    mutationFn: (token: string) => invokeWrapper<LogoutResponse>("logout", { token }),
+    mutationFn: () => invokeWrapper<LogoutResponse>("logout"),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: USER_QUERY_KEY });
       queryClient.clear();

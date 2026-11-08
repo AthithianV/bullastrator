@@ -23,7 +23,7 @@
         if (!value && $confirmationRequest) resolve(false);
     }}
 >
-    <AlertDialog.Content>
+    <AlertDialog.Content class="bg-card">
         <AlertDialog.Header>
             <AlertDialog.Title>
                 {$confirmationRequest?.title ?? "Confirm action"}

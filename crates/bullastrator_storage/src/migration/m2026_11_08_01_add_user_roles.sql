@@ -3,6 +3,12 @@ ALTER TABLE "users"
     ADD COLUMN "role" TEXT NOT NULL DEFAULT 'USER'
         CHECK ("role" IN ('USER', 'GLOBAL_ADMIN'));
 
+-- Existing installations with one user should retain the first-user admin
+-- bootstrap rule when this migration is applied.
+UPDATE "users"
+SET "role" = 'GLOBAL_ADMIN'
+WHERE (SELECT COUNT(*) FROM "users") = 1;
+
 -- Explicit connection-level access grants.
 CREATE TABLE IF NOT EXISTS "user_connection_roles" (
     "user_id" TEXT NOT NULL,

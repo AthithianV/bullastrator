@@ -34,7 +34,7 @@ pub fn router(state: AppState) -> Router {
         .merge(workspace::routes())
         .merge(resource_routes)
         .merge(
-            user::protected_routes().layer(middleware::from_fn_with_state(
+            user::global_admin_user_routes().layer(middleware::from_fn_with_state(
                 state.clone(),
                 global_admin_middleware,
             )),

@@ -38,7 +38,7 @@
         <div class="space-y-2">
             <Label class="text-muted-foreground" for="name">Name</Label>
             <Input
-                class="py-5 px-2 focus:border-primary focus:text-primary font-semibold"
+                class="py-5 px-2 focus:border-primary text-sm"
                 id="name"
                 bind:value={name}
                 required
@@ -48,7 +48,7 @@
         <div class="space-y-2">
             <Label class="text-muted-foreground" for="email">Email</Label>
             <Input
-                class="py-5 px-2 focus:border-primary focus:text-primary font-semibold"
+                class="py-5 px-2 focus:border-primary text-sm"
                 id="email"
                 type="email"
                 bind:value={email}

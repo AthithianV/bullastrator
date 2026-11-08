@@ -17,6 +17,20 @@ export interface User {
   role: "USER" | "GLOBAL_ADMIN";
 }
 
+export interface UserRole {
+  id: string;
+  userId: string;
+  entityType: "WORKSPACE" | "CONNECTION" | "FOLDER" | "QUEUE";
+  entityId: string;
+  entityName: string;
+  role: string;
+}
+
+export interface RoleEntityOption {
+  id: string;
+  name: string;
+}
+
 export interface AuthResponse {
   user: User;
   token: string;

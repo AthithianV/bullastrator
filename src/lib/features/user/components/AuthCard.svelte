@@ -7,12 +7,12 @@
         description,
         class: className,
         children,
-    } = $props<{
+    }: {
         title: string;
         description: string;
         class?: string;
         children: import("svelte").Snippet;
-    }>();
+    } = $props();
 </script>
 
 <div class="flex min-h-screen items-center justify-center p-6">

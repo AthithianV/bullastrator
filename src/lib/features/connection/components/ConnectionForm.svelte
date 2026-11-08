@@ -23,6 +23,7 @@
     import InfiniteScanLoader from "shared/components/loaders/InfiniteScanLoader.svelte";
     import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
     import { submitOnModEnter } from "shared/helpers/formShortcuts";
+    import { confirmAction } from "shared/helpers/confirmAction";
 
     let { connectionId = null, onComplete } = $props();
     const isEditing = $derived(!!connectionId);
@@ -86,7 +87,7 @@
                         onComplete();
                     }
 
-                    const confirmation = await confirm(
+                    const confirmation = await confirmAction(
                         `Do you want to sync all queues in the Connection?`,
                         { title: "Sync all Queues", kind: "info" },
                     );
