@@ -83,20 +83,28 @@
     <form use:enhance class="space-y-6" onkeydown={submitOnModEnter}>
         <Field.Set>
             <Field.Group>
-                <Field.Field data-invalid={nameError ? "" : undefined}>
-                    <Field.Label for="name">Workspace Name</Field.Label>
-                    <Input
-                        id="name"
-                        bind:value={$form.name}
-                        maxlength={20}
-                        placeholder="e.g. Personal Projects"
-                        aria-invalid={nameError ? "true" : undefined}
-                    />
-                    {#if nameError}<Field.Error>{nameError}</Field.Error>{/if}
-                </Field.Field>
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <Field.Field
+                        class="min-w-0 flex-1"
+                        data-invalid={nameError ? "" : undefined}
+                    >
+                        <Field.Label for="name">Workspace Name</Field.Label>
+                        <Input
+                            id="name"
+                            bind:value={$form.name}
+                            maxlength={20}
+                            placeholder="e.g. Production, Local, Staging"
+                            aria-invalid={nameError ? "true" : undefined}
+                            class="py-4! bg-card!"
+                        />
+                        {#if nameError}<Field.Error>{nameError}</Field.Error
+                            >{/if}
+                    </Field.Field>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <Field.Field data-invalid={$errors.color ? "" : undefined}>
+                    <Field.Field
+                        class="w-full sm:w-48 sm:shrink-0"
+                        data-invalid={$errors.color ? "" : undefined}
+                    >
                         <Field.Label for="color">Theme Color</Field.Label>
                         <ColorPicker bind:data={$form.color} />
                         {#if $errors.color}<Field.Error
@@ -120,8 +128,8 @@
                         {data ? "Update Workspace" : "Create Workspace"}
                         <SubmitShortcut />
                     </Button>
-                </div>
-            </Field.Group>
+                </div></Field.Group
+            >
         </Field.Set>
     </form>
 </div>

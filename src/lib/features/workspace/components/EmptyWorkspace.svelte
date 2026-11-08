@@ -9,6 +9,7 @@
     import WorkspaceForm from "./WorkspaceForm.svelte";
 
     import { useGetActiveWorkspace } from "workspace/hooks/workspace.hooks";
+    import Badge from "components/ui/badge/badge.svelte";
 
     const activeWorkspace = useGetActiveWorkspace();
     const workspaces = useGetWorkspaces();
@@ -27,7 +28,7 @@
     }
 </script>
 
-<div class="w-screen h-screen p-2 min-w-0">
+<div class="w-screen h-screen min-w-0">
     {#if activeWorkspace.isLoading}
         <div
             class="h-full w-full bg-background rounded-lg flex justify-center items-center"
@@ -76,8 +77,10 @@
                 </div>
 
                 {#if hasWorkspaces}
-                    <Card.Root class="overflow-hidden border shadow-sm">
-                        <Card.Header class="border-b bg-muted/20 px-6 py-5">
+                    <Card.Root
+                        class="overflow-hidden border shadow-sm bg-background"
+                    >
+                        <Card.Header class="border-b bg-muted/20 ">
                             <Card.Title class="text-base"
                                 >Your workspaces</Card.Title
                             >
@@ -85,11 +88,11 @@
                                 Choose one to open the Bullastrator workspace.
                             </Card.Description>
                         </Card.Header>
-                        <Card.Content class="grid gap-2 p-3 sm:grid-cols-2">
+                        <Card.Content class="grid gap-2  sm:grid-cols-2">
                             {#each workspaces.data as workspace (workspace.id)}
                                 <Button
                                     variant="ghost"
-                                    class="h-auto min-h-18 justify-start gap-3 rounded-lg border px-4 py-3 text-left hover:border-primary/40 hover:bg-primary/5"
+                                    class="h-auto min-h-18 justify-start gap-3 rounded-lg border px-4 py-3 text-left bg-card hover:bg-card!"
                                     disabled={isPending}
                                     onclick={() =>
                                         selectWorkspace(workspace.id)}
@@ -107,11 +110,11 @@
                                         <span class="block truncate font-medium"
                                             >{workspace.name}</span
                                         >
-                                        <span
-                                            class="mt-1 block text-xs uppercase tracking-wide text-muted-foreground"
+                                        <Badge
+                                            class="mt-1 px-2 text-black block text-xs uppercase tracking-wide"
                                         >
                                             {workspace.role}
-                                        </span>
+                                        </Badge>
                                     </span>
                                     {#if isPending}
                                         <LoaderCircle

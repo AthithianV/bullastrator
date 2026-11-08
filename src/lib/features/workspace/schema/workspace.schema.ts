@@ -3,8 +3,7 @@ import { z } from "zod";
 export const workspaceSchema = z.object({
   name: z
     .string()
-    .min(1, "Name is required")
-    .max(20, "Name must be 20 characters or less"),
+    .min(1, "Name is required").max(20, "More 20 character is crazy bro"),
   icon: z.string().optional().nullable(),
   color: z
     .string()
