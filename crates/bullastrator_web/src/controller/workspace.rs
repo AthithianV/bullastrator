@@ -72,8 +72,8 @@ pub(crate) async fn select(
 pub(crate) async fn active(
     State(state): State<AppState>,
     Extension(user): Extension<AuthenticatedUser>,
-) -> ApiResult<Json<Workspace>> {
-    Ok(Json(state.workspaces.active(&user.id).await?))
+) -> ApiResult<Json<Option<Workspace>>> {
+    Ok(Json(state.workspaces.active_optional(&user.id).await?))
 }
 
 pub(crate) async fn list_members(

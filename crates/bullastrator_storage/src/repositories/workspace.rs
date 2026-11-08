@@ -160,6 +160,12 @@ impl WorkspaceRepository {
     }
 
     pub async fn get_active_workspace(&self, user_id: &str) -> Result<Workspace> {
+        self.get_active_workspace_optional(user_id)
+            .await?
+            .context("Active workspace was not found or is inaccessible")
+    }
+
+    pub async fn get_active_workspace_optional(&self, user_id: &str) -> Result<Option<Workspace>> {
         // 1. Get the user's currently selected workspace.
         let active_workspace_id: Option<String> = sqlx::query_scalar(
             r#"
@@ -173,7 +179,9 @@ impl WorkspaceRepository {
         .await?
         .flatten();
 
-        let workspace_id = active_workspace_id.context("No active workspace selected")?;
+        let Some(workspace_id) = active_workspace_id else {
+            return Ok(None);
+        };
 
         let workspace = sqlx::query_as::<_, Workspace>(
             r#"
@@ -197,8 +205,7 @@ impl WorkspaceRepository {
         .bind(workspace_id)
         .bind(user_id)
         .fetch_optional(&self.pool)
-        .await?
-        .context("Active workspace was not found or is inaccessible")?;
+        .await?;
 
         Ok(workspace)
     }

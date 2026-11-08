@@ -28,7 +28,7 @@ export const useGetActiveWorkspace = () => {
   return createQuery(() => ({
     queryKey: [...WORKSPACE_QUERY_KEY, "active_workspace"],
     queryFn: () =>
-      invokeWrapper<ReadWorkspaceModel>(
+      invokeWrapper<ReadWorkspaceModel | null>(
         "get_active_workspace",
         {},
         {
@@ -36,6 +36,7 @@ export const useGetActiveWorkspace = () => {
           shouldLogResult: false,
         },
       ),
+    retry: false,
   }));
 };
 

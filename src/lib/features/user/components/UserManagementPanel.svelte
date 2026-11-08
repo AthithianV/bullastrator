@@ -22,18 +22,10 @@
         { value: "FOLDER", label: "Folders" },
         { value: "QUEUE", label: "Queues" },
     ];
-    const roleChoices: Record<AccessTab, string[]> = {
-        WORKSPACE: ["VIEWER", "EDITOR", "ADMIN", "OWNER"],
-        CONNECTION: ["VIEWER", "EDITOR"],
-        FOLDER: ["VIEWER", "EDITOR"],
-        QUEUE: ["VIEWER", "EDITOR"],
-    };
     let open = $state(false),
         activeTab = $state<AccessTab>("WORKSPACE"),
         selectedUserId = $state<string | null>(null);
-    let input = $state(""),
-        pendingEntity = $state<RoleEntityOption | null>(null),
-        pendingRole = $state("VIEWER");
+    let input = $state("");
 
     const usersQuery = useGetAllUsers(() => open);
     const users = $derived(usersQuery.data ?? []);
@@ -68,20 +60,22 @@
     const visibleRoles = $derived(
         (rolesQuery.data ?? []).filter((role) => role.entityType === activeTab),
     );
-    function chooseEntity(entity: RoleEntityOption) {
-        pendingEntity = entity;
-        input = entity.name;
-    }
-    function assignRole() {
-        if (selectedUserId && pendingEntity)
-            createRole.mutate({
-                userId: selectedUserId,
-                entityType: activeTab,
-                entityId: pendingEntity.id,
-                role: pendingRole,
-            });
-        pendingEntity = null;
+    function assignRole(entity: RoleEntityOption) {
+        if (!selectedUserId) return;
+
+        createRole.mutate({
+            userId: selectedUserId,
+            entityType: activeTab,
+            entityId: entity.id,
+            role: "VIEWER",
+        });
         input = "";
+    }
+    function handleInputKeydown(event: KeyboardEvent) {
+        if (event.key === "Enter" && matchingOptions.length > 0) {
+            event.preventDefault();
+            assignRole(matchingOptions[0]);
+        }
     }
 </script>
 
@@ -172,31 +166,37 @@
                         >{#each tabs as tab}<Tabs.Content
                                 value={tab.value}
                                 class="px-6 py-5"
-                                ><div class="relative flex gap-2">
-                                    <input
-                                        class="h-9 min-w-0 flex-1 rounded-md border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-                                        placeholder={`Add ${tab.label.slice(0, -1).toLowerCase()}...`}
-                                        bind:value={input}
-                                        onfocus={() => (pendingEntity = null)}
-                                    /><select
-                                        class="h-9 rounded-md border bg-background px-2 text-sm"
-                                        bind:value={pendingRole}
-                                        >{#each roleChoices[tab.value] as role}<option
-                                                value={role}>{role}</option
-                                            >{/each}</select
-                                    ><Button
-                                        size="sm"
-                                        disabled={!pendingEntity ||
-                                            createRole.isPending}
-                                        onclick={assignRole}>Add</Button
-                                    >{#if input && !pendingEntity && matchingOptions.length > 0}<div
-                                            class="absolute left-0 top-10 z-10 max-h-48 w-[calc(100%-9rem)] overflow-y-auto rounded-md border bg-popover p-1 shadow-md"
+                                ><div class="relative">
+                                    <div
+                                        class="min-h-28 rounded-lg border bg-background p-3 shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/50"
+                                        role="combobox"
+                                        aria-haspopup="listbox"
+                                        aria-controls={`role-options-${tab.value.toLowerCase()}`}
+                                        aria-expanded={input.length > 0 && matchingOptions.length > 0}
+                                    >
+                                        <div class="flex min-h-20 items-start gap-2">
+                                            <input
+                                                class="min-w-0 flex-1 self-stretch bg-transparent px-1 py-1 text-sm outline-none placeholder:text-muted-foreground"
+                                                placeholder={`Type to add ${tab.label.slice(0, -1).toLowerCase()}...`}
+                                                bind:value={input}
+                                                onkeydown={handleInputKeydown}
+                                                disabled={createRole.isPending}
+                                                aria-label={`Add ${tab.label.slice(0, -1).toLowerCase()}`}
+                                            />
+                                        </div>
+                                    </div>
+                                    {#if input && matchingOptions.length > 0}<div
+                                            class="absolute left-0 right-0 top-full z-10 mt-2 max-h-48 overflow-y-auto rounded-md border bg-popover p-1 shadow-md"
+                                            role="listbox"
+                                            id={`role-options-${tab.value.toLowerCase()}`}
                                         >
-                                            {#each matchingOptions as option}<button
+                                            {#each matchingOptions as option (option.id)}<button
                                                     type="button"
-                                                    class="block w-full rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
-                                                    onclick={() =>
-                                                        chooseEntity(option)}
+                                                    class="block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent"
+                                                    role="option"
+                                                    aria-selected="false"
+                                                    onclick={() => assignRole(option)}
+                                                    disabled={createRole.isPending}
                                                     >{option.name}</button
                                                 >{/each}
                                         </div>{/if}

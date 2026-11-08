@@ -22,7 +22,7 @@
     }
 </script>
 
-<div class="min-h-full w-full overflow-auto bg-background">
+<div class="min-h-full w-full overflow-auto bg-background rounded-lg">
     <div
         class="mx-auto flex min-h-full w-full max-w-3xl flex-col justify-center px-6 py-12 sm:px-10"
     >

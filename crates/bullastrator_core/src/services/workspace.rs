@@ -62,6 +62,10 @@ impl WorkspaceService {
         self.repository.get_active_workspace(user_id).await
     }
 
+    pub async fn active_optional(&self, user_id: &str) -> Result<Option<Workspace>> {
+        self.repository.get_active_workspace_optional(user_id).await
+    }
+
     pub async fn active_id(&self, user_id: &str) -> Result<String> {
         Ok(self.active(user_id).await?.id)
     }

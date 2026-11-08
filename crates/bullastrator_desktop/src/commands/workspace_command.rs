@@ -48,11 +48,11 @@ pub async fn get_workspace_by_id(
 }
 
 #[command]
-pub async fn get_active_workspace(state: State<'_, AppState>) -> Result<Workspace, String> {
+pub async fn get_active_workspace(state: State<'_, AppState>) -> Result<Option<Workspace>, String> {
     let user_id = user_id(&state).await?;
     state
         .workspaces
-        .active(&user_id)
+        .active_optional(&user_id)
         .await
         .map_err(|error| error.to_string())
 }
