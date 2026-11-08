@@ -26,35 +26,14 @@
 </script>
 
 <ProtectedRoute>
-    <Zoom />
-    <div class="w-screen h-screen p-2 min-w-0">
-        {#if activeWorkspace.isLoading}
-            <div
-                class="h-full w-full bg-background rounded-lg flex justify-center items-center"
-            >
-                <h1>Loading...</h1>
-            </div>
-        {:else if activeWorkspace.isLoading}
-            <div
-                class="h-full w-full bg-background rounded-lg flex justify-center items-center"
-            >
-                <h1>Error Occurred</h1>
-                <p>{activeWorkspace.error}</p>
-            </div>
-        {:else if activeWorkspace.data && !activeWorkspace.isError}
-            {#if !globalStore.isWeb}
-                <TitleBar />
-                <UpdateToaster />
-            {:else}
-                <WebTitlebar />
-            {/if}
-            <MainPanel />
+    <EmptyWorkspace>
+        <Zoom />
+        {#if !globalStore.isWeb}
+            <TitleBar />
+            <UpdateToaster />
         {:else}
-            <div
-                class="h-full w-full bg-background rounded-lg flex justify-center items-center"
-            >
-                <EmptyWorkspace />
-            </div>
+            <WebTitlebar />
         {/if}
-    </div>
+        <MainPanel />
+    </EmptyWorkspace>
 </ProtectedRoute>

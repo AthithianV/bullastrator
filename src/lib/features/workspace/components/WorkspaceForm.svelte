@@ -105,8 +105,6 @@
                     </Field.Field>
                 </div>
 
-                <Field.Separator class="my-4" />
-
                 <div class="flex justify-end gap-3 pt-6">
                     <Button
                         type="submit"

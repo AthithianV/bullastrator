@@ -10,7 +10,6 @@
         useGetActiveWorkspace,
         useGetWorkspaces,
     } from "$lib/features/workspace/hooks/workspace.hooks";
-    import EmptyWorkspace from "$lib/features/workspace/components/EmptyWorkspace.svelte";
 
     const workspaces = useGetWorkspaces();
     const activeWorkspace = useGetActiveWorkspace();
@@ -73,12 +72,6 @@
                     </Resizable.Pane>
                 </Resizable.PaneGroup>
             </Card>
-        {:else}
-            <div
-                class="h-full w-full bg-background rounded-lg flex justify-center items-center"
-            >
-                <EmptyWorkspace workspaces={workspaces.data ?? []} />
-            </div>
         {/if}
     </div>
 </div>

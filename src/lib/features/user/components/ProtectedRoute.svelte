@@ -4,7 +4,7 @@
     import { PUBLIC_IS_WEB } from "$env/static/public";
     import { useCheckSession } from "../hooks/user.hooks";
 
-    let { children } = $props<{ children: import("svelte").Snippet }>();
+    let { children } = $props();
     let checking = $state(true);
     const checkSession = useCheckSession();
 
