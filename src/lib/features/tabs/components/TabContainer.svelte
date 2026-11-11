@@ -27,7 +27,7 @@
 
     const tabQuery = useGetTabs();
     const activeTabQuery = useGetActiveTabId();
-    const { mutateAsync: closeTab } = useDeleteTab();
+    const { mutateAsync: closeTab, isPending } = useDeleteTab();
     const { mutateAsync: setActiveTabMutateAsync } = useSetActiveTab();
     const { mutateAsync: reorderTabs } = useReorderTabs();
 
@@ -66,9 +66,11 @@
                 tabId,
                 tabQuery.data,
             );
-            await setActiveTabMutateAsync(newActiveTabId ?? null);
-        }
 
+            if (newActiveTabId) {
+                await setActiveTabMutateAsync(newActiveTabId);
+            }
+        }
         closeTab(tabId);
     };
 
@@ -178,6 +180,7 @@
                                         e.stopPropagation();
                                         handleCloseTab(e, tab.id);
                                     }}
+                                    disabled={isPending}
                                 >
                                     <X size={8} class="w-2 h-2" />
                                 </Button>
