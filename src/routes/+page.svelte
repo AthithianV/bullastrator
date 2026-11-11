@@ -9,10 +9,6 @@
     import WebTitlebar from "$lib/layouts/WebTitlebar.svelte";
     import MainPanel from "$lib/layouts/MainPanel.svelte";
     import { invokeWrapper } from "$lib/shared/helpers/invokeWrapper";
-    import { useGetActiveWorkspace } from "workspace/hooks/workspace.hooks";
-    import EmptyWorkspace from "workspace/components/EmptyWorkspace.svelte";
-
-    const activeWorkspace = useGetActiveWorkspace();
 
     onMount(async () => {
         await invokeWrapper("show_main_window");
