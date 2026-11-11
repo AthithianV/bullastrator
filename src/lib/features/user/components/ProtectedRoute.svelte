@@ -1,15 +1,15 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
-    import { PUBLIC_IS_WEB } from "$env/static/public";
     import { useCheckSession } from "../hooks/user.hooks";
+    import { runtime } from "shared/runtime";
 
     let { children } = $props();
     let checking = $state(true);
     const checkSession = useCheckSession();
 
     onMount(async () => {
-        if (![true, "true", "1"].includes(PUBLIC_IS_WEB)) {
+        if (!runtime.isWeb) {
             checking = false;
             return;
         }

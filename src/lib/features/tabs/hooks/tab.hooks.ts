@@ -1,6 +1,5 @@
 import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
 import { toast } from "svelte-sonner";
-import { PUBLIC_IS_WEB } from "$env/static/public";
 import type { CreateTabModel, ReadTabModel, UpdateTabModel } from "../interface/tab.types";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
 import { tabStore } from "../store/tabStore.svelte";
@@ -64,11 +63,10 @@ export const useGetActiveTabId = () => {
  */
 export const useCreateTab = () => {
   const queryClient = useQueryClient();
-  const isWeb = [true, "true", "1"].includes(PUBLIC_IS_WEB);
 
   return createMutation(() => ({
     mutationFn: (data: CreateTabModel) =>
-      invokeWrapper<ReadTabModel>("create_tab", isWeb ? data : { data }),
+      invokeWrapper<ReadTabModel>("create_tab", { data }),
     onSuccess: (updatedTab) => {
       queryClient.setQueryData(TAB_QUERY_KEY, (oldData: ReadTabModel[] | undefined) => {
         if (!oldData) return [updatedTab];

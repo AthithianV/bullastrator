@@ -1,6 +1,6 @@
 import { handleZoom } from "shared/helpers/zoom";
 import { platform, type Platform } from "@tauri-apps/plugin-os";
-import { PUBLIC_IS_WEB } from "$env/static/public";
+import { runtime } from "shared/runtime";
 
 export type OperatingSystem = Platform | "unknown";
 
@@ -8,10 +8,8 @@ export function getShortcutModifier(os: OperatingSystem): "⌘" | "Ctrl" {
   return os === "macos" || os === "ios" ? "⌘" : "Ctrl";
 }
 
-const isWebEnvironment = [true, "true", "1"].includes(PUBLIC_IS_WEB);
-
 function detectOperatingSystem(): OperatingSystem {
-  if (!isWebEnvironment) {
+  if (!runtime.isWeb) {
     try {
       return platform();
     } catch {
@@ -30,7 +28,7 @@ function detectOperatingSystem(): OperatingSystem {
 }
 
 class GlobalStore {
-  readonly isWeb = isWebEnvironment;
+  readonly isWeb = runtime.isWeb;
   readonly os: OperatingSystem = detectOperatingSystem();
   shouldShowSidebar: boolean = $state(true);
   shouldShowSearchCommand: boolean = $state(false);

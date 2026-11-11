@@ -30,7 +30,6 @@ jobs:
 
       - name: Build frontend
         env:
-          PUBLIC_IS_WEB: ${{ secrets.PUBLIC_IS_WEB }}
           PUBLIC_API_URL: ${{ secrets.PUBLIC_API_URL }}
         run: npm run build
 

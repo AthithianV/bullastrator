@@ -1,7 +1,7 @@
 import { invoke as tauriInvoke } from "@tauri-apps/api/core";
 import { toast } from "svelte-sonner";
-import { PUBLIC_IS_WEB } from "$env/static/public";
 import { callWebApi, type CommandArgs } from "../apiServices";
+import { runtime } from "shared/runtime";
 
 interface InvokeOptions {
   shouldToast?: boolean;
@@ -11,8 +11,6 @@ interface InvokeOptions {
   loadMessage?: string;
 }
 
-const isWeb = [true, "true", "1"].includes(PUBLIC_IS_WEB);
-
 export async function invokeWrapper<T>(
   cmd: string,
   args: CommandArgs = {},
@@ -21,7 +19,7 @@ export async function invokeWrapper<T>(
   const { shouldToast, successMessage, errorMessage, shouldLogResult } = options;
 
   try {
-    const result = isWeb ? await callWebApi<T>(cmd, args) : await tauriInvoke<T>(cmd, args);
+    const result = runtime.isWeb ? await callWebApi<T>(cmd, args) : await tauriInvoke<T>(cmd, args);
 
     if (shouldToast) toast.success(successMessage || `${cmd} completed successfully`);
     if (shouldLogResult) {

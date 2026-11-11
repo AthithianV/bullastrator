@@ -1,5 +1,5 @@
 import { confirm as tauriConfirm } from "@tauri-apps/plugin-dialog";
-import { PUBLIC_IS_WEB } from "$env/static/public";
+import { runtime } from "shared/runtime";
 import { get, writable } from "svelte/store";
 
 export type ConfirmationRequest = {
@@ -9,10 +9,6 @@ export type ConfirmationRequest = {
 };
 
 export const confirmationRequest = writable<ConfirmationRequest | null>(null);
-
-function isWebEnvironment() {
-  return [true, "true", "1"].includes(PUBLIC_IS_WEB);
-}
 
 function requestWebConfirmation(message: string, title: string) {
   return new Promise<boolean>((resolve) => {
@@ -32,7 +28,7 @@ export function confirmAction(
     title: "Confirm action",
   },
 ) {
-  if (isWebEnvironment()) {
+  if (runtime.isWeb) {
     return requestWebConfirmation(message, options.title);
   }
 
