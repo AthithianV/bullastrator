@@ -6,7 +6,6 @@
     import AuthCard from "./AuthCard.svelte";
     import { useRegister } from "../hooks/user.hooks";
     import { Eye } from "@lucide/svelte";
-    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
     import { submitOnModEnter } from "shared/helpers/formShortcuts";
 
     let name = $state("");
@@ -38,7 +37,7 @@
         <div class="space-y-2">
             <Label class="text-muted-foreground" for="name">Name</Label>
             <Input
-                class="py-5 px-2 focus:border-primary text-sm"
+                class="p-2 focus:border-primary text-sm"
                 id="name"
                 bind:value={name}
                 required
@@ -48,7 +47,7 @@
         <div class="space-y-2">
             <Label class="text-muted-foreground" for="email">Email</Label>
             <Input
-                class="py-5 px-2 focus:border-primary text-sm"
+                class="p-2 focus:border-primary text-sm"
                 id="email"
                 type="email"
                 bind:value={email}
@@ -62,14 +61,14 @@
                 <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    class="relative py-5 px-2 focus:border-primary focus:text-primary"
+                    class="relative p-2 focus:border-primary focus:text-primary"
                     bind:value={password}
                     required
                     autocomplete="current-password"
                 />
                 <Button
                     variant="ghost"
-                    class="hover:bg-transparent absolute right-0 top-1 text-muted-foreground"
+                    class="hover:bg-transparent absolute right-0 top-3 text-muted-foreground px-1! py-1! h-4 me-2"
                     onclick={() => (showPassword = !showPassword)}
                     ><Eye /></Button
                 >
@@ -78,7 +77,6 @@
         <div class="flex justify-center items-center">
             <Button type="submit" disabled={submitting}>
                 {submitting ? "Creating account..." : "Register"}
-                <SubmitShortcut />
             </Button>
         </div>
 

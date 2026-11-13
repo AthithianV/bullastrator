@@ -56,3 +56,20 @@ export const useDeleteUserRole = (userId: () => string | null) => {
         },
     }));
 };
+
+export const useUpdateUserRole = (userId: () => string | null) => {
+    const queryClient = useQueryClient();
+
+    return createMutation(() => ({
+        mutationFn: ({ id, role }: { id: string; role: string }) =>
+            invokeWrapper<UserRole>("update_user_role", {
+                id,
+                data: { role },
+            }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: [...USER_ROLES_QUERY_KEY, userId()],
+            });
+        },
+    }));
+};

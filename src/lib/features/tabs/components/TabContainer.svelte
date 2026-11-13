@@ -138,9 +138,10 @@
                                 value={tab.id}
                                 class={cn(
                                     "shrink-0",
-                                    "data-[state=active]:bg-accent",
-                                    "dark:data-[state=active]:text-accent-foreground",
-                                    "dark:data-[state=active]:bg-accent-foreground/10",
+                                    "data-[state=active]:bg-card dark:data-[state=active]:bg-card",
+                                    "data-[state=active]:border-none ",
+                                    "data-[state=active]:opacity-100",
+                                    "opacity-80",
                                     "h-8 rounded-sm px-3 py-1",
                                     "flex items-center cursor-pointer",
                                 )}

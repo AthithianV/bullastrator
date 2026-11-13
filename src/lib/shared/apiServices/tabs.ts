@@ -34,6 +34,6 @@ export const TAB_ROUTES: Record<string, WebCommand> = {
   reorder_tabs: {
     method: "POST",
     path: () => "/tabs/reorder",
-    body: (args) => args.data,
+    body: (args) => args,
   },
 };

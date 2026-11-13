@@ -63,7 +63,7 @@
                 defaultSize={25}
                 minSize={20}
                 maxSize={50}
-                class="min-w-0 overflow-y-auto rounded-lg bg-background px-2"
+                class="min-h-0 min-w-0 overflow-y-auto rounded-lg bg-background px-2"
                 ><div
                     class="py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                 >
@@ -104,7 +104,7 @@
             <Resizable.Pane
                 defaultSize={65}
                 minSize={50}
-                class="min-w-0 overflow-y-auto rounded-lg bg-background"
+                class="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-lg bg-background"
             >
                 {#if selectedUser}
                     <div class="flex items-center gap-3 px-6 py-5">

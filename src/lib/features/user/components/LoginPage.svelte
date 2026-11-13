@@ -7,7 +7,6 @@
     import AuthCard from "./AuthCard.svelte";
     import { useCheckSession, useLogin } from "../hooks/user.hooks";
     import { Eye } from "@lucide/svelte";
-    import SubmitShortcut from "shared/components/form/SubmitShortcut.svelte";
     import { submitOnModEnter } from "shared/helpers/formShortcuts";
 
     let email = $state("");
@@ -52,7 +51,7 @@
             <div class="space-y-2">
                 <Label class="text-muted-foreground" for="email">Email</Label>
                 <Input
-                    class="py-6 px-2 focus:border-primary text-sm "
+                    class="p-2 focus:border-primary text-sm "
                     id="email"
                     type="email"
                     bind:value={email}
@@ -68,14 +67,14 @@
                     <Input
                         id="password"
                         type={showPassword ? "text" : "password"}
-                        class="relative py-6 px-2 focus:border-primary text-sm "
+                        class="relative p-2 focus:border-primary text-sm "
                         bind:value={password}
                         required
                         autocomplete="current-password"
                     />
                     <Button
                         variant="ghost"
-                        class="hover:bg-transparent absolute right-0 top-1 text-muted-foreground"
+                        class="hover:bg-transparent absolute right-0 top-3 text-muted-foreground px-1! py-1! h-4 me-2"
                         onclick={() => (showPassword = !showPassword)}
                         ><Eye /></Button
                     >
@@ -88,7 +87,6 @@
                     disabled={submitting}
                 >
                     {submitting ? "Logging in..." : "Log in"}
-                    <SubmitShortcut />
                 </Button>
             </div>
 
