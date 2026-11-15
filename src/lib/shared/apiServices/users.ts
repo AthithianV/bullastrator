@@ -14,7 +14,10 @@ export const USER_ROUTES: Record<string, WebCommand> = {
   get_role_options: {
     method: "GET",
     path: () => "/roles/options",
-    query: (args) => ({ entityType: args.entityType }),
+    query: (args) => ({
+      entityType: args.entityType,
+      userId: args.userId,
+    }),
   },
   create_user_role: {
     method: "POST",

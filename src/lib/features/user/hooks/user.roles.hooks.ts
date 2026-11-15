@@ -19,15 +19,17 @@ export const useGetUserRoles = (
 
 export const useGetRoleOptions = (
     entityType: () => RoleEntityType,
+    userId: () => string | null,
     enabled: () => boolean = () => true,
 ) =>
     createQuery(() => ({
-        queryKey: [...ROLE_OPTIONS_QUERY_KEY, entityType()],
+        queryKey: [...ROLE_OPTIONS_QUERY_KEY, entityType(), userId()],
         queryFn: () =>
             invokeWrapper<RoleEntityOption[]>("get_role_options", {
                 entityType: entityType(),
+                userId: userId(),
             }),
-        enabled: enabled(),
+        enabled: enabled() && !!userId(),
     }));
 
 export const useCreateUserRole = (userId: () => string | null) => {

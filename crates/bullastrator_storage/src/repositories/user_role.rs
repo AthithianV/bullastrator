@@ -9,7 +9,9 @@ pub struct UserRoleRepository {
 }
 
 impl UserRoleRepository {
-    pub fn new(pool: SqlitePool) -> Self { Self { pool } }
+    pub fn new(pool: SqlitePool) -> Self {
+        Self { pool }
+    }
 
     fn validate_type(entity_type: &str) -> Result<()> {
         if matches!(entity_type, "WORKSPACE" | "CONNECTION" | "FOLDER" | "QUEUE") {
@@ -55,59 +57,219 @@ impl UserRoleRepository {
             ORDER BY entity_type, entity_name
         "#;
         Ok(sqlx::query_as::<_, UserRole>(query)
-            .bind(user_id).bind(user_id).fetch_all(&self.pool).await?)
+            .bind(user_id)
+            .bind(user_id)
+            .fetch_all(&self.pool)
+            .await?)
     }
 
     pub async fn create(&self, data: CreateUserRole) -> Result<UserRole> {
         Self::validate_type(&data.entity_type)?;
         let exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE id = ?)")
-            .bind(&data.user_id).fetch_one(&self.pool).await?;
-        if !exists { bail!("User was not found"); }
+            .bind(&data.user_id)
+            .fetch_one(&self.pool)
+            .await?;
+        if !exists {
+            bail!("User was not found");
+        }
 
         match data.entity_type.as_str() {
-            "WORKSPACE" => sqlx::query("INSERT OR REPLACE INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)")
-                .bind(&data.entity_id).bind(&data.user_id).bind(&data.role).execute(&self.pool).await?,
-            "CONNECTION" => sqlx::query("INSERT OR REPLACE INTO user_connection_roles (user_id, connection_id, role) VALUES (?, ?, ?)")
-                .bind(&data.user_id).bind(&data.entity_id).bind(&data.role).execute(&self.pool).await?,
-            "FOLDER" => sqlx::query("INSERT OR REPLACE INTO user_folder_roles (user_id, folder_id, role) VALUES (?, ?, ?)")
-                .bind(&data.user_id).bind(&data.entity_id).bind(&data.role).execute(&self.pool).await?,
+            "WORKSPACE" =>
+                sqlx::
+                    query(
+                        "INSERT OR REPLACE INTO workspace_members (workspace_id, user_id, role) VALUES (?, ?, ?)"
+                    )
+                .bind(&data.entity_id)
+                .bind(&data.user_id)
+                .bind(&data.role)
+                .execute(&self.pool).await?,
+            "CONNECTION" => sqlx::query(
+                "INSERT OR REPLACE INTO user_connection_roles (user_id, connection_id, role) VALUES (?, ?, ?)")
+                .bind(&data.user_id)
+                .bind(&data.entity_id)
+                .bind(&data.role)
+                .execute(&self.pool).await?,
+            "FOLDER" => sqlx::query(
+                "INSERT OR REPLACE INTO user_folder_roles (user_id, folder_id, role) VALUES (?, ?, ?)"
+            )
+                .bind(&data.user_id)
+                .bind(&data.entity_id)
+                .bind(&data.role)
+                .execute(&self.pool).await?,
             "QUEUE" => sqlx::query("INSERT OR REPLACE INTO user_queue_roles (user_id, queue_id, role) VALUES (?, ?, ?)")
-                .bind(&data.user_id).bind(&data.entity_id).bind(&data.role).execute(&self.pool).await?,
+                .bind(&data.user_id)
+                .bind(&data.entity_id)
+                .bind(&data.role)
+                .execute(&self.pool).await?,
             _ => unreachable!(),
         };
-        self.get(&format!("{}:{}:{}", data.entity_type, data.user_id, data.entity_id)).await
+        self.get(&format!(
+            "{}:{}:{}",
+            data.entity_type, data.user_id, data.entity_id
+        ))
+        .await
     }
 
     pub async fn get(&self, id: &str) -> Result<UserRole> {
-        self.list(None).await?.into_iter().find(|role| role.id == id).ok_or_else(|| anyhow::anyhow!("Role was not found"))
+        self.list(None)
+            .await?
+            .into_iter()
+            .find(|role| role.id == id)
+            .ok_or_else(|| anyhow::anyhow!("Role was not found"))
     }
 
     pub async fn update(&self, id: &str, data: UpdateUserRole) -> Result<UserRole> {
         let (entity_type, user_id, entity_id) = Self::parse_id(id)?;
-        self.create(CreateUserRole { user_id: user_id.into(), entity_type: entity_type.into(), entity_id: entity_id.into(), role: data.role }).await
+        self.create(CreateUserRole {
+            user_id: user_id.into(),
+            entity_type: entity_type.into(),
+            entity_id: entity_id.into(),
+            role: data.role,
+        })
+        .await
     }
 
     pub async fn delete(&self, id: &str) -> Result<u64> {
         let (entity_type, user_id, entity_id) = Self::parse_id(id)?;
         let result = match entity_type {
-            "WORKSPACE" => sqlx::query("DELETE FROM workspace_members WHERE user_id = ? AND workspace_id = ?").bind(user_id).bind(entity_id).execute(&self.pool).await?,
-            "CONNECTION" => sqlx::query("DELETE FROM user_connection_roles WHERE user_id = ? AND connection_id = ?").bind(user_id).bind(entity_id).execute(&self.pool).await?,
-            "FOLDER" => sqlx::query("DELETE FROM user_folder_roles WHERE user_id = ? AND folder_id = ?").bind(user_id).bind(entity_id).execute(&self.pool).await?,
-            "QUEUE" => sqlx::query("DELETE FROM user_queue_roles WHERE user_id = ? AND queue_id = ?").bind(user_id).bind(entity_id).execute(&self.pool).await?,
+            "WORKSPACE" => {
+                sqlx::query("DELETE FROM workspace_members WHERE user_id = ? AND workspace_id = ?")
+                    .bind(user_id)
+                    .bind(entity_id)
+                    .execute(&self.pool)
+                    .await?
+            }
+            "CONNECTION" => {
+                sqlx::query(
+                    "DELETE FROM user_connection_roles WHERE user_id = ? AND connection_id = ?",
+                )
+                .bind(user_id)
+                .bind(entity_id)
+                .execute(&self.pool)
+                .await?
+            }
+            "FOLDER" => {
+                sqlx::query("DELETE FROM user_folder_roles WHERE user_id = ? AND folder_id = ?")
+                    .bind(user_id)
+                    .bind(entity_id)
+                    .execute(&self.pool)
+                    .await?
+            }
+            "QUEUE" => {
+                sqlx::query("DELETE FROM user_queue_roles WHERE user_id = ? AND queue_id = ?")
+                    .bind(user_id)
+                    .bind(entity_id)
+                    .execute(&self.pool)
+                    .await?
+            }
             _ => unreachable!(),
         };
         Ok(result.rows_affected())
     }
 
-    pub async fn options(&self, entity_type: &str) -> Result<Vec<RoleEntityOption>> {
+    pub async fn options(&self, entity_type: &str, user_id: &str) -> Result<Vec<RoleEntityOption>> {
         Self::validate_type(entity_type)?;
         let query = match entity_type {
-            "WORKSPACE" => "SELECT id, name FROM workspaces ORDER BY name COLLATE NOCASE",
-            "CONNECTION" => "SELECT id, name FROM connections ORDER BY name COLLATE NOCASE",
-            "FOLDER" => "SELECT id, title AS name FROM folders ORDER BY name COLLATE NOCASE",
-            "QUEUE" => "SELECT id, queue_name AS name FROM queues ORDER BY name COLLATE NOCASE",
+            "WORKSPACE" => {
+                r#"
+                SELECT
+                    id,
+                    name,
+                    NULL AS workspace_id,
+                    NULL AS workspace_name,
+                    NULL AS connection_id,
+                    NULL AS connection_name
+                FROM workspaces
+                ORDER BY name COLLATE NOCASE
+                "#
+            }
+            "CONNECTION" => {
+                r#"
+                SELECT
+                    c.id,
+                    c.name,
+                    c.workspace_id,
+                    w.name AS workspace_name,
+                    NULL AS connection_id,
+                    NULL AS connection_name
+                FROM connections c
+                JOIN workspaces w ON w.id = c.workspace_id
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM workspace_members wm
+                    WHERE wm.workspace_id = c.workspace_id
+                      AND wm.user_id = ?
+                )
+                ORDER BY c.name COLLATE NOCASE
+                "#
+            }
+            "FOLDER" => {
+                r#"
+                SELECT
+                    f.id,
+                    f.title AS name,
+                    c.workspace_id,
+                    w.name AS workspace_name,
+                    c.id AS connection_id,
+                    c.name AS connection_name
+                FROM folders f
+                JOIN connections c ON c.id = f.connection_id
+                JOIN workspaces w ON w.id = c.workspace_id
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM workspace_members wm
+                    WHERE wm.workspace_id = c.workspace_id
+                      AND wm.user_id = ?
+                )
+                  AND EXISTS (
+                    SELECT 1
+                    FROM user_connection_roles ucr
+                    WHERE ucr.connection_id = c.id
+                      AND ucr.user_id = ?
+                )
+                ORDER BY f.title COLLATE NOCASE
+                "#
+            }
+            "QUEUE" => {
+                r#"
+                SELECT
+                    q.id,
+                    q.queue_name AS name,
+                    c.workspace_id,
+                    w.name AS workspace_name,
+                    c.id AS connection_id,
+                    c.name AS connection_name
+                FROM queues q
+                JOIN connections c ON c.id = q.connection_id
+                JOIN workspaces w ON w.id = c.workspace_id
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM workspace_members wm
+                    WHERE wm.workspace_id = c.workspace_id
+                      AND wm.user_id = ?
+                )
+                  AND EXISTS (
+                    SELECT 1
+                    FROM user_connection_roles ucr
+                    WHERE ucr.connection_id = c.id
+                      AND ucr.user_id = ?
+                )
+                ORDER BY q.queue_name COLLATE NOCASE
+                "#
+            }
             _ => unreachable!(),
         };
-        Ok(sqlx::query_as::<_, RoleEntityOption>(query).fetch_all(&self.pool).await?)
+        let mut request = sqlx::query_as::<_, RoleEntityOption>(query);
+        match entity_type {
+            "CONNECTION" => {
+                request = request.bind(user_id);
+            }
+            "FOLDER" | "QUEUE" => {
+                request = request.bind(user_id).bind(user_id);
+            }
+            "WORKSPACE" => {}
+            _ => unreachable!(),
+        }
+        Ok(request.fetch_all(&self.pool).await?)
     }
 }

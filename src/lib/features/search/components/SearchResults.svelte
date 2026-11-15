@@ -71,7 +71,12 @@
     }
 </script>
 
-<Command.Input placeholder="Type a command or search..." class="px-4 py-2 mb-2 w-full" />
+<div class="bg-card rounded-lg">
+    <Command.Input
+        placeholder="Type a command or search..."
+        class="px-4 py-2 mb-2 w-full"
+    />
+</div>
 
 {#if connections.length > 0}
     <div class="flex flex-wrap gap-2 py-2">
@@ -86,11 +91,13 @@
                         ? "border-primary bg-primary text-primary-foreground"
                         : "hover:bg-accent text-accent bg-transparent"
                 }`}
-                style="border-color: {connection.color ?? undefined}; color: {selected
+                style="border-color: {connection.color ??
+                    undefined}; color: {selected
                     ? connection.color
                         ? 'white'
                         : undefined
-                    : (connection.color ?? undefined)}; background-color: {selected
+                    : (connection.color ??
+                      undefined)}; background-color: {selected
                     ? (connection.color ?? undefined)
                     : undefined}"
             >

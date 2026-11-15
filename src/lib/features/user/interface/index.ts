@@ -29,6 +29,10 @@ export interface UserRole {
 export interface RoleEntityOption {
   id: string;
   name: string;
+  workspaceId?: string | null;
+  workspaceName?: string | null;
+  connectionId?: string | null;
+  connectionName?: string | null;
 }
 
 export interface AuthResponse {

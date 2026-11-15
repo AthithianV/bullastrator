@@ -35,4 +35,8 @@ pub struct UpdateUserRole {
 pub struct RoleEntityOption {
     pub id: String,
     pub name: String,
+    pub workspace_id: Option<String>,
+    pub workspace_name: Option<String>,
+    pub connection_id: Option<String>,
+    pub connection_name: Option<String>,
 }

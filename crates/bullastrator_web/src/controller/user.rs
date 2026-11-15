@@ -100,5 +100,6 @@ pub(crate) async fn role_options(
     query: axum::extract::Query<std::collections::HashMap<String, String>>,
 ) -> ApiResult<Json<Vec<bullastrator_storage::models::RoleEntityOption>>> {
     let entity_type = query.get("entityType").map(String::as_str).unwrap_or("WORKSPACE");
-    Ok(Json(state.roles.options(entity_type).await?))
+    let user_id = query.get("userId").map(String::as_str).unwrap_or_default();
+    Ok(Json(state.roles.options(entity_type, user_id).await?))
 }
