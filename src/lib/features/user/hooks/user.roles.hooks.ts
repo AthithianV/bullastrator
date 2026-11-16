@@ -13,15 +13,17 @@ export const ROLE_OPTIONS_QUERY_KEY = ["role-options"];
 export const useGetUserRoles = (
     userId: () => string | null,
     entityType: () => RoleEntityType,
+    search: () => string = () => "",
     enabled: () => boolean = () => true,
 ) =>
     createInfiniteQuery<Paginated<UserRole>>(() => ({
-        queryKey: [...USER_ROLES_QUERY_KEY, userId(), entityType()],
+        queryKey: [...USER_ROLES_QUERY_KEY, userId(), entityType(), search()],
         initialPageParam: 0,
         queryFn: ({ pageParam }) =>
             invokeWrapper<Paginated<UserRole>>("get_user_roles", {
                 userId: userId(),
                 entityType: entityType(),
+                search: search(),
                 offset: pageParam,
                 limit: 50,
             }),

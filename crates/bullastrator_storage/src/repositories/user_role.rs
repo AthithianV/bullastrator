@@ -55,7 +55,11 @@ impl UserRoleRepository {
                     w.name AS entity_name,
                     wm.role,
                     wm.created_at,
-                    NULL AS updated_at
+                    NULL AS updated_at,
+                    wm.workspace_id,
+                    w.name AS workspace_name,
+                    NULL AS connection_id,
+                    NULL AS connection_name
                 FROM workspace_members wm
                 JOIN workspaces w ON w.id = wm.workspace_id
                 WHERE wm.user_id = ?
@@ -74,9 +78,14 @@ impl UserRoleRepository {
                     c.name AS entity_name,
                     r.role,
                     NULL AS created_at,
-                    NULL AS updated_at
+                    NULL AS updated_at,
+                    c.workspace_id,
+                    w.name AS workspace_name,
+                    c.id AS connection_id,
+                    c.name AS connection_name
                 FROM user_connection_roles r
                 JOIN connections c ON c.id = r.connection_id
+                JOIN workspaces w ON w.id = c.workspace_id
                 WHERE r.user_id = ?
                   AND (? IS NULL OR lower(c.name) LIKE '%' || lower(?) || '%')
                 ORDER BY entity_name
@@ -93,9 +102,15 @@ impl UserRoleRepository {
                     f.title AS entity_name,
                     r.role,
                     NULL AS created_at,
-                    NULL AS updated_at
+                    NULL AS updated_at,
+                    c.workspace_id,
+                    w.name AS workspace_name,
+                    c.id AS connection_id,
+                    c.name AS connection_name
                 FROM user_folder_roles r
                 JOIN folders f ON f.id = r.folder_id
+                JOIN connections c ON c.id = f.connection_id
+                JOIN workspaces w ON w.id = c.workspace_id
                 WHERE r.user_id = ?
                   AND (? IS NULL OR lower(f.title) LIKE '%' || lower(?) || '%')
                 ORDER BY entity_name
@@ -112,9 +127,15 @@ impl UserRoleRepository {
                     q.queue_name AS entity_name,
                     r.role,
                     NULL AS created_at,
-                    NULL AS updated_at
+                    NULL AS updated_at,
+                    c.workspace_id,
+                    w.name AS workspace_name,
+                    c.id AS connection_id,
+                    c.name AS connection_name
                 FROM user_queue_roles r
                 JOIN queues q ON q.id = r.queue_id
+                JOIN connections c ON c.id = q.connection_id
+                JOIN workspaces w ON w.id = c.workspace_id
                 WHERE r.user_id = ?
                   AND (? IS NULL OR lower(q.queue_name) LIKE '%' || lower(?) || '%')
                 ORDER BY entity_name
@@ -124,22 +145,75 @@ impl UserRoleRepository {
             "ALL" => {
                 r#"
                 SELECT * FROM (
-                    SELECT 'WORKSPACE:' || wm.user_id || ':' || wm.workspace_id AS id,
-                        wm.user_id, 'WORKSPACE' AS entity_type, wm.workspace_id AS entity_id,
-                        w.name AS entity_name, wm.role, wm.created_at, NULL AS updated_at
-                    FROM workspace_members wm JOIN workspaces w ON w.id = wm.workspace_id
+                    SELECT
+                        'WORKSPACE:' || wm.user_id || ':' || wm.workspace_id AS id,
+                        wm.user_id,
+                        'WORKSPACE' AS entity_type,
+                        wm.workspace_id AS entity_id,
+                        w.name AS entity_name,
+                        wm.role,
+                        wm.created_at,
+                        NULL AS updated_at,
+                        wm.workspace_id,
+                        w.name,
+                        NULL,
+                        NULL
+                    FROM workspace_members wm
+                    JOIN workspaces w ON w.id = wm.workspace_id
                     UNION ALL
-                    SELECT 'CONNECTION:' || r.user_id || ':' || r.connection_id,
-                        r.user_id, 'CONNECTION', r.connection_id, c.name, r.role, NULL, NULL
-                    FROM user_connection_roles r JOIN connections c ON c.id = r.connection_id
+                    SELECT
+                        'CONNECTION:' || r.user_id || ':' || r.connection_id,
+                        r.user_id,
+                        'CONNECTION',
+                        r.connection_id,
+                        c.name,
+                        r.role,
+                        NULL,
+                        NULL,
+                        c.workspace_id,
+                        w.name,
+                        c.id,
+                        c.name
+                    FROM user_connection_roles r
+                    JOIN connections c
+                    ON c.id = r.connection_id
+                    JOIN workspaces w ON w.id = c.workspace_id
                     UNION ALL
-                    SELECT 'FOLDER:' || r.user_id || ':' || r.folder_id,
-                        r.user_id, 'FOLDER', r.folder_id, f.title, r.role, NULL, NULL
-                    FROM user_folder_roles r JOIN folders f ON f.id = r.folder_id
+                    SELECT
+                        'FOLDER:' || r.user_id || ':' || r.folder_id,
+                        r.user_id,
+                        'FOLDER',
+                        r.folder_id,
+                        f.title,
+                        r.role,
+                        NULL,
+                        NULL,
+                        c.workspace_id,
+                        w.name,
+                        c.id,
+                        c.name
+                    FROM user_folder_roles r
+                    JOIN folders f ON f.id = r.folder_id
+                    JOIN connections c ON c.id = f.connection_id
+                    JOIN workspaces w ON w.id = c.workspace_id
                     UNION ALL
-                    SELECT 'QUEUE:' || r.user_id || ':' || r.queue_id,
-                        r.user_id, 'QUEUE', r.queue_id, q.queue_name, r.role, NULL, NULL
-                    FROM user_queue_roles r JOIN queues q ON q.id = r.queue_id
+                    SELECT
+                        'QUEUE:' || r.user_id || ':' || r.queue_id,
+                        r.user_id,
+                        'QUEUE',
+                        r.queue_id,
+                        q.queue_name,
+                        r.role,
+                        NULL,
+                        NULL,
+                        c.workspace_id,
+                        w.name,
+                        c.id,
+                        c.name
+                    FROM user_queue_roles r
+                    JOIN queues q ON q.id = r.queue_id
+                    JOIN connections c ON c.id = q.connection_id
+                    JOIN workspaces w ON w.id = c.workspace_id
                 ) roles
                 WHERE (? IS NULL OR user_id = ?)
                   AND (? IS NULL OR lower(entity_name) LIKE '%' || lower(?) || '%')
@@ -413,9 +487,7 @@ impl UserRoleRepository {
             }
             _ => unreachable!(),
         }
-        let request = request
-            .bind(fetch_limit as i64)
-            .bind(offset as i64);
+        let request = request.bind(fetch_limit as i64).bind(offset as i64);
         let mut items = request.fetch_all(&self.pool).await?;
         let has_more = items.len() > limit;
         if has_more {

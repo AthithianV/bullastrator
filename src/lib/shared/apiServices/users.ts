@@ -12,9 +12,9 @@ export const USER_ROUTES: Record<string, WebCommand> = {
     query: (args) => ({
       userId: args.userId,
       entityType: args.entityType,
+      search: args.search,
       offset: args.offset,
       limit: args.limit,
-      search: args.search,
     }),
   },
   get_role_options: {

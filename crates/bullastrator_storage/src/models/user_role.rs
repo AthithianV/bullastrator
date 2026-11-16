@@ -13,6 +13,10 @@ pub struct UserRole {
     pub role: String,
     pub created_at: Option<NaiveDateTime>,
     pub updated_at: Option<NaiveDateTime>,
+    pub workspace_id: Option<String>,
+    pub workspace_name: Option<String>,
+    pub connection_id: Option<String>,
+    pub connection_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Trash } from "@lucide/svelte";
+    import { Search, Trash } from "@lucide/svelte";
     import * as Tabs from "shared/components/ui/tabs";
     import {
         useCreateUserRole,
@@ -10,6 +10,7 @@
     } from "../hooks/user.roles.hooks";
     import type { RoleEntityOption, UserRole } from "../interface";
     import Button from "components/ui/button/button.svelte";
+    import Input from "components/ui/input/input.svelte";
     import Checkbox from "components/ui/checkbox/checkbox.svelte";
     import * as Select from "components/ui/select";
     import * as Resizable from "components/ui/resizable";
@@ -35,9 +36,14 @@
 
     let activeTab = $state<AccessTab>("WORKSPACE");
     let input = $state("");
+    let assignedInput = $state("");
     let selectedConnectionIds = $state<string[]>([]);
 
-    const rolesQuery = useGetUserRoles(() => selectedUserId, () => activeTab);
+    const rolesQuery = useGetUserRoles(
+        () => selectedUserId,
+        () => activeTab,
+        () => assignedInput,
+    );
     const optionsQuery = useGetRoleOptions(
         () => activeTab,
         () => selectedUserId,
@@ -109,9 +115,37 @@
     const visibleRoles = $derived(
         allRolePages.filter((role) => role.entityType === activeTab),
     );
+    const assignedItems = $derived(
+        visibleRoles.map((role) => ({
+            id: role.entityId,
+            name: role.entityName,
+            workspaceId: role.workspaceId,
+            workspaceName: role.workspaceName,
+            connectionId: role.connectionId,
+            connectionName: role.connectionName,
+        })),
+    );
+    const assignedWorkspaceGroups = $derived(groupByWorkspace(assignedItems));
+    const assignedConnectionGroups = $derived(
+        groupByWorkspace(
+            assignedItems.filter(
+                (option, index, options) =>
+                    options.findIndex(
+                        (candidate) =>
+                            candidate.connectionId === option.connectionId,
+                    ) === index,
+            ),
+        ),
+    );
 
     function roleForEntity(entityId: string) {
         return visibleRoles.find((role) => role.entityId === entityId);
+    }
+
+    function rolesForConnection(connectionId: string) {
+        return visibleRoles.filter(
+            (role) => role.connectionId === connectionId,
+        );
     }
 
     function isAssigned(entityId: string) {
@@ -149,12 +183,14 @@
         activeTab = tab;
         selectedConnectionIds = [];
         input = "";
+        assignedInput = "";
     }
 
     function loadMoreRoles(event: Event) {
         const element = event.currentTarget as HTMLElement;
         if (
-            element.scrollTop + element.clientHeight >= element.scrollHeight - 80 &&
+            element.scrollTop + element.clientHeight >=
+                element.scrollHeight - 80 &&
             rolesQuery.hasNextPage &&
             !rolesQuery.isFetchingNextPage
         ) {
@@ -165,7 +201,8 @@
     function loadMoreOptions(event: Event) {
         const element = event.currentTarget as HTMLElement;
         if (
-            element.scrollTop + element.clientHeight >= element.scrollHeight - 80 &&
+            element.scrollTop + element.clientHeight >=
+                element.scrollHeight - 80 &&
             optionsQuery.hasNextPage &&
             !optionsQuery.isFetchingNextPage
         ) {
@@ -173,6 +210,49 @@
         }
     }
 </script>
+
+{#snippet roleCard(role: UserRole, label: string)}
+    <div
+        class="mb-1 flex min-h-16 items-center gap-3 rounded-lg bg-card px-3 py-2.5 sm:px-4"
+    >
+        <div
+            class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/15"
+        >
+            {role.entityName.substring(0, 1).toUpperCase()}
+        </div>
+        <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium">{role.entityName}</p>
+            <p class="mt-0.5 text-xs text-muted-foreground">{label} access</p>
+        </div>
+        <Select.Root
+            type="single"
+            value={role.role}
+            onValueChange={(value) => changeRole(role, value)}
+        >
+            <Select.Trigger class="h-8 w-32 bg-background text-xs">
+                {roleOptions.find((option) => option.value === role.role)
+                    ?.label ?? role.role}
+            </Select.Trigger>
+            <Select.Content>
+                {#each roleOptions as option}
+                    <Select.Item value={option.value}
+                        >{option.label}</Select.Item
+                    >
+                {/each}
+            </Select.Content>
+        </Select.Root>
+        <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            class="size-8 shrink-0 text-muted-foreground hover:bg-red-500/10 hover:text-red-400"
+            aria-label={`Remove ${role.entityName} role`}
+            onclick={() => deleteRole.mutate(role.id)}
+        >
+            <Trash class="size-4" />
+        </Button>
+    </div>
+{/snippet}
 
 <Tabs.Root
     bind:value={activeTab}
@@ -200,8 +280,20 @@
                     minSize={50}
                     class="min-h-0 min-w-0 flex-1 overflow-hidden"
                 >
+                    <div class="shrink-0 border-b py-3">
+                        <div
+                            class="flex items-center bg-card rounded-lg px-4 w-[50%]"
+                        >
+                            <Search class="h-4 w-4" />
+                            <Input
+                                bind:value={assignedInput}
+                                placeholder={`Search assigned ${tab.label.toLowerCase()}...`}
+                                class="border-none bg-transparent!"
+                            />
+                        </div>
+                    </div>
                     <div
-                        class="h-full min-h-0 overflow-y-auto pr-1"
+                        class="h-full min-h-0 overflow-y-auto scroll-pb-16 pb-16 pr-1"
                         onscroll={loadMoreRoles}
                     >
                         {#if visibleRoles.length === 0}
@@ -211,63 +303,40 @@
                                 Select a {tab.label.toLowerCase().slice(0, -1)} to
                                 assign access.
                             </div>
-                        {:else}
-                            {#each visibleRoles as role (role.id)}
-                                <div
-                                    class="mb-1 flex min-h-16 items-center gap-3 rounded-lg bg-card px-3 py-2.5 sm:px-4"
+                        {:else if activeTab === "WORKSPACE" || activeTab === "CONNECTION"}
+                            {#each assignedWorkspaceGroups as group (group.id)}
+                                <p
+                                    class="px-2! py-2! text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                                 >
-                                    <div
-                                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/15"
+                                    {group.name}
+                                </p>
+                                {#each group.options as option (option.id)}
+                                    {@const role = roleForEntity(option.id)}
+                                    {#if role}
+                                        {@render roleCard(
+                                            role,
+                                            tab.label.slice(0, -1),
+                                        )}
+                                    {/if}
+                                {/each}
+                            {/each}
+                        {:else}
+                            {#each assignedConnectionGroups as group (group.id)}
+                                {#each group.options as connection (connection.connectionId)}
+                                    {@const connectionId =
+                                        connection.connectionId ?? ""}
+                                    <p
+                                        class="px-2 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                                     >
-                                        {role.entityName
-                                            .substring(0, 1)
-                                            .toUpperCase()}
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="truncate text-sm font-medium">
-                                            {role.entityName}
-                                        </p>
-                                        <p
-                                            class="mt-0.5 text-xs text-muted-foreground"
-                                        >
-                                            {tab.label.slice(0, -1)} access
-                                        </p>
-                                    </div>
-                                    <Select.Root
-                                        type="single"
-                                        value={role.role}
-                                        onValueChange={(value) =>
-                                            changeRole(role, value)}
-                                    >
-                                        <Select.Trigger
-                                            class="h-8 w-32 bg-background text-xs"
-                                        >
-                                            {roleOptions.find(
-                                                (option) =>
-                                                    option.value === role.role,
-                                            )?.label ?? role.role}
-                                        </Select.Trigger>
-                                        <Select.Content>
-                                            {#each roleOptions as option}
-                                                <Select.Item
-                                                    value={option.value}
-                                                    >{option.label}</Select.Item
-                                                >
-                                            {/each}
-                                        </Select.Content>
-                                    </Select.Root>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        class="size-8 shrink-0 text-muted-foreground hover:bg-red-500/10 hover:text-red-400"
-                                        aria-label={`Remove ${role.entityName} role`}
-                                        onclick={() =>
-                                            deleteRole.mutate(role.id)}
-                                    >
-                                        <Trash class="size-4" />
-                                    </Button>
-                                </div>
+                                        {group.name} / {connection.connectionName}
+                                    </p>
+                                    {#each rolesForConnection(connectionId) as role (role.id)}
+                                        {@render roleCard(
+                                            role,
+                                            tab.label.slice(0, -1),
+                                        )}
+                                    {/each}
+                                {/each}
                             {/each}
                         {/if}
                     </div>
@@ -283,7 +352,7 @@
                     <Command.Root
                         class="h-full min-h-0 max-h-full flex-1 rounded-lg bg-card p-2"
                     >
-                        <div class="bg-background rounded-lg">
+                        <div class="border-b mb-1">
                             <Command.Input
                                 bind:value={input}
                                 placeholder={`Search ${tab.label.toLowerCase()}...`}
@@ -292,9 +361,7 @@
                         </div>
 
                         {#if activeTab === "FOLDER" || activeTab === "QUEUE"}
-                            <div
-                                class="flex shrink-0 flex-wrap gap-2 border-b px-3 py-2"
-                            >
+                            <div class="flex shrink-0 flex-wrap gap-2 py-2">
                                 {#each connectionGroups.flatMap((group) => group.options) as connection (connection.connectionId)}
                                     {@const connectionId =
                                         connection.connectionId ?? ""}
@@ -314,7 +381,7 @@
                         {/if}
 
                         <Command.List
-                            class="min-h-0 max-h-none flex-1 overflow-y-auto"
+                            class="min-h-0 max-h-none flex-1 overflow-y-auto scroll-pb-6 pb-6"
                             onscroll={loadMoreOptions}
                         >
                             {#if optionsQuery.isLoading}
