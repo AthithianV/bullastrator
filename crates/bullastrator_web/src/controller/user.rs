@@ -65,8 +65,31 @@ pub(crate) async fn list_users(
 pub(crate) async fn list_roles(
     State(state): State<AppState>,
     query: axum::extract::Query<std::collections::HashMap<String, String>>,
-) -> ApiResult<Json<Vec<bullastrator_storage::models::UserRole>>> {
-    Ok(Json(state.roles.list(query.get("userId").map(String::as_str)).await?))
+) -> ApiResult<Json<bullastrator_storage::models::Paginated<bullastrator_storage::models::UserRole>>> {
+    let offset = query
+        .get("offset")
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(0);
+    let limit = query
+        .get("limit")
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(50);
+    let search = query
+        .get("search")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    Ok(Json(
+        state
+            .roles
+            .list(
+                query.get("userId").map(String::as_str),
+                query.get("entityType").map(String::as_str),
+                search,
+                offset,
+                limit,
+            )
+            .await?,
+    ))
 }
 
 pub(crate) async fn create_role(
@@ -98,8 +121,25 @@ pub(crate) async fn delete_role(
 pub(crate) async fn role_options(
     State(state): State<AppState>,
     query: axum::extract::Query<std::collections::HashMap<String, String>>,
-) -> ApiResult<Json<Vec<bullastrator_storage::models::RoleEntityOption>>> {
+) -> ApiResult<Json<bullastrator_storage::models::Paginated<bullastrator_storage::models::RoleEntityOption>>> {
     let entity_type = query.get("entityType").map(String::as_str).unwrap_or("WORKSPACE");
     let user_id = query.get("userId").map(String::as_str).unwrap_or_default();
-    Ok(Json(state.roles.options(entity_type, user_id).await?))
+    let offset = query
+        .get("offset")
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(0);
+    let limit = query
+        .get("limit")
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(50);
+    let search = query
+        .get("search")
+        .map(String::as_str)
+        .filter(|value| !value.trim().is_empty());
+    Ok(Json(
+        state
+            .roles
+            .options(entity_type, user_id, search, offset, limit)
+            .await?,
+    ))
 }

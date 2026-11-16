@@ -9,7 +9,13 @@ export const USER_ROUTES: Record<string, WebCommand> = {
   get_user_roles: {
     method: "GET",
     path: () => "/roles",
-    query: (args) => ({ userId: args.userId }),
+    query: (args) => ({
+      userId: args.userId,
+      entityType: args.entityType,
+      offset: args.offset,
+      limit: args.limit,
+      search: args.search,
+    }),
   },
   get_role_options: {
     method: "GET",
@@ -17,6 +23,9 @@ export const USER_ROUTES: Record<string, WebCommand> = {
     query: (args) => ({
       entityType: args.entityType,
       userId: args.userId,
+      offset: args.offset,
+      limit: args.limit,
+      search: args.search,
     }),
   },
   create_user_role: {

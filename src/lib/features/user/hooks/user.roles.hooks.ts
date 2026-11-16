@@ -1,6 +1,10 @@
-import { createMutation, createQuery, useQueryClient } from "@tanstack/svelte-query";
+import {
+    createInfiniteQuery,
+    createMutation,
+    useQueryClient,
+} from "@tanstack/svelte-query";
 import { invokeWrapper } from "shared/helpers/invokeWrapper";
-import type { RoleEntityOption, UserRole } from "../interface";
+import type { Paginated, RoleEntityOption, UserRole } from "../interface";
 
 export type RoleEntityType = UserRole["entityType"];
 export const USER_ROLES_QUERY_KEY = ["user-roles"];
@@ -8,27 +12,43 @@ export const ROLE_OPTIONS_QUERY_KEY = ["role-options"];
 
 export const useGetUserRoles = (
     userId: () => string | null,
+    entityType: () => RoleEntityType,
     enabled: () => boolean = () => true,
 ) =>
-    createQuery(() => ({
-        queryKey: [...USER_ROLES_QUERY_KEY, userId()],
-        queryFn: () =>
-            invokeWrapper<UserRole[]>("get_user_roles", { userId: userId() }),
+    createInfiniteQuery<Paginated<UserRole>>(() => ({
+        queryKey: [...USER_ROLES_QUERY_KEY, userId(), entityType()],
+        initialPageParam: 0,
+        queryFn: ({ pageParam }) =>
+            invokeWrapper<Paginated<UserRole>>("get_user_roles", {
+                userId: userId(),
+                entityType: entityType(),
+                offset: pageParam,
+                limit: 50,
+            }),
+        getNextPageParam: (lastPage) =>
+            lastPage.hasMore ? lastPage.nextOffset : undefined,
         enabled: enabled() && !!userId(),
     }));
 
 export const useGetRoleOptions = (
     entityType: () => RoleEntityType,
     userId: () => string | null,
+    search: () => string = () => "",
     enabled: () => boolean = () => true,
 ) =>
-    createQuery(() => ({
-        queryKey: [...ROLE_OPTIONS_QUERY_KEY, entityType(), userId()],
-        queryFn: () =>
-            invokeWrapper<RoleEntityOption[]>("get_role_options", {
+    createInfiniteQuery<Paginated<RoleEntityOption>>(() => ({
+        queryKey: [...ROLE_OPTIONS_QUERY_KEY, entityType(), userId(), search()],
+        initialPageParam: 0,
+        queryFn: ({ pageParam }) =>
+            invokeWrapper<Paginated<RoleEntityOption>>("get_role_options", {
                 entityType: entityType(),
                 userId: userId(),
+                search: search(),
+                offset: pageParam,
+                limit: 50,
             }),
+        getNextPageParam: (lastPage) =>
+            lastPage.hasMore ? lastPage.nextOffset : undefined,
         enabled: enabled() && !!userId(),
     }));
 

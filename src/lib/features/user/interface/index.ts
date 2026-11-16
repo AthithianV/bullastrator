@@ -35,6 +35,12 @@ export interface RoleEntityOption {
   connectionName?: string | null;
 }
 
+export interface Paginated<T> {
+  items: T[];
+  nextOffset: number | null;
+  hasMore: boolean;
+}
+
 export interface AuthResponse {
   user: User;
   token: string;

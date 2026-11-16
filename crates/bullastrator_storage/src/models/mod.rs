@@ -21,7 +21,7 @@ pub use session::Session;
 pub use settings::Settings;
 pub use tab::{CreateTab, Tab, UpdateTab};
 pub use user::User;
-pub use user_role::{CreateUserRole, RoleEntityOption, UpdateUserRole, UserRole};
+pub use user_role::{CreateUserRole, Paginated, RoleEntityOption, UpdateUserRole, UserRole};
 pub use user_access_connection::UserAccessConnection;
 pub use workspace::{CreateWorkspace, UpdateWorkspace, Workspace, WorkspacePermissionError};
 pub use workspace_members::{

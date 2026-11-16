@@ -37,24 +37,24 @@
     let input = $state("");
     let selectedConnectionIds = $state<string[]>([]);
 
-    const rolesQuery = useGetUserRoles(() => selectedUserId);
+    const rolesQuery = useGetUserRoles(() => selectedUserId, () => activeTab);
     const optionsQuery = useGetRoleOptions(
         () => activeTab,
         () => selectedUserId,
+        () => input,
     );
     const createRole = useCreateUserRole(() => selectedUserId);
     const deleteRole = useDeleteUserRole(() => selectedUserId);
     const updateRole = useUpdateUserRole(() => selectedUserId);
 
-    const matchingOptions = $derived(
-        (optionsQuery.data ?? []).filter((option) =>
-            [option.name, option.workspaceName, option.connectionName]
-                .filter(Boolean)
-                .some((value) =>
-                    value!.toLowerCase().includes(input.trim().toLowerCase()),
-                ),
-        ),
+    const allRolePages = $derived(
+        rolesQuery.data?.pages.flatMap((page) => page.items) ?? [],
     );
+    const allOptionPages = $derived(
+        optionsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    );
+
+    const matchingOptions = $derived(allOptionPages);
 
     type OptionGroup = {
         id: string;
@@ -107,7 +107,7 @@
     );
 
     const visibleRoles = $derived(
-        (rolesQuery.data ?? []).filter((role) => role.entityType === activeTab),
+        allRolePages.filter((role) => role.entityType === activeTab),
     );
 
     function roleForEntity(entityId: string) {
@@ -150,6 +150,28 @@
         selectedConnectionIds = [];
         input = "";
     }
+
+    function loadMoreRoles(event: Event) {
+        const element = event.currentTarget as HTMLElement;
+        if (
+            element.scrollTop + element.clientHeight >= element.scrollHeight - 80 &&
+            rolesQuery.hasNextPage &&
+            !rolesQuery.isFetchingNextPage
+        ) {
+            void rolesQuery.fetchNextPage();
+        }
+    }
+
+    function loadMoreOptions(event: Event) {
+        const element = event.currentTarget as HTMLElement;
+        if (
+            element.scrollTop + element.clientHeight >= element.scrollHeight - 80 &&
+            optionsQuery.hasNextPage &&
+            !optionsQuery.isFetchingNextPage
+        ) {
+            void optionsQuery.fetchNextPage();
+        }
+    }
 </script>
 
 <Tabs.Root
@@ -178,7 +200,10 @@
                     minSize={50}
                     class="min-h-0 min-w-0 flex-1 overflow-hidden"
                 >
-                    <div class="h-full min-h-0 overflow-y-auto pr-1">
+                    <div
+                        class="h-full min-h-0 overflow-y-auto pr-1"
+                        onscroll={loadMoreRoles}
+                    >
                         {#if visibleRoles.length === 0}
                             <div
                                 class="rounded-lg border border-dashed px-4 py-12 text-center text-sm text-muted-foreground"
@@ -290,6 +315,7 @@
 
                         <Command.List
                             class="min-h-0 max-h-none flex-1 overflow-y-auto"
+                            onscroll={loadMoreOptions}
                         >
                             {#if optionsQuery.isLoading}
                                 <p

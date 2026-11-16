@@ -40,3 +40,11 @@ pub struct RoleEntityOption {
     pub connection_id: Option<String>,
     pub connection_name: Option<String>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Paginated<T> {
+    pub items: Vec<T>,
+    pub next_offset: Option<usize>,
+    pub has_more: bool,
+}
