@@ -1,7 +1,13 @@
 <script lang="ts">
-    import { explorerStore } from "$lib/features/explorer/store/explorer.svelte";
-    import { Folder } from "@lucide/svelte";
     import Input from "components/ui/input/input.svelte";
+    import TooltipContent from "shared/components/ui/tooltip/tooltip-content.svelte";
+    import TooltipTrigger from "shared/components/ui/tooltip/tooltip-trigger.svelte";
+    import Tooltip from "shared/components/ui/tooltip/tooltip.svelte";
+
+    import { Folder } from "@lucide/svelte";
+
+    import { explorerStore } from "$lib/features/explorer/store/explorer.svelte";
+
     import {
         useCreateFolder,
         useUpdateFolder,
@@ -66,20 +72,30 @@
                 return;
             }
 
-            if (folderId) {
-                await updateFolder({
-                    id: folderId,
-                    title: newFolderName,
-                });
-            } else {
-                await createFolder({
-                    title: newFolderName || "Untitled",
-                    connectionId,
-                });
+            folderError = null;
+
+            try {
+                if (folderId) {
+                    await updateFolder({
+                        id: folderId,
+                        title: newFolderName,
+                    });
+                } else {
+                    await createFolder({
+                        title: newFolderName || "Untitled",
+                        connectionId,
+                    });
+                }
+
+                explorerStore.createFolderForConnectionId = null;
+                newFolderName = "";
+                explorerStore.renameFolderId = null;
+            } catch (error) {
+                folderError =
+                    error instanceof Error
+                        ? error.message
+                        : String(error ?? "Unable to save folder");
             }
-            explorerStore.createFolderForConnectionId = null;
-            newFolderName = "";
-            explorerStore.renameFolderId = null;
         }
     }
 </script>
@@ -92,14 +108,22 @@
             folderError ? "border-red-500" : "border-primary",
         )}
     >
-        <div class="flex gap-2 items-center">
-            <Folder class="w-4 h-4" />
-            <Input
-                bind:ref={inputElement}
-                bind:value={newFolderName}
-                class="w-full border-none outline-0 px-0 bg-transparent! py-1!"
-                onkeydown={(e) => createNewFolder(e, connectionId)}
-            />
-        </div>
+        <Tooltip open={!!folderError}>
+            <TooltipTrigger class="flex gap-2 items-center">
+                <Folder class="w-4 h-4" />
+                <Input
+                    bind:ref={inputElement}
+                    bind:value={newFolderName}
+                    class="w-full border-none outline-0 px-0 bg-transparent! py-1!"
+                    oninput={() => (folderError = null)}
+                    onkeydown={(e) => createNewFolder(e, connectionId)}
+                />
+            </TooltipTrigger>
+            {#if folderError}
+                <TooltipContent class="text-red-500">
+                    {folderError}
+                </TooltipContent>
+            {/if}
+        </Tooltip>
     </div>
 {/if}
