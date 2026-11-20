@@ -21,4 +21,8 @@ pub const MIGRATIONS: &[Migration] = &[
         version: "m2026_11_08_01_add_user_roles",
         sql: include_str!("m2026_11_08_01_add_user_roles.sql"),
     },
+    Migration {
+        version: "m2026_11_16_01_add_connection_resource_scopes",
+        sql: include_str!("m2026_11_16_01_add_connection_resource_scopes.sql"),
+    },
 ];

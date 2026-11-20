@@ -45,12 +45,12 @@ pub(crate) async fn update(
     Path(connection_id): Path<String>,
     Json(request): Json<UpdateConnection>,
 ) -> ApiResult<Json<Connection>> {
-    Ok(Json(
-        state
+    let connection = state
             .connections
             .update(&connection_id, &user.id, request)
-            .await?,
-    ))
+            .await?;
+    state.invalidate_connection(&connection_id).await;
+    Ok(Json(connection))
 }
 
 pub(crate) async fn delete(

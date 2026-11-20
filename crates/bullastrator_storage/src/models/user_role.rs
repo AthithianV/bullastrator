@@ -17,6 +17,8 @@ pub struct UserRole {
     pub workspace_name: Option<String>,
     pub connection_id: Option<String>,
     pub connection_name: Option<String>,
+    pub folder_scope: Option<String>,
+    pub queue_scope: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -26,12 +28,18 @@ pub struct CreateUserRole {
     pub entity_type: String,
     pub entity_id: String,
     pub role: String,
+    #[serde(default = "default_selected_scope")]
+    pub folder_scope: String,
+    #[serde(default = "default_selected_scope")]
+    pub queue_scope: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateUserRole {
     pub role: String,
+    pub folder_scope: Option<String>,
+    pub queue_scope: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -43,6 +51,12 @@ pub struct RoleEntityOption {
     pub workspace_name: Option<String>,
     pub connection_id: Option<String>,
     pub connection_name: Option<String>,
+    pub is_inherited: bool,
+    pub inherited_role: Option<String>,
+}
+
+fn default_selected_scope() -> String {
+    "SELECTED".to_owned()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

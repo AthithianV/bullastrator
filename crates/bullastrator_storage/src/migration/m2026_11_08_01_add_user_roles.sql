@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS "user_connection_roles" (
     "user_id" TEXT NOT NULL,
     "connection_id" TEXT NOT NULL,
     "role" TEXT NOT NULL
-        CHECK ("role" IN ('VIEWER', 'EDITOR')),
+        CHECK ("role" IN ('VIEWER', 'EDITOR', 'ADMIN', 'OWNER')),
 
     PRIMARY KEY ("user_id", "connection_id"),
 
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS "user_folder_roles" (
     "user_id" TEXT NOT NULL,
     "folder_id" TEXT NOT NULL,
     "role" TEXT NOT NULL
-        CHECK ("role" IN ('VIEWER', 'EDITOR')),
+        CHECK ("role" IN ('VIEWER', 'EDITOR', 'ADMIN', 'OWNER')),
 
     PRIMARY KEY ("user_id", "folder_id"),
 
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS "user_queue_roles" (
     "user_id" TEXT NOT NULL,
     "queue_id" TEXT NOT NULL,
     "role" TEXT NOT NULL
-        CHECK ("role" IN ('VIEWER', 'EDITOR')),
+        CHECK ("role" IN ('VIEWER', 'EDITOR', 'ADMIN', 'OWNER')),
 
     PRIMARY KEY ("user_id", "queue_id"),
 

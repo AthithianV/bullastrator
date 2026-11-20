@@ -36,11 +36,13 @@ pub async fn update_connection(
     data: UpdateConnection,
 ) -> Result<Connection, String> {
     let user_id = user_id(&state).await?;
-    state
+    let connection = state
         .connections
         .update(&id, &user_id, data)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(|error| error.to_string())?;
+    state.invalidate_connection(&id).await;
+    Ok(connection)
 }
 
 #[command]

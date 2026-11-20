@@ -159,4 +159,12 @@ impl AppState {
 
         Ok(queue_service_clone.clone())
     }
+
+    /// Remove cached clients after connection credentials or Redis options change.
+    /// Existing in-flight requests may finish with their clone, while future
+    /// requests will build clients from the updated database row.
+    pub async fn invalidate_connection(&self, connection_id: &str) {
+        self.queue_services.write().await.remove(connection_id);
+        self.redis_connections.write().await.remove(connection_id);
+    }
 }

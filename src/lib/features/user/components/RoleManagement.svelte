@@ -173,6 +173,18 @@
         updateRole.mutate({ id: role.id, role: value });
     }
 
+    function changeScope(
+        role: UserRole,
+        scope: "folderScope" | "queueScope",
+        value: "SELECTED" | "ALL",
+    ) {
+        updateRole.mutate({
+            id: role.id,
+            role: role.role,
+            [scope]: value,
+        });
+    }
+
     function toggleConnection(connectionId: string) {
         selectedConnectionIds = selectedConnectionIds.includes(connectionId)
             ? selectedConnectionIds.filter((id) => id !== connectionId)
@@ -213,7 +225,7 @@
 
 {#snippet roleCard(role: UserRole, label: string)}
     <div
-        class="mb-1 flex min-h-16 items-center gap-3 rounded-lg bg-card px-3 py-2.5 sm:px-4"
+        class="mb-1 flex min-h-16 flex-wrap items-center gap-2 rounded-lg bg-card px-3 py-2.5 sm:gap-3 sm:px-4"
     >
         <div
             class="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/15"
@@ -241,6 +253,46 @@
                 {/each}
             </Select.Content>
         </Select.Root>
+        {#if role.entityType === "CONNECTION"}
+            <div class="flex shrink-0 items-center gap-3">
+                <label class="flex flex-col items-center justify-center gap-1">
+                    <span class="text-xs font-medium text-foreground"
+                        >All folder access</span
+                    >
+                    <span
+                        class="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                    >
+                        <Checkbox
+                            checked={role.folderScope === "ALL"}
+                            onCheckedChange={(checked) =>
+                                changeScope(
+                                    role,
+                                    "folderScope",
+                                    checked === true ? "ALL" : "SELECTED",
+                                )}
+                        />
+                    </span>
+                </label>
+                <label class="flex flex-col items-center gap-1">
+                    <span class="text-xs font-medium text-foreground"
+                        >All queue access</span
+                    >
+                    <span
+                        class="flex items-center gap-1.5 text-[11px] text-muted-foreground"
+                    >
+                        <Checkbox
+                            checked={role.queueScope === "ALL"}
+                            onCheckedChange={(checked) =>
+                                changeScope(
+                                    role,
+                                    "queueScope",
+                                    checked === true ? "ALL" : "SELECTED",
+                                )}
+                        />
+                    </span>
+                </label>
+            </div>
+        {/if}
         <Button
             type="button"
             variant="ghost"
@@ -258,7 +310,9 @@
     bind:value={activeTab}
     class="flex h-full min-h-0 flex-1 flex-col gap-0"
 >
-    <Tabs.List class="mx-6 mt-4 grid h-auto w-auto grid-cols-4 rounded-md">
+    <Tabs.List
+        class="mx-2 py-2 rounded-none border-b grid h-auto w-auto grid-cols-4"
+    >
         {#each tabs as tab}
             <Tabs.Trigger value={tab.value} onclick={() => selectTab(tab.value)}
                 >{tab.label}</Tabs.Trigger
@@ -269,7 +323,7 @@
     {#each tabs as tab}
         <Tabs.Content
             value={tab.value}
-            class="flex min-h-0 flex-1 flex-col overflow-hidden px-6 py-5"
+            class="flex min-h-0 flex-1 flex-col overflow-hidden p-2"
         >
             <Resizable.PaneGroup
                 direction="horizontal"
@@ -280,7 +334,7 @@
                     minSize={50}
                     class="min-h-0 min-w-0 flex-1 overflow-hidden"
                 >
-                    <div class="shrink-0 border-b py-3">
+                    <div class="shrink-0 pb-3">
                         <div
                             class="flex items-center bg-card rounded-lg px-4 w-[50%]"
                         >
@@ -477,16 +531,23 @@
                                             {#each matchingOptions.filter((option) => option.connectionId === connectionId) as option (option.id)}
                                                 <Command.Item
                                                     value={`${group.name} ${connection.connectionName} ${option.name}`}
-                                                    onSelect={() =>
-                                                        toggleAssignment(
-                                                            option,
-                                                        )}
+                                                    onSelect={() => {
+                                                        if (
+                                                            !option.isInherited
+                                                        ) {
+                                                            toggleAssignment(
+                                                                option,
+                                                            );
+                                                        }
+                                                    }}
+                                                    aria-disabled={option.isInherited}
                                                     class="px-3 py-2.5 [&_svg:not([class*='text-'])]:text-black aria-selected:bg-muted/60  aria-selected:text-white"
                                                 >
                                                     <Checkbox
                                                         checked={isAssigned(
                                                             option.id,
-                                                        )}
+                                                        ) || option.isInherited}
+                                                        disabled={option.isInherited}
                                                     />
                                                     <span
                                                         class="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
@@ -500,6 +561,13 @@
                                                     >
                                                         {option.name}
                                                     </span>
+                                                    {#if option.isInherited}
+                                                        <span
+                                                            class="ml-auto text-xs text-muted-foreground"
+                                                        >
+                                                            Inherited ({option.inheritedRole?.toLowerCase()})
+                                                        </span>
+                                                    {/if}
                                                 </Command.Item>
                                             {/each}
                                         </Command.Group>

@@ -52,7 +52,12 @@ impl QueueService {
     pub async fn sync_queues(&self, user_id: &str) -> Result<Vec<String>> {
         self.authorize(user_id, WorkspaceRole::ADMIN).await?;
         tracing::debug!("discovering BullMQ queues");
-        let mut connection = self.redis.pool.get().await.context("Connection failed")?;
+        let mut connection = self
+            .redis
+            .pool
+            .get()
+            .await
+            .map_err(|error| anyhow::anyhow!("Connection failed: {error:#}"))?;
         let pattern = format!("{}:*:meta", self.redis.prefix);
         let mut cursor = 0_u64;
         let mut names = std::collections::HashSet::new();

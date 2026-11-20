@@ -21,6 +21,14 @@ impl UserRoleRepository {
         }
     }
 
+    fn validate_scope(scope: &str) -> Result<()> {
+        if matches!(scope, "SELECTED" | "ALL") {
+            Ok(())
+        } else {
+            bail!("Unsupported connection resource scope: {scope}")
+        }
+    }
+
     fn parse_id(id: &str) -> Result<(&str, &str, &str)> {
         let mut parts = id.splitn(3, ':');
         let entity_type = parts.next().unwrap_or_default();
@@ -59,7 +67,9 @@ impl UserRoleRepository {
                     wm.workspace_id,
                     w.name AS workspace_name,
                     NULL AS connection_id,
-                    NULL AS connection_name
+                    NULL AS connection_name,
+                    NULL AS folder_scope,
+                    NULL AS queue_scope
                 FROM workspace_members wm
                 JOIN workspaces w ON w.id = wm.workspace_id
                 WHERE wm.user_id = ?
@@ -82,7 +92,9 @@ impl UserRoleRepository {
                     c.workspace_id,
                     w.name AS workspace_name,
                     c.id AS connection_id,
-                    c.name AS connection_name
+                    c.name AS connection_name,
+                    r.folder_scope,
+                    r.queue_scope
                 FROM user_connection_roles r
                 JOIN connections c ON c.id = r.connection_id
                 JOIN workspaces w ON w.id = c.workspace_id
@@ -106,7 +118,9 @@ impl UserRoleRepository {
                     c.workspace_id,
                     w.name AS workspace_name,
                     c.id AS connection_id,
-                    c.name AS connection_name
+                    c.name AS connection_name,
+                    NULL AS folder_scope,
+                    NULL AS queue_scope
                 FROM user_folder_roles r
                 JOIN folders f ON f.id = r.folder_id
                 JOIN connections c ON c.id = f.connection_id
@@ -131,7 +145,9 @@ impl UserRoleRepository {
                     c.workspace_id,
                     w.name AS workspace_name,
                     c.id AS connection_id,
-                    c.name AS connection_name
+                    c.name AS connection_name,
+                    NULL AS folder_scope,
+                    NULL AS queue_scope
                 FROM user_queue_roles r
                 JOIN queues q ON q.id = r.queue_id
                 JOIN connections c ON c.id = q.connection_id
@@ -157,6 +173,8 @@ impl UserRoleRepository {
                         wm.workspace_id,
                         w.name,
                         NULL,
+                        NULL,
+                        NULL,
                         NULL
                     FROM workspace_members wm
                     JOIN workspaces w ON w.id = wm.workspace_id
@@ -173,7 +191,9 @@ impl UserRoleRepository {
                         c.workspace_id,
                         w.name,
                         c.id,
-                        c.name
+                        c.name,
+                        r.folder_scope,
+                        r.queue_scope
                     FROM user_connection_roles r
                     JOIN connections c
                     ON c.id = r.connection_id
@@ -191,7 +211,9 @@ impl UserRoleRepository {
                         c.workspace_id,
                         w.name,
                         c.id,
-                        c.name
+                        c.name,
+                        NULL,
+                        NULL
                     FROM user_folder_roles r
                     JOIN folders f ON f.id = r.folder_id
                     JOIN connections c ON c.id = f.connection_id
@@ -209,7 +231,9 @@ impl UserRoleRepository {
                         c.workspace_id,
                         w.name,
                         c.id,
-                        c.name
+                        c.name,
+                        NULL,
+                        NULL
                     FROM user_queue_roles r
                     JOIN queues q ON q.id = r.queue_id
                     JOIN connections c ON c.id = q.connection_id
@@ -255,6 +279,8 @@ impl UserRoleRepository {
 
     pub async fn create(&self, data: CreateUserRole) -> Result<UserRole> {
         Self::validate_type(&data.entity_type)?;
+        Self::validate_scope(&data.folder_scope)?;
+        Self::validate_scope(&data.queue_scope)?;
         let exists: bool = sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE id = ?)")
             .bind(&data.user_id)
             .fetch_one(&self.pool)
@@ -274,10 +300,12 @@ impl UserRoleRepository {
                 .bind(&data.role)
                 .execute(&self.pool).await?,
             "CONNECTION" => sqlx::query(
-                "INSERT OR REPLACE INTO user_connection_roles (user_id, connection_id, role) VALUES (?, ?, ?)")
+                "INSERT OR REPLACE INTO user_connection_roles (user_id, connection_id, role, folder_scope, queue_scope) VALUES (?, ?, ?, ?, ?)")
                 .bind(&data.user_id)
                 .bind(&data.entity_id)
                 .bind(&data.role)
+                .bind(&data.folder_scope)
+                .bind(&data.queue_scope)
                 .execute(&self.pool).await?,
             "FOLDER" => sqlx::query(
                 "INSERT OR REPLACE INTO user_folder_roles (user_id, folder_id, role) VALUES (?, ?, ?)"
@@ -302,7 +330,9 @@ impl UserRoleRepository {
 
     pub async fn get(&self, id: &str) -> Result<UserRole> {
         let (entity_type, user_id, _) = Self::parse_id(id)?;
-        self.list(Some(user_id), Some(entity_type), None, 0, 1)
+        // `list` is ordered by entity name, so fetching only the first row can
+        // miss the role being updated when several roles exist.
+        self.list(Some(user_id), Some(entity_type), None, 0, 100)
             .await?
             .items
             .into_iter()
@@ -312,11 +342,35 @@ impl UserRoleRepository {
 
     pub async fn update(&self, id: &str, data: UpdateUserRole) -> Result<UserRole> {
         let (entity_type, user_id, entity_id) = Self::parse_id(id)?;
+
+        if entity_type == "CONNECTION" {
+            if let Some(scope) = data.folder_scope.as_deref() {
+                Self::validate_scope(scope)?;
+            }
+            if let Some(scope) = data.queue_scope.as_deref() {
+                Self::validate_scope(scope)?;
+            }
+            sqlx::query(
+                "UPDATE user_connection_roles SET role = ?, folder_scope = COALESCE(?, folder_scope), queue_scope = COALESCE(?, queue_scope) WHERE user_id = ? AND connection_id = ?",
+            )
+            .bind(&data.role)
+            .bind(data.folder_scope)
+            .bind(data.queue_scope)
+            .bind(user_id)
+            .bind(entity_id)
+            .execute(&self.pool)
+            .await?;
+
+            return self.get(id).await;
+        }
+
         self.create(CreateUserRole {
             user_id: user_id.into(),
             entity_type: entity_type.into(),
             entity_id: entity_id.into(),
             role: data.role,
+            folder_scope: data.folder_scope.unwrap_or_else(|| "SELECTED".to_owned()),
+            queue_scope: data.queue_scope.unwrap_or_else(|| "SELECTED".to_owned()),
         })
         .await
     }
@@ -379,7 +433,9 @@ impl UserRoleRepository {
                     NULL AS workspace_id,
                     NULL AS workspace_name,
                     NULL AS connection_id,
-                    NULL AS connection_name
+                    NULL AS connection_name,
+                    0 AS is_inherited,
+                    NULL AS inherited_role
                 FROM workspaces
                 WHERE (? IS NULL OR lower(name) LIKE '%' || lower(?) || '%')
                 ORDER BY name COLLATE NOCASE
@@ -394,7 +450,9 @@ impl UserRoleRepository {
                     c.workspace_id,
                     w.name AS workspace_name,
                     NULL AS connection_id,
-                    NULL AS connection_name
+                    NULL AS connection_name,
+                    0 AS is_inherited,
+                    NULL AS inherited_role
                 FROM connections c
                 JOIN workspaces w ON w.id = c.workspace_id
                 WHERE (? IS NULL OR lower(c.name) LIKE '%' || lower(?) || '%' OR lower(w.name) LIKE '%' || lower(?) || '%')
@@ -416,10 +474,14 @@ impl UserRoleRepository {
                     c.workspace_id,
                     w.name AS workspace_name,
                     c.id AS connection_id,
-                    c.name AS connection_name
+                    c.name AS connection_name,
+                    CASE WHEN ucr.folder_scope = 'ALL' THEN 1 ELSE 0 END AS is_inherited,
+                    CASE WHEN ucr.folder_scope = 'ALL' THEN ucr.role ELSE NULL END AS inherited_role
                 FROM folders f
                 JOIN connections c ON c.id = f.connection_id
                 JOIN workspaces w ON w.id = c.workspace_id
+                LEFT JOIN user_connection_roles ucr
+                  ON ucr.connection_id = c.id AND ucr.user_id = ?
                 WHERE (? IS NULL OR lower(f.title) LIKE '%' || lower(?) || '%' OR lower(c.name) LIKE '%' || lower(?) || '%' OR lower(w.name) LIKE '%' || lower(?) || '%')
                   AND EXISTS (
                     SELECT 1
@@ -427,12 +489,7 @@ impl UserRoleRepository {
                     WHERE wm.workspace_id = c.workspace_id
                       AND wm.user_id = ?
                 )
-                  AND EXISTS (
-                    SELECT 1
-                    FROM user_connection_roles ucr
-                    WHERE ucr.connection_id = c.id
-                      AND ucr.user_id = ?
-                )
+                  AND ucr.user_id IS NOT NULL
                 ORDER BY f.title COLLATE NOCASE
                 LIMIT ? OFFSET ?
                 "#
@@ -445,10 +502,14 @@ impl UserRoleRepository {
                     c.workspace_id,
                     w.name AS workspace_name,
                     c.id AS connection_id,
-                    c.name AS connection_name
+                    c.name AS connection_name,
+                    CASE WHEN ucr.queue_scope = 'ALL' THEN 1 ELSE 0 END AS is_inherited,
+                    CASE WHEN ucr.queue_scope = 'ALL' THEN ucr.role ELSE NULL END AS inherited_role
                 FROM queues q
                 JOIN connections c ON c.id = q.connection_id
                 JOIN workspaces w ON w.id = c.workspace_id
+                LEFT JOIN user_connection_roles ucr
+                  ON ucr.connection_id = c.id AND ucr.user_id = ?
                 WHERE (? IS NULL OR lower(q.queue_name) LIKE '%' || lower(?) || '%' OR lower(c.name) LIKE '%' || lower(?) || '%' OR lower(w.name) LIKE '%' || lower(?) || '%')
                   AND EXISTS (
                     SELECT 1
@@ -456,12 +517,7 @@ impl UserRoleRepository {
                     WHERE wm.workspace_id = c.workspace_id
                       AND wm.user_id = ?
                 )
-                  AND EXISTS (
-                    SELECT 1
-                    FROM user_connection_roles ucr
-                    WHERE ucr.connection_id = c.id
-                      AND ucr.user_id = ?
-                )
+                  AND ucr.user_id IS NOT NULL
                 ORDER BY q.queue_name COLLATE NOCASE
                 LIMIT ? OFFSET ?
                 "#
@@ -475,11 +531,11 @@ impl UserRoleRepository {
             }
             "FOLDER" | "QUEUE" => {
                 request = request
-                    .bind(search)
-                    .bind(search)
-                    .bind(search)
-                    .bind(search)
                     .bind(user_id)
+                    .bind(search)
+                    .bind(search)
+                    .bind(search)
+                    .bind(search)
                     .bind(user_id);
             }
             "WORKSPACE" => {

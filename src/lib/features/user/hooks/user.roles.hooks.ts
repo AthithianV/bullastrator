@@ -64,6 +64,7 @@ export const useCreateUserRole = (userId: () => string | null) => {
             queryClient.invalidateQueries({
                 queryKey: [...USER_ROLES_QUERY_KEY, userId()],
             });
+            queryClient.invalidateQueries({ queryKey: ROLE_OPTIONS_QUERY_KEY });
         },
     }));
 };
@@ -77,6 +78,7 @@ export const useDeleteUserRole = (userId: () => string | null) => {
             queryClient.invalidateQueries({
                 queryKey: [...USER_ROLES_QUERY_KEY, userId()],
             });
+            queryClient.invalidateQueries({ queryKey: ROLE_OPTIONS_QUERY_KEY });
         },
     }));
 };
@@ -85,15 +87,26 @@ export const useUpdateUserRole = (userId: () => string | null) => {
     const queryClient = useQueryClient();
 
     return createMutation(() => ({
-        mutationFn: ({ id, role }: { id: string; role: string }) =>
+        mutationFn: ({
+            id,
+            role,
+            folderScope,
+            queueScope,
+        }: {
+            id: string;
+            role: string;
+            folderScope?: "SELECTED" | "ALL";
+            queueScope?: "SELECTED" | "ALL";
+        }) =>
             invokeWrapper<UserRole>("update_user_role", {
                 id,
-                data: { role },
+                data: { role, folderScope, queueScope },
             }),
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: [...USER_ROLES_QUERY_KEY, userId()],
             });
+            queryClient.invalidateQueries({ queryKey: ROLE_OPTIONS_QUERY_KEY });
         },
     }));
 };

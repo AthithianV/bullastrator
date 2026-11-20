@@ -35,6 +35,8 @@ impl ConnectionRepository {
         user_id: &str,
         data: CreateConnection,
     ) -> Result<Connection> {
+        let username = Self::empty_to_none(data.username);
+        let password = Self::empty_to_none(data.password);
         let id = Uuid::new_v4().to_string();
         let mut tx = self.pool.begin().await?;
         sqlx::query(
@@ -62,8 +64,8 @@ impl ConnectionRepository {
         .bind(&data.name)
         .bind(&data.host)
         .bind(data.port)
-        .bind(data.password)
-        .bind(data.username)
+        .bind(password)
+        .bind(username)
         .bind(data.db.unwrap_or(0))
         .bind(data.bullmq_prefix.unwrap_or_else(|| "bull".into()))
         .bind(data.is_tls_enabled)
@@ -282,6 +284,8 @@ impl ConnectionRepository {
     }
 
     pub async fn update(&self, id: &str, data: UpdateConnection) -> Result<Connection> {
+        let username = Self::empty_to_none(data.username);
+        let password = Self::empty_to_none(data.password);
         let result = sqlx::query(
             r#"
             UPDATE
@@ -303,8 +307,8 @@ impl ConnectionRepository {
         .bind(data.name)
         .bind(data.host)
         .bind(data.port)
-        .bind(data.username)
-        .bind(data.password)
+        .bind(username)
+        .bind(password)
         .bind(data.db)
         .bind(data.bullmq_prefix)
         .bind(data.is_tls_enabled)
@@ -319,6 +323,16 @@ impl ConnectionRepository {
         self.get_by_id(id)
             .await?
             .context("Updated connection was not found")
+    }
+
+    fn empty_to_none(value: Option<String>) -> Option<String> {
+        value.and_then(|value| {
+            if value.trim().is_empty() {
+                None
+            } else {
+                Some(value)
+            }
+        })
     }
 
     pub async fn delete(&self, id: &str) -> Result<u64> {

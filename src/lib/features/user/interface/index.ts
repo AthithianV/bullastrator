@@ -28,6 +28,8 @@ export interface UserRole {
   workspaceName?: string | null;
   connectionId?: string | null;
   connectionName?: string | null;
+  folderScope?: "SELECTED" | "ALL" | null;
+  queueScope?: "SELECTED" | "ALL" | null;
 }
 
 export interface RoleEntityOption {
@@ -37,6 +39,8 @@ export interface RoleEntityOption {
   workspaceName?: string | null;
   connectionId?: string | null;
   connectionName?: string | null;
+  isInherited?: boolean;
+  inheritedRole?: string | null;
 }
 
 export interface Paginated<T> {
