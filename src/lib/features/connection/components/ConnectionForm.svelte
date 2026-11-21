@@ -176,16 +176,17 @@
     {/if}
 
     <Alert.Root variant="default" class="my-4 bg-yellow-400/10">
-        <Alert.Title class="flex gap-2 items-center text-xs  text-yellow-400"
-            ><CircleAlert size={12} />Only BullMQ v5 is supported for now!</Alert.Title
-        >
+        <Alert.Title class="flex gap-2 items-center text-xs  text-yellow-400">
+            <CircleAlert size={12} />Only BullMQ v5 is supported for now!
+        </Alert.Title>
     </Alert.Root>
 
     {#if errorTitle || errorDescription}
         <Alert.Root variant="destructive" class="my-2 mb-4">
-            <Alert.Title class="flex gap-2 items-center bg-card"
-                ><CircleAlert size={12} /> {errorTitle}</Alert.Title
-            >
+            <Alert.Title class="flex gap-2 items-center bg-card">
+                <CircleAlert size={12} />
+                {errorTitle}
+            </Alert.Title>
             <Alert.Description>
                 {errorDescription}
             </Alert.Description>
@@ -205,8 +206,9 @@
                         aria-invalid={$errors.name ? "true" : undefined}
                         oninput={handleNameInput}
                     />
-                    {#if $errors.name}<Field.Error>{$errors.name}</Field.Error
-                        >{/if}
+                    {#if $errors.name}<Field.Error>
+                            {$errors.name}
+                        </Field.Error>{/if}
                 </Field.Field>
 
                 <div class="grid grid-cols-3 gap-4">
@@ -220,9 +222,9 @@
                             bind:value={$form.host}
                             placeholder="127.0.0.1"
                         />
-                        {#if $errors.host}<Field.Error
-                                >{$errors.host}</Field.Error
-                            >{/if}
+                        {#if $errors.host}<Field.Error>
+                                {$errors.host}
+                            </Field.Error>{/if}
                     </Field.Field>
 
                     <Field.Field data-invalid={$errors.port ? "" : undefined}>
@@ -233,27 +235,32 @@
                             bind:value={$form.port}
                             placeholder="6379"
                         />
-                        {#if $errors.port}<Field.Error
-                                >{$errors.port}</Field.Error
-                            >{/if}
+                        {#if $errors.port}<Field.Error>
+                                {$errors.port}
+                            </Field.Error>{/if}
                     </Field.Field>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <Field.Field>
-                        <Field.Label for="username"
-                            >Username (Optional)</Field.Label
-                        >
-                        <Input id="username" bind:value={$form.username} />
+                        <Field.Label for="username">
+                            Username (Optional)
+                        </Field.Label>
+                        <Input
+                            id="username"
+                            bind:value={$form.username}
+                            placeholder="NULL"
+                        />
                     </Field.Field>
 
                     <Field.Field>
-                        <Field.Label for="password"
-                            >Password (Optional)</Field.Label
-                        >
+                        <Field.Label for="password">
+                            Password (Optional)
+                        </Field.Label>
                         <Input
                             id="password"
                             type="password"
                             bind:value={$form.password}
+                            placeholder="NULL"
                         />
                     </Field.Field>
                 </div>
@@ -264,41 +271,42 @@
                     <Field.Field data-invalid={$errors.db ? "" : undefined}>
                         <Field.Label for="db">DB Index</Field.Label>
                         <Input id="db" type="number" bind:value={$form.db} />
-                        {#if $errors.db}<Field.Error>{$errors.db}</Field.Error
-                            >{/if}
+                        {#if $errors.db}<Field.Error>
+                                {$errors.db}
+                            </Field.Error>{/if}
                     </Field.Field>
 
                     <Field.Field
                         data-invalid={$errors.bullmqPrefix ? "" : undefined}
                     >
-                        <Field.Label for="bullmq_prefix"
-                            >BullMQ Prefix</Field.Label
-                        >
+                        <Field.Label for="bullmq_prefix">
+                            BullMQ Prefix
+                        </Field.Label>
                         <Input
                             id="bullmq_prefix"
                             bind:value={$form.bullmqPrefix}
                         />
-                        {#if $errors.bullmqPrefix}<Field.Error
-                                >{$errors.bullmqPrefix}</Field.Error
-                            >{/if}
+                        {#if $errors.bullmqPrefix}<Field.Error>
+                                {$errors.bullmqPrefix}
+                            </Field.Error>{/if}
                     </Field.Field>
 
                     <Field.Field
                         data-invalid={$errors.isTlsEnabled ? "" : undefined}
                     >
                         <div class="flex items-start flex-col gap-2">
-                            <Field.Label for="bullmq_prefix"
-                                >TLS Enabled</Field.Label
-                            >
+                            <Field.Label for="bullmq_prefix">
+                                TLS Enabled
+                            </Field.Label>
                             <Checkbox
                                 id="is_tls_enabled"
                                 bind:checked={$form.isTlsEnabled}
                                 class="w-4 self-start"
                             />
                         </div>
-                        {#if $errors.isTlsEnabled}<Field.Error
-                                >{$errors.isTlsEnabled}</Field.Error
-                            >{/if}
+                        {#if $errors.isTlsEnabled}<Field.Error>
+                                {$errors.isTlsEnabled}
+                            </Field.Error>{/if}
                     </Field.Field>
                 </div>
 
@@ -328,12 +336,12 @@
                         type="button"
                         disabled={$submitting}
                         onclick={() => checkHealth($form)}
-                        >Test Connection</Button
                     >
-                    <Button disabled={$submitting} type="submit"
-                        >{isEditing ? "Update" : "Save"}<SubmitShortcut
-                        /></Button
-                    >
+                        Test Connection
+                    </Button>
+                    <Button disabled={$submitting} type="submit">
+                        {isEditing ? "Update" : "Save"}<SubmitShortcut />
+                    </Button>
                 </div>
             </Field.Group>
         </Field.Set>

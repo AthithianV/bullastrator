@@ -6,7 +6,6 @@ use crate::models::{
     Connection, ConnectionDetails, ConnectionWithQueues, CreateConnection, Queue, UpdateConnection,
     connection::{ConnectionCredentials, InsecureConnectionCredentials},
 };
-
 #[derive(sqlx::FromRow)]
 struct ConnectionQueueRow {
     connection_id: String,
@@ -35,8 +34,6 @@ impl ConnectionRepository {
         user_id: &str,
         data: CreateConnection,
     ) -> Result<Connection> {
-        let username = Self::empty_to_none(data.username);
-        let password = Self::empty_to_none(data.password);
         let id = Uuid::new_v4().to_string();
         let mut tx = self.pool.begin().await?;
         sqlx::query(
@@ -64,8 +61,8 @@ impl ConnectionRepository {
         .bind(&data.name)
         .bind(&data.host)
         .bind(data.port)
-        .bind(password)
-        .bind(username)
+        .bind(data.password)
+        .bind(data.username)
         .bind(data.db.unwrap_or(0))
         .bind(data.bullmq_prefix.unwrap_or_else(|| "bull".into()))
         .bind(data.is_tls_enabled)
@@ -284,8 +281,8 @@ impl ConnectionRepository {
     }
 
     pub async fn update(&self, id: &str, data: UpdateConnection) -> Result<Connection> {
-        let username = Self::empty_to_none(data.username);
-        let password = Self::empty_to_none(data.password);
+        let should_update_username = data.username.is_some();
+        let should_update_password = data.password.is_some();
         let result = sqlx::query(
             r#"
             UPDATE
@@ -294,8 +291,8 @@ impl ConnectionRepository {
                 name = COALESCE(?, name),
                 host = COALESCE(?, host),
                 port = COALESCE(?, port),
-                username = COALESCE(?, username),
-                password = COALESCE(?, password),
+                username = CASE WHEN ? THEN NULLIF(?, '') ELSE username END,
+                password = CASE WHEN ? THEN NULLIF(?, '') ELSE password END,
                 db = COALESCE(?, db),
                 bullmq_prefix = COALESCE(?, bullmq_prefix),
                 is_tls_enabled = COALESCE(?, is_tls_enabled),
@@ -307,8 +304,10 @@ impl ConnectionRepository {
         .bind(data.name)
         .bind(data.host)
         .bind(data.port)
-        .bind(username)
-        .bind(password)
+        .bind(should_update_username)
+        .bind(data.username)
+        .bind(should_update_password)
+        .bind(data.password)
         .bind(data.db)
         .bind(data.bullmq_prefix)
         .bind(data.is_tls_enabled)
@@ -323,16 +322,6 @@ impl ConnectionRepository {
         self.get_by_id(id)
             .await?
             .context("Updated connection was not found")
-    }
-
-    fn empty_to_none(value: Option<String>) -> Option<String> {
-        value.and_then(|value| {
-            if value.trim().is_empty() {
-                None
-            } else {
-                Some(value)
-            }
-        })
     }
 
     pub async fn delete(&self, id: &str) -> Result<u64> {

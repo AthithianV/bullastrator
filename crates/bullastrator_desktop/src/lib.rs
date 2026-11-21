@@ -1,4 +1,5 @@
 use bullastrator_core::state::AppState;
+use bullastrator_core::utils::keychain::initialize_encryption_key;
 use tauri::{Emitter, Manager, WindowEvent};
 use tauri_plugin_deep_link::DeepLinkExt;
 
@@ -14,6 +15,7 @@ pub use commands::workspace_command::*;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    initialize_encryption_key().unwrap_or_else(|error| panic!("{error}"));
     let app_state = tauri::async_runtime::block_on(async {
         let pool = bullastrator_storage::initialize_database()
             .await

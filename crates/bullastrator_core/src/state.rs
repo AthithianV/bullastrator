@@ -120,7 +120,8 @@ impl AppState {
                 "connection not found".to_string(),
             ));
         }
-        let connection = connection.unwrap();
+        let mut connection = connection.unwrap();
+        connection.password = crate::utils::crypto::decrypt_password(connection.password)?;
 
         tracing::debug!(connection_id = %connection_id, host = %connection.host, "initializing Redis connection");
         let redis_connection = create_redis_connection(&connection)?;

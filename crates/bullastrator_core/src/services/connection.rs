@@ -11,7 +11,11 @@ use bullastrator_storage::{
     repositories::ConnectionRepository,
 };
 
-use crate::{error::BullastratorError, services::workspace::WorkspaceService};
+use crate::{
+    error::BullastratorError,
+    services::workspace::WorkspaceService,
+    utils::crypto::encrypt_password,
+};
 
 #[derive(Clone)]
 pub struct ConnectionService {
@@ -70,9 +74,9 @@ impl ConnectionService {
             );
         }
 
-        self.repository
-            .create(&workspace_id, user_id, request)
-            .await
+        let mut request = request;
+        request.password = encrypt_password(request.password)?;
+        self.repository.create(&workspace_id, user_id, request).await
     }
 
     pub async fn list(&self, user_id: &str) -> Result<Vec<Connection>> {
@@ -114,6 +118,10 @@ impl ConnectionService {
     ) -> Result<Connection> {
         self.authorize(connection_id, user_id, WorkspaceRole::ADMIN)
             .await?;
+        let mut request = request;
+        if request.password.is_some() {
+            request.password = encrypt_password(request.password)?;
+        }
         self.repository.update(connection_id, request).await
     }
 
