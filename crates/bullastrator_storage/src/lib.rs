@@ -11,7 +11,6 @@ mod migration;
 
 pub mod models;
 pub mod repositories;
-pub mod utils;
 
 pub async fn initialize_database() -> anyhow::Result<SqlitePool> {
     let data_path = dirs_next::data_dir()

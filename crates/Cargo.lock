@@ -564,6 +564,7 @@ dependencies = [
 name = "bullastrator-core"
 version = "0.1.0"
 dependencies = [
+ "aes-gcm",
  "anyhow",
  "argon2",
  "base64 0.22.1",
@@ -614,13 +615,9 @@ dependencies = [
 name = "bullastrator-storage"
 version = "0.1.0"
 dependencies = [
- "aes-gcm",
  "anyhow",
- "base64 0.22.1",
  "chrono",
  "dirs-next",
- "keyring",
- "rand 0.8.8",
  "serde",
  "serde_json",
  "sqlx",
