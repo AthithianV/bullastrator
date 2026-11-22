@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::error::{BullastratorError, Result};
+use crate::error::Result;
 use crate::services::{
     RedisConnection, folder::FolderService, queue::QueueService, tab::TabService,
     user::UserService, workspace::WorkspaceService,
@@ -67,11 +67,7 @@ impl AppState {
             connections: connections.clone(),
             workspaces: workspaces.clone(),
             tabs: tabs.clone(),
-            folders: FolderService::new(
-                FolderRepository::new(pool.clone()),
-                connections,
-                tabs,
-            ),
+            folders: FolderService::new(FolderRepository::new(pool.clone()), connections, tabs),
             db: pool,
             redis_connections,
             queue_services,
@@ -111,17 +107,10 @@ impl AppState {
             return Ok(redis_connection);
         }
 
-        let connection = ConnectionRepository::new(self.db.clone())
+        let connection = self
+            .connections
             .get_credential_insecure(connection_id)
             .await?;
-
-        if connection.is_none() {
-            return Err(BullastratorError::NotFound(
-                "connection not found".to_string(),
-            ));
-        }
-        let mut connection = connection.unwrap();
-        connection.password = crate::utils::crypto::decrypt_password(connection.password)?;
 
         tracing::debug!(connection_id = %connection_id, host = %connection.host, "initializing Redis connection");
         let redis_connection = create_redis_connection(&connection)?;

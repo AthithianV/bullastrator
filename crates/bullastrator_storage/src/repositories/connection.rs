@@ -280,6 +280,15 @@ impl ConnectionRepository {
         .await?)
     }
 
+    pub async fn update_password(&self, id: &str, password: Option<String>) -> Result<()> {
+        sqlx::query("UPDATE connections SET password = NULLIF(?, '') WHERE id = ?")
+            .bind(password)
+            .bind(id)
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
     pub async fn update(&self, id: &str, data: UpdateConnection) -> Result<Connection> {
         let should_update_username = data.username.is_some();
         let should_update_password = data.password.is_some();

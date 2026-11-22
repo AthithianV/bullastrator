@@ -6,14 +6,13 @@ use tokio::time::timeout;
 use bullastrator_storage::{
     models::{
         Connection, ConnectionDetails, ConnectionWithQueues, CreateConnection, UpdateConnection,
-        WorkspaceRole,
+        WorkspaceRole, connection::InsecureConnectionCredentials,
     },
     repositories::ConnectionRepository,
 };
 
 use crate::{
-    error::BullastratorError,
-    services::workspace::WorkspaceService,
+    error::BullastratorError, services::workspace::WorkspaceService,
     utils::crypto::encrypt_password,
 };
 
@@ -76,7 +75,40 @@ impl ConnectionService {
 
         let mut request = request;
         request.password = encrypt_password(request.password)?;
-        self.repository.create(&workspace_id, user_id, request).await
+        self.repository
+            .create(&workspace_id, user_id, request)
+            .await
+    }
+
+    #[tracing::instrument(skip(self), fields(connection_id = %connection_id), err)]
+    pub async fn get_credential_insecure(
+        &self,
+        connection_id: &str,
+    ) -> crate::error::Result<InsecureConnectionCredentials> {
+        let connection = self
+            .repository
+            .get_credential_insecure(connection_id)
+            .await?;
+
+        if connection.is_none() {
+            return Err(BullastratorError::NotFound(
+                "connection not found".to_string(),
+            ));
+        }
+        let mut connection = connection.unwrap();
+        let stored_password = connection.password.take();
+        let was_encrypted = stored_password
+            .as_deref()
+            .is_some_and(crate::utils::crypto::is_encrypted);
+        let encrypted_password = crate::utils::crypto::ensure_encryption(stored_password)?;
+        if !was_encrypted {
+            self.repository
+                .update_password(connection_id, encrypted_password.clone())
+                .await?;
+        }
+        connection.password = crate::utils::crypto::decrypt_password(encrypted_password)?;
+
+        Ok(connection)
     }
 
     pub async fn list(&self, user_id: &str) -> Result<Vec<Connection>> {
@@ -153,7 +185,9 @@ pub async fn start_health_check_service(pool: &deadpool_redis::Pool) -> Result<b
 }
 
 #[tracing::instrument(skip(data), err)]
-pub async fn test_redis_connection_service(data: &CreateConnection) -> Result<bool> {
+pub async fn test_redis_connection_service(
+    data: &CreateConnection,
+) -> crate::error::Result<bool> {
     tracing::debug!("testing Redis connection");
 
     let url = create_redis_url(
