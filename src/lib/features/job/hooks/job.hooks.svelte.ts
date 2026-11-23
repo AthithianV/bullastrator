@@ -298,6 +298,7 @@ export const useDeleteJobs = () => {
       const confirmation = await confirmAction(
         `This action cannot be reverted. ${confirmationMesssage}`,
         { title: "Delete job(s)", kind: "warning" },
+        isAll ? `DELETE ALL ${count} JOBS` : undefined,
       );
 
       if (!confirmation) throw new Error("Cancelled");
@@ -490,6 +491,7 @@ export const useRetryJob = () => {
       const confirmation = await confirmAction(
         `This action cannot be reverted. ${confirmationMesssage}`,
         { title: "Retry", kind: "warning" },
+        isAll ? `RETRY ALL ${count} JOBS` : undefined,
       );
 
       if (!confirmation) throw new Error("Cancelled");

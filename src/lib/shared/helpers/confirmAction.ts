@@ -1,18 +1,21 @@
-import { confirm as tauriConfirm } from "@tauri-apps/plugin-dialog";
-import { runtime } from "shared/runtime";
 import { get, writable } from "svelte/store";
 
 export type ConfirmationRequest = {
   message: string;
   title: string;
+  requiredText?: string;
   resolve: (confirmed: boolean) => void;
 };
 
 export const confirmationRequest = writable<ConfirmationRequest | null>(null);
 
-function requestWebConfirmation(message: string, title: string) {
+function requestWebConfirmation(
+  message: string,
+  title: string,
+  requiredText?: string,
+) {
   return new Promise<boolean>((resolve) => {
-    confirmationRequest.set({ message, title, resolve });
+    confirmationRequest.set({ message, title, requiredText, resolve });
   });
 }
 
@@ -27,10 +30,7 @@ export function confirmAction(
   options: { title: string; kind?: "warning" | "info" } = {
     title: "Confirm action",
   },
+  requiredText?: string,
 ) {
-  if (runtime.isWeb) {
-    return requestWebConfirmation(message, options.title);
-  }
-
-  return tauriConfirm(message, options);
+  return requestWebConfirmation(message, options.title, requiredText);
 }
