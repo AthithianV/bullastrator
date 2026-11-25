@@ -3,7 +3,6 @@ use anyhow::{Context, Result, bail};
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use rand::RngCore;
 
-const KEY_ENV: &str = "BULLASTRATOR_ENCRYPTION_KEY";
 const PREFIX: &str = "enc:v1:";
 const NONCE_SIZE: usize = 12;
 
@@ -58,13 +57,12 @@ pub fn decrypt_password(value: Option<String>) -> Result<Option<String>> {
 }
 
 fn cipher() -> Result<Aes256Gcm> {
-    let encoded_key = std::env::var(KEY_ENV)
-        .with_context(|| format!("{KEY_ENV} is required to encrypt connection passwords"))?;
+    let encoded_key = crate::utils::keychain::encryption_key().map_err(anyhow::Error::msg)?;
     let key = STANDARD
         .decode(encoded_key)
-        .with_context(|| format!("{KEY_ENV} must be a base64-encoded 32-byte key"))?;
+        .context("encryption key must be base64 encoded")?;
     if key.len() != 32 {
-        bail!("{KEY_ENV} must decode to exactly 32 bytes")
+        bail!("encryption key must decode to exactly 32 bytes")
     }
     Aes256Gcm::new_from_slice(&key).context("failed to initialize encryption cipher")
 }

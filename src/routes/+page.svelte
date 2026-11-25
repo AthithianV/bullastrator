@@ -1,7 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
 
-    import UpdateToaster from "$lib/shared/components/updater/UpdateToaster.svelte";
     import Zoom from "settings/components/Zoom.svelte";
     import { globalStore } from "shared/stores/global.svelte";
     import ProtectedRoute from "$lib/features/user/components/ProtectedRoute.svelte";
@@ -28,7 +27,6 @@
     <Zoom />
     {#if !globalStore.isWeb}
         <TitleBar />
-        <UpdateToaster />
     {:else}
         <WebTitlebar />
     {/if}

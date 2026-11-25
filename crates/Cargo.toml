@@ -23,7 +23,7 @@ tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
 anyhow = "1.0.100"
 aes-gcm = "0.10"
 base64 = "0.22"
-keyring = { version = "3.6", features = ["apple-native", "windows-native", "linux-native"] }
+keyring = { version = "3.6", features = ["apple-native", "windows-native", "linux-native-sync-persistent"] }
 rand = "0.8.5"
 thiserror = "2"
 tracing = "0.1"

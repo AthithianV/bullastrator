@@ -1,14 +1,24 @@
 use base64::{Engine as _, engine::general_purpose::STANDARD};
 use keyring::Entry;
 use rand::RngCore;
+use std::sync::OnceLock;
 
 const ENCRYPTION_KEY_ENV: &str = "BULLASTRATOR_ENCRYPTION_KEY";
 const KEYCHAIN_SERVICE: &str = "com.bullastrator.desktop";
 const KEYCHAIN_ACCOUNT: &str = "connection-encryption-key";
+static ENCRYPTION_KEY: OnceLock<String> = OnceLock::new();
 
 pub fn initialize_encryption_key() -> Result<(), String> {
-    if std::env::var_os(ENCRYPTION_KEY_ENV).is_some() {
-        return Ok(());
+    encryption_key().map(|_| ())
+}
+
+pub fn encryption_key() -> Result<String, String> {
+    if let Some(key) = ENCRYPTION_KEY.get() {
+        return Ok(key.clone());
+    }
+
+    if let Ok(key) = std::env::var(ENCRYPTION_KEY_ENV) {
+        return cache_key(key);
     }
 
     let entry = Entry::new(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT)
@@ -31,7 +41,12 @@ pub fn initialize_encryption_key() -> Result<(), String> {
         }
     };
 
-    // The storage layer reads this only inside the current desktop process.
-    std::env::set_var(ENCRYPTION_KEY_ENV, key);
-    Ok(())
+    cache_key(key)
+}
+
+fn cache_key(key: String) -> Result<String, String> {
+    ENCRYPTION_KEY
+        .set(key.clone())
+        .map_err(|_| "Encryption key was initialized concurrently".to_string())?;
+    Ok(key)
 }

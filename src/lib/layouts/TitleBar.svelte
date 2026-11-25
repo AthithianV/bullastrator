@@ -10,8 +10,7 @@
     import WorkspaceSelector from "workspace/components/WorkspaceSelector.svelte";
     import Brand from "./Brand.svelte";
     import ThemeToggler from "$lib/shared/components/actions/ThemeToggler.svelte";
-    import { globalStore } from "shared/stores/global.svelte";
-    import { Search } from "@lucide/svelte";
+    import UpdateToaster from "$lib/shared/components/updater/UpdateToaster.svelte";
 
     const currentPlatform = platform();
     const isMacos = currentPlatform === "macos";
@@ -64,6 +63,7 @@
     </div>
     <QueueSearch />
     <div class="flex items-center h-full gap-1 px-2">
+        <UpdateToaster />
         <ThemeToggler />
         {#if !isMacos}
             <div class="h-full flex items-center">
